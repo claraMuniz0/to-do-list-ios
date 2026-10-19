@@ -4,7 +4,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 0: Project foundation
 - Layer structure: Domain, Presentation, Data (Clean Architecture).
-- Core `Task` entity and `TaskRepository` protocol, with an in-memory/local store behind it.
+- Core `TodoItem` entity and `TodoItemRepository` protocol, with an in-memory/local store behind it.
 - **Done when:** the test suite runs green on an empty shell.
 
 ## Phase 1: Design system components
@@ -23,7 +23,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 3: Add Task (manual)
 - **Form:** task name, optional description, category (Work / Personal / Shopping), due date (Today / Tomorrow / Next week pills + calendar sheet), Save.
-- **Domain:** `TaskTitle` validation, `Task` entity, `AddTask` use case.
+- **Domain:** `TodoItemTitle` validation, `TodoItem` entity, `AddTodoItemUseCase`.
 - **Minimal Task List:** open and completed tasks, tap-to-complete circle. Required so a saved task has somewhere to appear.
 - **Done when:** a task can be created and shows up in the list.
 

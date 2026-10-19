@@ -8,14 +8,14 @@ Create a task manually and see it in a list.
 
 ## Scope
 ### Persistence (first step)
-- [ ] SwiftData `@Model` storage record in Data (never in Domain), mapped to/from `Task`
-- [ ] `SwiftDataTaskRepository` implementing `TaskRepository`, tested with an in-memory `ModelContainer`
-- [ ] Swap the composition root from `InMemoryTaskRepository` to SwiftData
+- [ ] SwiftData `@Model` storage record in Data (never in Domain), mapped to/from `TodoItem`
+- [ ] `SwiftDataTodoItemRepository` implementing `TodoItemRepository`, tested with an in-memory `ModelContainer`
+- [ ] Swap the composition root from `InMemoryTodoItemRepository` to SwiftData
 
 ### Domain
-- [ ] `TaskTitle` value object (self-validating: non-empty, trimmed)
+- [ ] `TodoItemTitle` value object (self-validating: non-empty, trimmed)
 - [ ] `Category` (Work / Personal / Shopping) and `DueDate` value objects
-- [ ] `AddTask` use case
+- [ ] `AddTodoItemUseCase`
 
 ### Form
 - [ ] Task name, optional description

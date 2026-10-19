@@ -8,8 +8,8 @@ Change or remove an existing task.
 
 ## Scope
 - [ ] Edit screen: same form as Add Task, prefilled
-- [ ] `UpdateTask` use case
-- [ ] `DeleteTask` use case
+- [ ] `UpdateTodoItemUseCase`
+- [ ] `DeleteTodoItemUseCase`
 - [ ] "Delete task" action and Undo toast
 
 ## Out of scope

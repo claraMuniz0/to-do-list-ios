@@ -31,7 +31,7 @@ Several things in the design look like separate components but are one component
 
 ## Tokens
 **Colors:** bg `#FFF8F0`, surface, border, text-primary / secondary / muted, accent `#C4401F`, accent-soft, on-accent, danger, plus chip pairs for work, personal, shopping (bg + fg). Done-row and toast use a few raw values (`#2B2118` toast, `#EFE6DA` done chip) that should become tokens.
-**Typography:** heading Fraunces, body Bricolage Grotesque, UI Outfit, accent Caveat, mono DM Mono. Sizes seen: chip 12 (list) / 14 (option), pill 14, row title 16, button 17.
+**Typography:** heading Fraunces, body Bricolage Grotesque, UI Outfit, accent Caveat, mono DM Mono. Variants the screens need: Fraunces semibold **italic** (screen title 36) and bold (empty title 26), Caveat semibold (greeting 24). Bundle these variants (font files and Info.plist registration need project-file permission). Sizes seen: chip 12 (list) / 14 (option), pill 14, row title 16, button 17.
 **Radii:** md 16, pill 999. **Shadows:** soft warm shadow on rows/inputs (`#EAD6C3`, y 3), accent shadow on buttons (`#8F2A10`, y 4).
 **Touch targets:** checkbox 44×44 (ring 26), add button 44, more-options 40.
 
@@ -56,7 +56,9 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 ### Tokens
 - [ ] Color sets in the asset catalog + `Color` extension (names mirror the .pen variables)
 - [ ] Font registration + typography tokens that scale with Dynamic Type
-- [ ] Radius and shadow tokens
+- [ ] Radius and shadow tokens (incl. illustration disc shadow `#D94A2B26`, y 8, blur 24)
+- [ ] Welcome background gradient: top `#FFE8D6` to `bg` at 38%
+- [ ] Illustration dot colors: green `#7BC8A0`, peach `#FFC9B8`, blue `#B8C6FF` (coral is `accent`)
 - [ ] Promote the loose raw values (toast, done chip) to named tokens
 
 ### Components
@@ -66,7 +68,7 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 - [ ] `AddTaskInput` (placeholder, options button, add button)
 - [ ] `TaskRow` (open and done states, optional description, category chip, step count slot unused in MVP)
 - [ ] `UndoToast` (message + Undo action)
-- [ ] `EmptyStateIllustration` (SF Symbol + size + tint inside a decorative frame; reused by Welcome `clipboard-check` 64pt, All Done `party-popper` 64pt, Search No Results `search-x` 48pt)
+- [ ] `EmptyStateIllustration`: composed from shapes, not a single icon: 200pt `accent-soft` halo, 140pt white disc with warm shadow, a 64pt SF Symbol in accent, and 4 decorative dots (coral 28, green 18, peach 20, blue 12). Parameters: symbol, size, dot set. Reused by Welcome `clipboard-check`, All Done `party-popper`, Search No Results `search-x` (48pt; check in the design whether it uses the same composition)
 - [ ] `DesignSystemGallery` screen
 
 ### Tests

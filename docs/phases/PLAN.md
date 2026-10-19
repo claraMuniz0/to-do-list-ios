@@ -37,3 +37,11 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - **Create-category sheet:** new category with color and preview.
 - **Steps:** manual sub-steps on a task.
 - **Claude features:** Smart Add (describe a task in a sentence), "Suggest steps", "Break it down".
+
+## Phase files
+- [Phase 0: Foundation](docs/phases/phase-0-foundation.md)
+- [Phase 1: Design system](docs/phases/phase-1-design-system.md)
+- [Phase 2: Welcome / Empty Tasks](docs/phases/phase-2-welcome-empty.md)
+- [Phase 3: Add Task](docs/phases/phase-3-add-task.md)
+- [Phase 4: Edit Task](docs/phases/phase-4-edit-task.md)
+- [Post-MVP backlog](docs/phases/backlog-post-mvp.md)

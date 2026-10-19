@@ -57,13 +57,13 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 | B5 | Description rules | optional | **Trimmed; empty becomes nil; no maximum** (assumed) | assumed |
 | B6 | "Next week" | (1) today + 7 days; (2) next Monday | **(1) Today + 7 days**, unambiguous | **confirmed** (recommendation accepted) |
 | B7 | Past dates | (1) domain allows any day, picker only offers today onward for new dates; (2) domain rejects the past | **(1)**: a saved task's date becomes past naturally, and Edit must still show it | **confirmed** (recommendation accepted) |
-| B8 | Categories | (1) static seeded set in Domain, stored by key; (2) a `CategoryRepository` | **(1) Static**: Work, Personal, Shopping (name + color key). "+ New" and custom categories are post-MVP | **confirmed** (recommendation accepted) |
+| B8 | Categories | (1) `CategoryID` + name + color, seeded built-ins with stable ids `work`, `personal`, `shopping`; (2) a `CategoryRepository` | **(1) Seeded static set in Domain, shaped for Phase 7**: `Category` = `CategoryID` (string value object) + `CategoryName` + `CategoryColor`. "+ New" and custom categories are post-MVP (Phase 7). Amended from the earlier "name + color key" after the Phase 7 kickoff | **confirmed** (recommendation accepted) |
 | B9 | Date label format | | **"Today, Oct 8" / "Tomorrow, Oct 9" / "Tue, Oct 13"** produced in Presentation from `DateProvider` and `Calendar` (assumed) | assumed |
 
 ### C. Data (SwiftData)
 | # | Decision | Options | Recommendation | Status |
 |---|----------|---------|----------------|--------|
-| C1 | Storage record | `@Model TodoItemRecord` in Data, mapped by `TodoItemMapper`; due date stored as year/month/day integers, category as its key | **As described**; never `@Model` in Domain (decision D5) | **confirmed** (recommendation accepted) |
+| C1 | Storage record | `@Model TodoItemRecord` in Data, mapped by `TodoItemMapper`; due date stored as year/month/day integers, category as a plain `categoryID: String` (no enum, relationship, or copied name/color) | **As described**; never `@Model` in Domain (decision D5). `TodoItemMapper` takes a category lookup and falls back to Personal if the id is unknown (covered by a test). Phase 7 then only adds a `CategoryRecord` | **confirmed** (recommendation accepted) |
 | C2 | Concurrency of the repository | (1) `@MainActor` repository on the main `ModelContext`; (2) `@ModelActor` background context | **(1) `@MainActor`** for the MVP (small data, simpler). Revisit if data grows | **confirmed** (recommendation accepted) |
 | C3 | Container and tests | one `ModelContainer` built in the composition root; tests and previews use an in-memory container | **As described**. SwiftData is a system framework: no project-file edit and no package | **confirmed** (recommendation accepted) |
 | C4 | Schema versioning | none for the MVP | **None** (assumed). Any later model change needs a migration decision | assumed |
@@ -92,7 +92,7 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 - [ ] Composition root swaps `InMemoryTodoItemRepository` for SwiftData (in-memory kept for tests and previews)
 
 ### Domain
-- [ ] `DateProvider`; `DueDate`; `Category` (seeded Work/Personal/Shopping); `TodoItemTitle` (trim, non-empty, max length); `TodoItem.createdAt`
+- [ ] `DateProvider`; `DueDate`; `CategoryID`, `CategoryName`, `CategoryColor` and `Category` (seeded Work/Personal/Shopping, stable ids); `TodoItemTitle` (trim, non-empty, max length); `TodoItem.createdAt`
 - [ ] `AddTodoItemUseCase`; `CompleteTodoItemUseCase` and `ReopenTodoItemUseCase` (or one toggle use case); ordering of open and completed lists (a pure function with tests)
 - [ ] Quick-add path through `AddTodoItemUseCase` with the defaults from A5
 

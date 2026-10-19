@@ -34,11 +34,17 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 5: Task List (post-MVP core)
 - Swipe to delete (and the delete-confirmation question), the "All caught up" state, and the filters (Active / Done / Categories).
-- Stub: confirmed at its own kickoff.
+- All decisions confirmed.
+
+## Phase 6: Search & Sort
+- Search (recent searches, category scope, results, no results with "Add as task") and a Sort menu with three options (the sort menu is undesigned, flagged for the designer).
+- All decisions confirmed; built after Phase 5.
+
+## Phase 7: Custom Categories
+- "New category" sheet (name, one of 6 colors, live preview), "+ New" in the forms, the "New category" row in the Categories filter. Built-in categories keep stable ids; Phase 3 stores the category as a plain id so no migration is needed.
+- All decisions confirmed; built after Phase 5.
 
 ## Post-MVP backlog (to be phased later)
-- **Task List extras:** search (recent, by category, no-results state) and sort. (Filters, swipe to delete and "All caught up" moved to Phase 5.)
-- **Create-category sheet:** new category with color and preview.
 - **Steps:** manual sub-steps on a task.
 - **Claude features:** Smart Add (describe a task in a sentence), "Suggest steps", "Break it down".
 
@@ -49,4 +55,6 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - [Phase 3: Add Task](phase-3-add-task.md)
 - [Phase 4: Edit Task](phase-4-edit-task.md)
 - [Phase 5: Task List](phase-5-task-list.md)
+- [Phase 6: Search & Sort](phase-6-search-sort.md)
+- [Phase 7: Custom Categories](phase-7-categories.md)
 - [Post-MVP backlog](backlog-post-mvp.md)

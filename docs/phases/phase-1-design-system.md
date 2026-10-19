@@ -30,7 +30,7 @@ Several things in the design look like separate components but are one component
 | Task Row (open) / Task Row Done | Two states of the same row | `TaskRow(task state)`, one component, two visual states |
 
 ## Tokens
-**Colors:** bg `#FFF8F0`, surface, border, text-primary / secondary / muted, accent `#C4401F`, accent-soft, on-accent, danger, plus chip pairs for work, personal, shopping (bg + fg). Done-row and toast use a few raw values (`#2B2118` toast, `#EFE6DA` done chip) that should become tokens.
+**Colors:** bg `#FFF8F0`, surface, border, text-primary / secondary / muted, accent `#C4401F`, accent-soft, on-accent, danger, plus chip bg/fg pairs **keyed by palette color** (blue, brick, green now; violet, ochre, teal arrive in Phase 7), where Work, Personal and Shopping map to blue, brick and green. Done-row and toast use a few raw values (`#2B2118` toast, `#EFE6DA` done chip) that should become tokens.
 **Typography:** heading Fraunces, body Bricolage Grotesque, UI Outfit, accent Caveat, mono DM Mono. Variants the screens need: Fraunces semibold **italic** (screen title 36) and bold (empty title 26), Caveat semibold (greeting 24). Bundle these variants (font files and Info.plist registration need project-file permission). Sizes seen: chip 12 (list) / 14 (option), pill 14, row title 16, button 17.
 **Radii:** md 16, pill 999. **Shadows:** soft warm shadow on rows/inputs (`#EAD6C3`, y 3), accent shadow on buttons (`#8F2A10`, y 4).
 **Touch targets:** checkbox 44×44 (ring 26), add button 44, more-options 40.

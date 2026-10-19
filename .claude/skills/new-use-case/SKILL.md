@@ -1,6 +1,6 @@
 ---
 name: new-use-case
-description: Scaffold a Domain use case (AddTask, UpdateTask, DeleteTask style) with a hand-written TaskRepository test double and tests, test first. Use when adding application/business actions that orchestrate entities through the repository.
+description: Scaffold a Domain use case (AddTodoItemUseCase, UpdateTodoItemUseCase, DeleteTodoItemUseCase style) with a hand-written TodoItemRepository test double and tests, test first. Use when adding application/business actions that orchestrate entities through the repository.
 ---
 
 # New use case
@@ -8,18 +8,18 @@ description: Scaffold a Domain use case (AddTask, UpdateTask, DeleteTask style) 
 Follow the `tdd-cycle` skill for commands, commits and guardrails. Test first, always.
 
 ## Location and shape
-- Production: `ToDoList/Domain/UseCases/<Name>.swift`. Depends ONLY on the `TaskRepository` protocol and Domain types. Imports only `Foundation`.
+- Production: `ToDoList/Domain/UseCases/<Name>.swift`. Depends ONLY on the `TodoItemRepository` protocol and Domain types. Imports only `Foundation`.
 - Test: `ToDoListTests/Domain/UseCases/<Name>Tests.swift`, Swift Testing.
-- `TaskRepository` (Domain, `async throws`): `add`, `update`, `delete`, `task(id:)`, `allTasks()`. Do not add methods (no filters/search yet).
+- `TodoItemRepository` (Domain, `async throws`): `add`, `update`, `delete`, `task(id:)`, `allTasks()`. Do not add methods (no filters/search yet).
 - Use cases are structs with constructor-injected dependencies and one `execute(...) async throws` method; no singletons, no framework types.
 - Never call `Date()` in Domain. If dates matter (`complete(at:)`, "today"), inject a clock (protocol `Clock`-like, e.g. `protocol DateProvider { func now() -> Date }`) and use a fixed-date test double.
 
 ## Test double
-- Hand-written, in the test target (e.g. `ToDoListTests/Doubles/TaskRepositorySpy.swift`). No mocking libraries.
+- Hand-written, in the test target (e.g. `ToDoListTests/Doubles/TodoItemRepositorySpy.swift`). No mocking libraries.
 - In-memory storage + recorded calls (`addedTasks`, `deletedIDs`, ...) + optional `errorToThrow: Error?` per method.
 
 ## Steps
-- [ ] Check `TaskRepository` and the use case's inputs exist; if not, create via TDD first (value objects: `new-value-object`).
+- [ ] Check `TodoItemRepository` and the use case's inputs exist; if not, create via TDD first (value objects: `new-value-object`).
 - [ ] RED then GREEN, one test at a time, commit each phase:
   - success: calls the right repository method with the right entity
   - edge cases: invalid input rejected BEFORE touching the repository (repository not called); unknown id -> typed domain error (e.g. `.notFound`); already-completed / duplicate cases as the rules require

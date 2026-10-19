@@ -13,7 +13,7 @@ Rules: no production code without a failing test first. Swift Testing only (`imp
 - [ ] If no test target exists, stop: adding one edits `project.pbxproj` and needs explicit user permission.
 
 ## Red
-- [ ] Write ONE failing test. File `<Production>Tests.swift`, in a test folder mirroring the production folder (e.g. `Domain/TaskTitle.swift` -> `ToDoListTests/Domain/TaskTitleTests.swift`).
+- [ ] Write ONE failing test. File `<Production>Tests.swift`, in a test folder mirroring the production folder (e.g. `Domain/TodoItemTitle.swift` -> `ToDoListTests/Domain/TodoItemTitleTests.swift`).
 - [ ] Run the test command. Confirm it fails for the RIGHT reason (assertion fails or the missing type/method), not a typo or setup error.
 - [ ] Commit: `test: add failing test for [feature]`
 

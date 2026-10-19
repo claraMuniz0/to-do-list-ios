@@ -19,8 +19,8 @@ Runs as its own pass and its own `docs:` commit, never mixed into a `feat:` or `
 3. Document the WHY only, never restate the WHAT. Worth documenting:
    - Edge cases (empty, boundary values, time zones, past dates).
    - Non-obvious invariants (e.g. state only mutable through named methods).
-   - Failure conditions on validated value objects (what makes `TaskTitle(...)` throw, and which error).
-   - Naming collisions (e.g. our `Task` vs Swift concurrency's `Task`).
+   - Failure conditions on validated value objects (what makes `TodoItemTitle(...)` throw, and which error).
+   - Naming collisions (the entity is `TodoItem`, not `Task`, so it does not shadow Swift concurrency's `Task`; keep it that way).
    - Why a design choice exists when a reader would otherwise "fix" it (e.g. `completedAt: Date?` instead of a Bool).
 4. Style: one short summary line, then extra lines only if needed. Use `- Throws:` for failure conditions. No `@param`-style noise that repeats parameter names.
 5. Change comments only. Do not touch code, formatting, or tests.

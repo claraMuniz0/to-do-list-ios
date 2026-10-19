@@ -37,3 +37,6 @@ Assumed location (adjust to actual repo layout): `ToDoList/Presentation/DesignSy
 
 ## Done when
 Previews render all states, gallery shows them, token/mapping tests green, no raw hex/font names (grep the new files to confirm), nothing in Domain depends on this layer.
+
+## Related skills
+Name with `naming-convention`, build previews per `create-preview` (`#if DEBUG` `.preview(...)` samples, never test factories), then run `accessibility-check` before calling it done. Feature screens use `new-screen`.

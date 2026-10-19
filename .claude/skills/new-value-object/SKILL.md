@@ -1,6 +1,6 @@
 ---
 name: new-value-object
-description: Scaffold a self-validating Swift value object (e.g. TaskTitle, TaskID, DueDate) with its test file, test first. Use when a domain concept would otherwise be a raw String/Int/UUID/Date (primitive obsession) or the user asks for a new value object.
+description: Scaffold a self-validating Swift value object (e.g. TodoItemTitle, TodoItemID, DueDate) with its test file, test first. Use when a domain concept would otherwise be a raw String/Int/UUID/Date (primitive obsession) or the user asks for a new value object.
 ---
 
 # New value object
@@ -28,17 +28,17 @@ Follow the `tdd-cycle` skill for commands, commits and guardrails. Test first, a
 - [ ] REFACTOR while green.
 - [ ] Use `#expect(throws: <Name>Error.empty) { try <Name>("") }` for failures.
 
-## Example (TaskTitle)
+## Example (TodoItemTitle)
 ```swift
 import Foundation
 
-enum TaskTitleError: Error, Equatable { case empty }
+enum TodoItemTitleError: Error, Equatable { case empty }
 
-struct TaskTitle: Equatable, Hashable, Sendable {
+struct TodoItemTitle: Equatable, Hashable, Sendable {
     private let storage: String
     var value: String { storage }
 
-    init(_ raw: String) throws(TaskTitleError) {
+    init(_ raw: String) throws(TodoItemTitleError) {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw .empty }
         storage = trimmed

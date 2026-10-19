@@ -37,7 +37,7 @@ Recommendation in **bold**. Status `open` until confirmed.
 |---|----------|---------|----------------|--------|
 | B1 | Use case | (1) `GetTodoItemsUseCase` (wraps `allTodoItems()`); (2) view model calls the repository; (3) dedicated `HasTodoItemsUseCase` | **(1)**: view models never call repositories, and Phase 3's list needs the same use case | **confirmed** (recommendation accepted) |
 | B2 | View model | (1) `TodoListViewModel` with a `ViewState` (loading / empty / loaded / error) introduced now; (2) throwaway `WelcomeViewModel` | **(1)**: Phase 3 adds the loaded content to the same view model instead of replacing it | **confirmed** (recommendation accepted) |
-| B3 | Navigation | (1) introduce `NavigationStack` + route enum now (`AppRoute.addTodoItem`), per E2; (2) push a plain `NavigationLink` | **(1)**: the router is needed by Phases 3 and 4 anyway | **confirmed** (recommendation accepted) |
+| B3 | Navigation | (1) introduce `NavigationStack` + route enum now (`AppRoute.addTodoItem`), per E2; (2) push a plain `NavigationLink` | **(1)**: the router is needed by Phases 3 and 4 anyway. Per Phase 3 A1, Add Task is presented as a **full-screen cover** driven by the router, so the placeholder is presented that way too | **confirmed** (recommendation accepted) |
 | B4 | App entry | Rename the app entry point and remove the `ContentView` placeholder in this phase (A4 from Phase 0) | **Do it here**, when the first real root view exists. Composition root wires repository -> use case -> view model | **confirmed** (recommendation accepted) |
 
 ### C. UI
@@ -57,7 +57,7 @@ Recommendation in **bold**. Status `open` until confirmed.
 - [ ] `GetTodoItemsUseCase` with tests (empty, non-empty, repository failure)
 - [ ] `TodoListViewModel` with `ViewState`, tested first (loading -> empty, loading -> loaded, failure, retry)
 - [ ] `AppRoute` + router; the button navigates to a placeholder Add Task screen
-- [ ] `WelcomeView`: gradient background, header, composed illustration, copy, `PrimaryButton`
+- [ ] `WelcomeView`: gradient background, `ScreenHeader` (from Phase 1), composed illustration, copy, `PrimaryButton`
 - [ ] Minimal error view with Retry
 - [ ] Previews: empty, loading, error, empty at `.accessibility3`
 - [ ] Composition root; rename the entry point; delete the `ContentView` placeholder

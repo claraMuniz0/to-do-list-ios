@@ -34,10 +34,10 @@ Recommendation in **bold**. Status: `open` until you confirm.
 ### C. Domain model (the part to get right early)
 | # | Decision | Options | Recommendation | Status |
 |---|----------|---------|----------------|--------|
-| C1 | Task fields for MVP | title, description, category, due date, completion | **`TodoItemID`, `TodoItemTitle`, optional description, `Category`, optional `DueDate`, `completedAt: Date?`**. `completedAt` (not a Bool) supports "You finished 4 of 4 today" later | **confirmed** (recommendation accepted) |
+| C1 | Task fields for MVP | title, description, category, due date, completion | **`TodoItemID`, `TodoItemTitle`, optional description, `Category`, optional `DueDate`, `completedAt: Date?`, `createdAt: Date`** (createdAt added in Phase 3 kickoff, B1). `completedAt` (not a Bool) supports "You finished 4 of 4 today" later | **confirmed** (recommendation accepted) |
 | C2 | Category: enum or value type | enum of 3 vs value (`name` + color key) | **Value type with 3 seeded defaults.** The design has a "New category" sheet, so an enum would be thrown away in the backlog | **confirmed** (recommendation accepted) |
 | C3 | Due date precision | date only vs date + time | **Date only for the MVP.** Time appears only in Smart Add (backlog). Is due date optional? Design shows "Today" prefilled | **confirmed** (recommendation accepted) |
-| C4 | "Today" / "Tomorrow" / "Next week" | compute inside Domain | **Inject a clock** (protocol or closure) so the pills are testable, never call `Date()` in Domain | **confirmed** (recommendation accepted) |
+| C4 | "Today" / "Tomorrow" / "Next week" | compute inside Domain | **Inject a `DateProvider`** (`now()`; named so because Swift already has a `Clock` protocol) so the pills are testable, never call `Date()` in Domain | **confirmed** (recommendation accepted) |
 | C5 | Identity | UUID wrapped in `TodoItemID` | **`TodoItemID` value object**, generated in Domain, no database ids leaking in | **confirmed** (recommendation accepted) |
 | C6 | Behavior on `TodoItem` | what it can do | **`complete(at:)`, `reopen()`, `rename(_:)`, `changeCategory(_:)`, `reschedule(_:)`**: private state, mutated only through these | **confirmed** (recommendation accepted) |
 | C7 | Failure model | typed errors | **Domain error enum** (e.g. `TodoItemTitleError.empty`), thrown, never swallowed | **confirmed** (recommendation accepted) |

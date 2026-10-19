@@ -39,7 +39,7 @@ Recommendation in **bold**. Status: `open` until you confirm.
 | C3 | Due date precision | date only vs date + time | **Date only for the MVP.** Time appears only in Smart Add (backlog). Is due date optional? Design shows "Today" prefilled | **confirmed** (recommendation accepted) |
 | C4 | "Today" / "Tomorrow" / "Next week" | compute inside Domain | **Inject a `DateProvider`** (`now()`; named so because Swift already has a `Clock` protocol) so the pills are testable, never call `Date()` in Domain | **confirmed** (recommendation accepted) |
 | C5 | Identity | UUID wrapped in `TodoItemID` | **`TodoItemID` value object**, generated in Domain, no database ids leaking in | **confirmed** (recommendation accepted) |
-| C6 | Behavior on `TodoItem` | what it can do | **`complete(at:)`, `reopen()`, `rename(_:)`, `changeCategory(_:)`, `reschedule(_:)`**: private state, mutated only through these | **confirmed** (recommendation accepted) |
+| C6 | Behavior on `TodoItem` | what it can do | **`complete(at:)`, `reopen()`, `rename(_:)`, `changeCategory(_:)`, `reschedule(_:)`, `changeDescription(_:)`** (changeDescription added in Phase 4 kickoff, B3): private state, mutated only through these | **confirmed** (recommendation accepted) |
 | C7 | Failure model | typed errors | **Domain error enum** (e.g. `TodoItemTitleError.empty`), thrown, never swallowed | **confirmed** (recommendation accepted) |
 | C8 | Entity name | `Task` vs `TodoItem` | **`TodoItem`**: a type named `Task` shadows Swift concurrency's `Task` inside the module, breaking `Task { }` in view models. UI copy and view names still say "task" (`TaskRow`). Use cases follow `<Verb><Noun>UseCase` (e.g. `AddTodoItemUseCase`) | **confirmed** |
 

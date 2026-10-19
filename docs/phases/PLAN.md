@@ -28,20 +28,25 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - **Done when:** a task can be created and shows up in the list.
 
 ## Phase 4: Edit Task
-- Same form, prefilled.
-- Update and delete, with Undo toast.
+- Same form, prefilled (one form view model for Add and Edit).
+- Update, and delete from the Edit screen, with Undo toast.
 - **Done when:** a task can be edited (title, description, category, date) and deleted with undo.
 
+## Phase 5: Task List (post-MVP core)
+- Swipe to delete (and the delete-confirmation question), the "All caught up" state, and the filters (Active / Done / Categories).
+- Stub: confirmed at its own kickoff.
+
 ## Post-MVP backlog (to be phased later)
-- **Task List extras:** Active / Done / Categories filters, swipe to delete, search (recent, by category, no-results state), "All caught up" state.
+- **Task List extras:** search (recent, by category, no-results state) and sort. (Filters, swipe to delete and "All caught up" moved to Phase 5.)
 - **Create-category sheet:** new category with color and preview.
 - **Steps:** manual sub-steps on a task.
 - **Claude features:** Smart Add (describe a task in a sentence), "Suggest steps", "Break it down".
 
 ## Phase files
-- [Phase 0: Foundation](docs/phases/phase-0-foundation.md)
-- [Phase 1: Design system](docs/phases/phase-1-design-system.md)
-- [Phase 2: Welcome / Empty Tasks](docs/phases/phase-2-welcome-empty.md)
-- [Phase 3: Add Task](docs/phases/phase-3-add-task.md)
-- [Phase 4: Edit Task](docs/phases/phase-4-edit-task.md)
-- [Post-MVP backlog](docs/phases/backlog-post-mvp.md)
+- [Phase 0: Foundation](phase-0-foundation.md)
+- [Phase 1: Design system](phase-1-design-system.md)
+- [Phase 2: Welcome / Empty Tasks](phase-2-welcome-empty.md)
+- [Phase 3: Add Task](phase-3-add-task.md)
+- [Phase 4: Edit Task](phase-4-edit-task.md)
+- [Phase 5: Task List](phase-5-task-list.md)
+- [Post-MVP backlog](backlog-post-mvp.md)

@@ -57,6 +57,7 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 - [ ] Color sets in the asset catalog + `Color` extension (names mirror the .pen variables)
 - [ ] Font registration + typography tokens that scale with Dynamic Type
 - [ ] Radius and shadow tokens (incl. illustration disc shadow `#D94A2B26`, y 8, blur 24)
+- [ ] Toast tokens: background `#2B2118`, Undo color `#FFB4A0`; the toast uses Outfit (`font-ui`) for the message and Undo, not DM Sans (Phase 4 C4)
 - [ ] Welcome background gradient: top `#FFE8D6` to `bg` at 38%
 - [ ] Illustration dot colors: green `#7BC8A0`, peach `#FFC9B8`, blue `#B8C6FF` (coral is `accent`)
 - [ ] Promote the loose raw values (toast, done chip) to named tokens

@@ -25,6 +25,12 @@ struct DSShadow: Equatable {
 }
 
 extension View {
+    /// Fills `shape` behind the view and casts `shadow` from that shape only, so the content
+    /// (text, icons) never gets a shadow of its own.
+    func dsBackground<S: Shape>(_ fill: Color, in shape: S, shadow: DSShadow = .none) -> some View {
+        background { shape.fill(fill).dsShadow(shadow) }
+    }
+
     func dsShadow(_ shadow: DSShadow) -> some View {
         self.shadow(color: shadow.color, radius: shadow.radius, x: 0, y: shadow.y)
     }

@@ -27,8 +27,7 @@ struct UndoToast: View {
         .padding(.vertical, 2)
         .padding(.leading, 16)
         .padding(.trailing, 8)
-        .background(DSColor.toastBackground, in: RoundedRectangle(cornerRadius: DSRadius.md))
-        .dsShadow(.toast)
+        .dsBackground(DSColor.toastBackground, in: RoundedRectangle(cornerRadius: DSRadius.md), shadow: .toast)
         .accessibilityElement(children: .contain)
     }
 }

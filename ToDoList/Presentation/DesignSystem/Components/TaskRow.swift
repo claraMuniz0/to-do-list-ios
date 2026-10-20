@@ -86,9 +86,8 @@ struct TaskRow: View {
             .accessibilityElement(children: .combine)
         }
         .padding(EdgeInsets(top: 14, leading: 8, bottom: 14, trailing: 16))
-        .background(style.surfaceFill, in: RoundedRectangle(cornerRadius: DSRadius.md))
+        .dsBackground(style.surfaceFill, in: RoundedRectangle(cornerRadius: DSRadius.md), shadow: style.shadow)
         .overlay { RoundedRectangle(cornerRadius: DSRadius.md).strokeBorder(DSColor.border, lineWidth: 1) }
-        .dsShadow(style.shadow)
     }
 
     private var checkbox: some View {

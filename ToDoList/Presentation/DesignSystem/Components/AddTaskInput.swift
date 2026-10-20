@@ -47,7 +47,7 @@ struct AddTaskInput: View {
                     .foregroundStyle(DSColor.onAccent)
                     .frame(width: DSTouchTarget.minimum, height: DSTouchTarget.minimum)
                     .background(DSColor.accent, in: Circle())
-                    .dsShadow(.accentSmall)
+                    
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Add task")
@@ -56,9 +56,8 @@ struct AddTaskInput: View {
         .padding(.leading, 20)
         .padding(.trailing, 8)
         .frame(minHeight: DSTouchTarget.minimum + 16)
-        .background(DSColor.surface, in: Capsule())
+        .dsBackground(DSColor.surface, in: Capsule(), shadow: .soft)
         .overlay { Capsule().strokeBorder(DSColor.border, lineWidth: 1) }
-        .dsShadow(.soft)
     }
 }
 

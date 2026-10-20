@@ -46,8 +46,7 @@ struct PrimaryButton: View {
             .padding(.vertical, 16)
             .padding(.horizontal, 28)
             .frame(maxWidth: fullWidth ? .infinity : nil, minHeight: DSTouchTarget.minimum)
-            .background(DSColor.accent, in: Capsule())
-            .dsShadow(appearance.showsShadow ? .accent : .none)
+            .dsBackground(DSColor.accent, in: Capsule(), shadow: appearance.showsShadow ? .accentSmall : .none)
             .opacity(appearance.opacity)
         }
         .buttonStyle(.plain)

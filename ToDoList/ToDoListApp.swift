@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 @main struct ToDoListApp: App {
@@ -6,7 +7,9 @@ import SwiftUI
 
     init() {
         FontRegistrar.registerAll()
-        let dependencies = AppDependencies.live()
+        // A store that cannot open is unrecoverable at launch; fail loudly rather than lose tasks silently.
+        let dependencies: AppDependencies
+        do { dependencies = try AppDependencies.live() } catch { fatalError("Could not open the task store: \(error)") }
         _viewModel = State(initialValue: dependencies.makeTodoListViewModel())
     }
 
@@ -20,9 +23,21 @@ import SwiftUI
 
 /// Composition root: the only place concrete Data types are chosen.
 extension AppDependencies {
-    static func live() -> AppDependencies {
+    @MainActor
+    static func live() throws -> AppDependencies {
+        try make(container: .todoItems())
+    }
+
+    /// SwiftData in memory, for tests and previews.
+    @MainActor
+    static func inMemory() throws -> AppDependencies {
+        try make(container: .inMemoryTodoItems())
+    }
+
+    @MainActor
+    private static func make(container: ModelContainer) -> AppDependencies {
         AppDependencies(
-            todoItemRepository: InMemoryTodoItemRepository(),
+            todoItemRepository: SwiftDataTodoItemRepository(container: container),
             dateProvider: SystemDateProvider()
         )
     }

@@ -15,3 +15,21 @@ struct AppDependenciesTests {
         #expect(try await AppDependencies.live().todoItemRepository.allTasks().isEmpty)
     }
 }
+
+@MainActor
+struct AppDependenciesViewModelTests {
+    @Test func theTodoListViewModelStartsLoading() {
+        #expect(AppDependencies.live().makeTodoListViewModel().state == .loading)
+    }
+
+    @Test func theTodoListViewModelReadsFromTheSharedRepository() async throws {
+        let dependencies = AppDependencies.live()
+        let item = makeTodoItem()
+        try await dependencies.todoItemRepository.add(item)
+        let viewModel = dependencies.makeTodoListViewModel()
+
+        await viewModel.load()
+
+        #expect(viewModel.state == .loaded([item]))
+    }
+}

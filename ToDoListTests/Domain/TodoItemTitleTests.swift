@@ -14,6 +14,12 @@ struct TodoItemTitleTests {
         }
     }
 
+    @Test func rejectsUnicodeWhitespaceOnlyTitle() {
+        #expect(throws: TodoItemTitleError.empty) {
+            try TodoItemTitle("\u{00A0}\u{2003}")
+        }
+    }
+
     @Test func trimsSurroundingWhitespace() throws {
         let title = try TodoItemTitle("  Buy milk \n")
         #expect(title.value == "Buy milk")

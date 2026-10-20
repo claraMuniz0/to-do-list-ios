@@ -29,6 +29,34 @@ struct DueDateTests {
         #expect(nextWeek == DueDate(year: 2027, month: 1, day: 4))
     }
 
+    @Test(arguments: [
+        (2027, 2, 28, 2027, 3, 1),
+        (2028, 2, 28, 2028, 2, 29),
+        (2026, 12, 31, 2027, 1, 1),
+    ])
+    func tomorrowHandlesMonthYearAndLeapBoundaries(y: Int, m: Int, d: Int, ey: Int, em: Int, ed: Int) {
+        let provider = DateProviderStub(current: calendar.makeDate(y, m, d))
+        #expect(DueDate.tomorrow(using: provider, calendar: calendar) == DueDate(year: ey, month: em, day: ed))
+    }
+
+    @Test func nextWeekCrossesMonthEnd() {
+        let provider = DateProviderStub(current: calendar.makeDate(2026, 1, 28))
+        #expect(DueDate.nextWeek(using: provider, calendar: calendar) == DueDate(year: 2026, month: 2, day: 4))
+    }
+
+    @Test func lateEveningStillBelongsToToday() {
+        let provider = DateProviderStub(current: calendar.makeDate(2026, 10, 8, hour: 23))
+        #expect(DueDate.today(using: provider, calendar: calendar) == DueDate(year: 2026, month: 10, day: 8))
+    }
+
+    @Test func usesTheCalendarTimeZoneForTheDay() {
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let instant = calendar.makeDate(2026, 10, 8, hour: 20) // 05:00 on Oct 9 in Tokyo
+        #expect(DueDate(instant, calendar: tokyo) == DueDate(year: 2026, month: 10, day: 9))
+        #expect(DueDate(instant, calendar: calendar) == DueDate(year: 2026, month: 10, day: 8))
+    }
+
     @Test func ordersChronologically() {
         #expect(DueDate(year: 2026, month: 10, day: 8) < DueDate(year: 2026, month: 10, day: 9))
         #expect(DueDate(year: 2026, month: 12, day: 31) < DueDate(year: 2027, month: 1, day: 1))

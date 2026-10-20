@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// Visual state of a `PrimaryButton`. The design does not define a disabled state (decision E3);
-/// opacity 0.4 without shadow is the confirmed choice.
+/// opacity 0.6 without shadow is the confirmed choice (0.4 was too faint to read).
 struct PrimaryButtonAppearance: Equatable {
     let isEnabled: Bool
 
-    var opacity: Double { isEnabled ? 1 : 0.4 }
+    var opacity: Double { isEnabled ? 1 : 0.6 }
     var showsShadow: Bool { isEnabled }
 }
 

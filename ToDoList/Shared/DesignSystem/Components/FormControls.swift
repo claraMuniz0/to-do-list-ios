@@ -18,6 +18,7 @@ struct FormControlBorder: Equatable {
 private struct FormControlChrome: ViewModifier {
     let isFocused: Bool
     let minHeight: CGFloat
+    var onTap: (() -> Void)?
 
     func body(content: Content) -> some View {
         let border = FormControlBorder(isFocused: isFocused)
@@ -28,6 +29,9 @@ private struct FormControlChrome: ViewModifier {
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
             .background(DSColor.surface, in: shape)
             .overlay { shape.strokeBorder(border.color, lineWidth: border.lineWidth) }
+            // The whole box focuses the field, not just the text line.
+            .contentShape(shape)
+            .onTapGesture { onTap?() }
     }
 }
 
@@ -50,13 +54,15 @@ struct FormField<Content: View>: View {
                 Text(label)
                     .dsFont(.chipOption)
                     .foregroundStyle(DSColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
                 if isOptional {
                     Text("Optional")
                         .dsFont(.chipTag)
                         .foregroundStyle(DSColor.textMuted)
                 }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(isOptional ? "\(label), Optional" : label)
+            .accessibilityAddTraits(.isHeader)
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -86,7 +92,11 @@ struct TextInputField: View {
 
     var body: some View {
         field
-            .modifier(FormControlChrome(isFocused: focused, minHeight: FormControlMetrics.singleLineMinHeight))
+            .modifier(FormControlChrome(isFocused: focused, minHeight: FormControlMetrics.singleLineMinHeight, onTap: focus))
+    }
+
+    private func focus() {
+        if let isFocused { isFocused.wrappedValue = true } else { internalFocus = true }
     }
 
     private var focused: Bool { isFocused?.wrappedValue ?? internalFocus }
@@ -133,7 +143,7 @@ struct TextAreaField: View {
         .dsFont(.inputText)
         .foregroundStyle(DSColor.textPrimary)
         .focused($isFocused)
-        .modifier(FormControlChrome(isFocused: isFocused, minHeight: FormControlMetrics.textAreaMinHeight))
+        .modifier(FormControlChrome(isFocused: isFocused, minHeight: FormControlMetrics.textAreaMinHeight, onTap: { isFocused = true }))
     }
 }
 
@@ -141,6 +151,9 @@ struct TextAreaField: View {
 struct DateRow: View {
     let value: String
     let action: () -> Void
+
+    @ScaledMetric(relativeTo: .body) private var calendarSize: CGFloat = 18
+    @ScaledMetric(relativeTo: .body) private var chevronSize: CGFloat = 14
 
     init(value: String, action: @escaping () -> Void) {
         self.value = value
@@ -151,7 +164,7 @@ struct DateRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: "calendar")
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: calendarSize, weight: .regular))
                     .foregroundStyle(DSColor.accent)
                     .accessibilityHidden(true)
                 Text(value)
@@ -159,14 +172,15 @@ struct DateRow: View {
                     .foregroundStyle(DSColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: chevronSize, weight: .semibold))
                     .foregroundStyle(DSColor.textMuted)
                     .accessibilityHidden(true)
             }
             .modifier(FormControlChrome(isFocused: false, minHeight: FormControlMetrics.dateRowMinHeight))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Due date, \(value)")
+        .accessibilityLabel("Due date")
+        .accessibilityValue(value)
         .accessibilityHint("Opens the date picker")
     }
 }
@@ -181,6 +195,9 @@ struct CircleIconButton: View {
     let accessibilityLabel: String
     let action: () -> Void
 
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 16
+    private var diameter: CGFloat { max(CircleIconButtonMetrics.diameter, iconSize + 28) }
+
     init(systemImage: String = "xmark", accessibilityLabel: String, action: @escaping () -> Void) {
         self.systemImage = systemImage
         self.accessibilityLabel = accessibilityLabel
@@ -190,9 +207,9 @@ struct CircleIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: iconSize, weight: .semibold))
                 .foregroundStyle(DSColor.textPrimary)
-                .frame(width: CircleIconButtonMetrics.diameter, height: CircleIconButtonMetrics.diameter)
+                .frame(width: diameter, height: diameter)
                 .dsBackground(DSColor.surface, in: Circle(), shadow: .soft)
                 .overlay { Circle().strokeBorder(DSColor.borderControl, lineWidth: 1) }
                 .contentShape(Circle())

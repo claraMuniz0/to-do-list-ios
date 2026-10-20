@@ -19,9 +19,43 @@ struct AddTaskInput: View {
         self.onAdd = onAdd
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .body) private var optionsIconSize: CGFloat = 18
+    @ScaledMetric(relativeTo: .body) private var plusIconSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .body) private var optionsFrame = DSTouchTarget.moreOptions
+    private var plusSize: CGFloat { max(DSTouchTarget.minimum, plusIconSize + 24) }
+
+    private var stacked: Bool { dynamicTypeSize.isAccessibilitySize }
+
+    /// At accessibility sizes the field gets its own line above the buttons so the text stays readable.
     var body: some View {
-        HStack(spacing: 8) {
-            TextField(
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        let shape = stacked ? AnyShape(RoundedRectangle(cornerRadius: 28, style: .continuous)) : AnyShape(Capsule())
+        layout {
+            field
+            if stacked {
+                HStack(spacing: 8) { Spacer(minLength: 0); optionsButton; addButton }
+            } else {
+                optionsButton
+                addButton
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.leading, 20)
+        .padding(.trailing, 8)
+        .frame(minHeight: DSTouchTarget.minimum + 16)
+        .dsBackground(DSColor.surface, in: shape, shadow: .soft)
+        .overlay {
+            if stacked {
+                RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(DSColor.borderControl, lineWidth: 1)
+            } else {
+                Capsule().strokeBorder(DSColor.borderControl, lineWidth: 1)
+            }
+        }
+    }
+
+    private var field: some View {
+        TextField(
                 "New task",
                 text: $text,
                 prompt: Text(placeholder).foregroundStyle(DSColor.textMuted)
@@ -30,35 +64,31 @@ struct AddTaskInput: View {
             .foregroundStyle(DSColor.textPrimary)
             .submitLabel(.done)
             .onSubmit(onAdd)
+    }
 
-            Button(action: onOptions) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(DSColor.textSecondary)
-                    .frame(width: DSTouchTarget.moreOptions, height: DSTouchTarget.moreOptions)
-                    .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("More options")
-
-            Button(action: onAdd) {
-                Image(systemName: "plus")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(DSColor.onAccent)
-                    .frame(width: DSTouchTarget.minimum, height: DSTouchTarget.minimum)
-                    .background(DSColor.accent, in: Circle())
-                    
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Add task")
+    private var optionsButton: some View {
+        Button(action: onOptions) {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: optionsIconSize, weight: .regular))
+                .foregroundStyle(DSColor.textSecondary)
+                .frame(width: optionsFrame, height: optionsFrame)
+                .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
+                .contentShape(Rectangle())
         }
-        .padding(.vertical, 8)
-        .padding(.leading, 20)
-        .padding(.trailing, 8)
-        .frame(minHeight: DSTouchTarget.minimum + 16)
-        .dsBackground(DSColor.surface, in: Capsule(), shadow: .soft)
-        .overlay { Capsule().strokeBorder(DSColor.borderControl, lineWidth: 1) }
+        .buttonStyle(.plain)
+        .accessibilityLabel("More options")
+    }
+
+    private var addButton: some View {
+        Button(action: onAdd) {
+            Image(systemName: "plus")
+                .font(.system(size: plusIconSize, weight: .semibold))
+                .foregroundStyle(DSColor.onAccent)
+                .frame(width: plusSize, height: plusSize)
+                .background(DSColor.accent, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Add task")
     }
 }
 

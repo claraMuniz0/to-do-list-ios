@@ -8,7 +8,7 @@ struct PrimaryButtonStyleTests {
     }
 
     @Test func disabledIsDimmedWithoutShadow() {
-        #expect(PrimaryButtonAppearance(isEnabled: false).opacity == 0.4)
+        #expect(PrimaryButtonAppearance(isEnabled: false).opacity == 0.6)
         #expect(PrimaryButtonAppearance(isEnabled: false).showsShadow == false)
     }
 }

@@ -6,6 +6,16 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		000000000000000300000000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000100000000;
+			remoteInfo = MyApp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* ToDoListTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ToDoListTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -23,16 +33,6 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
-
-/* Begin PBXContainerItemProxy section */
-		000000000000000300000000 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 000000000000000000000000 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 000000000000000100000000;
-			remoteInfo = MyApp;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000130000000 /* Frameworks */ = {

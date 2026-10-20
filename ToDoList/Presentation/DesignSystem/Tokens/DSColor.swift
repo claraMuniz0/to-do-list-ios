@@ -6,6 +6,8 @@ enum DSColor {
     static let bg = Color("bg")
     static let surface = Color("surface")
     static let border = Color("border")
+    /// Stronger edge for form controls: `border` is ~1.2:1 on the surface, too faint to mark a field (WCAG 1.4.11).
+    static let borderControl = Color("border-control")
     static let textPrimary = Color("text-primary")
     static let textSecondary = Color("text-secondary")
     static let textMuted = Color("text-muted")

@@ -24,8 +24,10 @@ struct AddTaskInput: View {
             TextField(
                 "New task",
                 text: $text,
-                prompt: Text(placeholder).foregroundStyle(DSColor.textMuted)
+                prompt: Text(placeholder).foregroundStyle(DSColor.textMuted),
+                axis: .vertical
             )
+            .lineLimit(1...4)
             .dsFont(.inputText)
             .foregroundStyle(DSColor.textPrimary)
             .submitLabel(.done)
@@ -58,7 +60,7 @@ struct AddTaskInput: View {
         .padding(.trailing, 8)
         .frame(minHeight: DSTouchTarget.minimum + 16)
         .dsBackground(DSColor.surface, in: Capsule(), shadow: .soft)
-        .overlay { Capsule().strokeBorder(DSColor.border, lineWidth: 1) }
+        .overlay { Capsule().strokeBorder(DSColor.borderControl, lineWidth: 1) }
     }
 }
 

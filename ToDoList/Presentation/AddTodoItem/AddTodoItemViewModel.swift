@@ -48,7 +48,7 @@ final class AddTodoItemViewModel {
 
     /// Also false while a save is running, which blocks a double submit.
     var canSave: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving
+        !TodoItemTitle.isBlank(title) && !isSaving
     }
 
     var dueDateText: String { dueDateLabel.text(for: dueDate) }

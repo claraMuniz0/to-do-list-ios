@@ -59,7 +59,7 @@ final class TodoListViewModel {
     /// Returns whether a task was added. A blank title is ignored without flagging a failure.
     @discardableResult
     func quickAdd(title: String) async -> Bool {
-        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        guard !TodoItemTitle.isBlank(title) else { return false }
         return await perform { _ = try await addTodoItem.quickAdd(title: title) }
     }
 

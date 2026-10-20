@@ -4,6 +4,13 @@ enum CategoryError: Error, Equatable {
     case emptyName
 }
 
+/// A task category. A value type (not an enum) so user-created categories can arrive later
+/// without replacing it; the three seeded ones keep stable ids.
+///
+/// Named `Category` as decided; inside test targets Foundation's `Category` makes the bare name
+/// ambiguous, so tests alias it.
+///
+/// - Throws: `CategoryError.emptyName` when the name is blank.
 struct Category: Hashable {
     let id: String
     let name: String

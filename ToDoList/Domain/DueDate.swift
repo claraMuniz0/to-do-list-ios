@@ -1,5 +1,8 @@
 import Foundation
 
+/// A calendar day with no time component, so a time-zone change never shifts a saved date.
+///
+/// Past dates are valid: a saved task becomes overdue naturally and must still be editable.
 struct DueDate: Hashable, Comparable {
     let year: Int
     let month: Int
@@ -24,6 +27,7 @@ struct DueDate: Hashable, Comparable {
         shifted(byDays: 1, using: provider, calendar: calendar)
     }
 
+    /// Today plus 7 days, not "next Monday", so the label is unambiguous.
     static func nextWeek(using provider: DateProvider, calendar: Calendar) -> DueDate {
         shifted(byDays: 7, using: provider, calendar: calendar)
     }

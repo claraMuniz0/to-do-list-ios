@@ -4,6 +4,9 @@ enum TodoItemTitleError: Error, Equatable {
     case empty
 }
 
+/// A non-blank task title, trimmed of surrounding whitespace and newlines.
+///
+/// - Throws: `TodoItemTitleError.empty` when the input is empty or only whitespace.
 struct TodoItemTitle: Equatable {
     let value: String
 

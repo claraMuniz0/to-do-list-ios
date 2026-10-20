@@ -1,3 +1,4 @@
+/// Insertion-ordered, non-persistent store used until the SwiftData repository arrives in Phase 3.
 actor InMemoryTodoItemRepository: TodoItemRepository {
     private var items: [TodoItem] = []
 

@@ -1,5 +1,9 @@
 import Foundation
 
+/// A task. Named `TodoItem`, not `Task`, so it never shadows Swift concurrency's `Task`.
+///
+/// State is `private(set)` and changes only through the named methods below.
+/// Completion is a timestamp rather than a Bool so "finished N today" can be derived later.
 struct TodoItem: Equatable {
     let id: TodoItemID
     let createdAt: Date
@@ -29,6 +33,7 @@ struct TodoItem: Equatable {
 
     var isCompleted: Bool { completedAt != nil }
 
+    /// Completing an already completed item is a no-op, keeping the first completion time.
     mutating func complete(at date: Date) {
         guard completedAt == nil else { return }
         completedAt = date
@@ -50,6 +55,7 @@ struct TodoItem: Equatable {
         dueDate = newDueDate
     }
 
+    /// Blank text clears the description (stored as `nil`).
     mutating func changeDescription(_ newDescription: String?) {
         description = Self.normalized(newDescription)
     }

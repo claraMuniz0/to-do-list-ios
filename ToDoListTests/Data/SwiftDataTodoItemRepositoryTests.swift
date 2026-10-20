@@ -28,6 +28,15 @@ struct SwiftDataTodoItemRepositoryTests {
         #expect(try await repository.allTasks() == [first, second])
     }
 
+    @Test func allTasksReturnsOldestCreatedFirstRegardlessOfInsertionOrder() async throws {
+        let repository = try makeRepository()
+        let older = makeTodoItem(title: "Older", createdAt: Date(timeIntervalSince1970: 1))
+        let newer = makeTodoItem(title: "Newer", createdAt: Date(timeIntervalSince1970: 2))
+        try await repository.add(newer)
+        try await repository.add(older)
+        #expect(try await repository.allTasks() == [older, newer])
+    }
+
     @Test func addingDuplicateIDThrowsAndKeepsOneItem() async throws {
         let repository = try makeRepository()
         let item = makeTodoItem()

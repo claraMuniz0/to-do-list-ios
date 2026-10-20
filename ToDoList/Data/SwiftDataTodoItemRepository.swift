@@ -56,8 +56,9 @@ final class SwiftDataTodoItemRepository: TodoItemRepository {
         try record(for: id).map(mapper.toDomain)
     }
 
+    /// Oldest created first; SwiftData gives no order guarantee without a sort.
     func allTasks() throws -> [TodoItem] {
-        try context.fetch(FetchDescriptor<TodoItemRecord>()).map(mapper.toDomain)
+        try context.fetch(FetchDescriptor<TodoItemRecord>(sortBy: [SortDescriptor(\.createdAt)])).map(mapper.toDomain)
     }
 
     private func record(for id: TodoItemID) throws -> TodoItemRecord? {

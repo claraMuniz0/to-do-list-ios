@@ -7,6 +7,7 @@ enum AppRoute: Hashable, Identifiable {
     var id: Self { self }
 }
 
+/// Owns what is presented over the root screen; one route at a time.
 @MainActor @Observable
 final class AppRouter {
     private(set) var presentedRoute: AppRoute?

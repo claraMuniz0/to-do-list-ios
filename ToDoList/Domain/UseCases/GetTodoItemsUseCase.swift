@@ -1,3 +1,4 @@
+/// Repository errors propagate unchanged; the caller decides how to present a failure.
 struct GetTodoItemsUseCase {
     private let repository: TodoItemRepository
 

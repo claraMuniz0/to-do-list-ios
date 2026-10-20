@@ -5,15 +5,16 @@ struct WelcomeView: View {
     let onAddFirstTask: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                ScreenHeader(subtitle: "Welcome 👋", title: "My Tasks")
+        GeometryReader { proxy in
+            ScrollView {
                 VStack(spacing: 24) {
-                    EmptyStateIllustration(symbol: "list.clipboard")
-                    VStack(spacing: 12) {
+                    ScreenHeader(subtitle: "Welcome 👋", title: "My Tasks")
+                    VStack(spacing: 16) {
+                        EmptyStateIllustration(symbol: "list.clipboard")
                         Text("Nothing to do yet")
                             .dsFont(.emptyTitle)
                             .foregroundStyle(DSColor.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
                         Text("Add your first task, then tap the circle whenever it's done.")
                             .dsFont(.inputText)
                             .foregroundStyle(DSColor.textSecondary)
@@ -21,17 +22,19 @@ struct WelcomeView: View {
                             .frame(maxWidth: 290)
                     }
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .frame(minHeight: proxy.size.height)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
         }
         .safeAreaInset(edge: .bottom) {
             PrimaryButton(title: "Add your first task", systemImage: "plus", fullWidth: true, action: onAddFirstTask)
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 8)
+                .background(DSColor.bg)
         }
         .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
     }

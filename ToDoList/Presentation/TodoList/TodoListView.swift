@@ -22,6 +22,8 @@ struct TodoListView: View {
         switch viewModel.state {
         case .loading:
             DSGradient.welcome.linearGradient.ignoresSafeArea()
+                .accessibilityElement()
+                .accessibilityLabel("Loading tasks")
         case .empty:
             WelcomeView(onAddFirstTask: { router.present(.addTodoItem) })
         case .loaded(let items):

@@ -5,16 +5,21 @@ struct AddTodoItemPlaceholderView: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        ScrollView {
             ScreenHeader(subtitle: "What's on your mind?", title: "New task")
-            Spacer()
-            PrimaryButton(title: "Close", fullWidth: true, action: onClose)
+                .padding(20)
         }
-        .padding(20)
+        .safeAreaInset(edge: .bottom) {
+            PrimaryButton(title: "Close", fullWidth: true, action: onClose)
+                .padding(20)
+                .background(DSColor.bg)
+        }
         .background(DSColor.bg.ignoresSafeArea())
+        .accessibilityAction(.escape, onClose)
     }
 }
 
 #if DEBUG
 #Preview { AddTodoItemPlaceholderView {} }
+#Preview("Accessibility3") { AddTodoItemPlaceholderView {}.dynamicTypeSize(.accessibility3) }
 #endif

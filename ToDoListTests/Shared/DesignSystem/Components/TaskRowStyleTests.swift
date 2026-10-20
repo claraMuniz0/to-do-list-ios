@@ -37,4 +37,29 @@ struct TaskRowStyleTests {
         #expect(style.chipBackground(for: palette).lightHex == DSColor.doneChipBackground.lightHex)
         #expect(style.chipForeground(for: palette).lightHex == DSColor.textSecondary.lightHex)
     }
+
+    @Test func openRowLabelIncludesTitleDescriptionAndCategory() {
+        let style = TaskRowStyle(isDone: false)
+        #expect(style.accessibilityLabel(title: "Prepare slides", description: "Quarterly deck", categoryName: "Work")
+            == "Prepare slides, Quarterly deck, Work")
+    }
+
+    @Test func rowLabelSkipsMissingOrEmptyDescription() {
+        let style = TaskRowStyle(isDone: false)
+        #expect(style.accessibilityLabel(title: "Buy milk", description: nil, categoryName: "Shopping") == "Buy milk, Shopping")
+        #expect(style.accessibilityLabel(title: "Buy milk", description: "", categoryName: "Shopping") == "Buy milk, Shopping")
+    }
+
+    @Test func doneRowLabelOmitsHiddenDescription() {
+        let style = TaskRowStyle(isDone: true)
+        #expect(style.accessibilityLabel(title: "Prepare slides", description: "Quarterly deck", categoryName: "Work")
+            == "Prepare slides, Work")
+    }
+
+    @Test func valueAndActionNameFollowState() {
+        #expect(TaskRowStyle(isDone: false).accessibilityValue == "Not completed")
+        #expect(TaskRowStyle(isDone: true).accessibilityValue == "Completed")
+        #expect(TaskRowStyle(isDone: false).toggleActionName == "Mark as completed")
+        #expect(TaskRowStyle(isDone: true).toggleActionName == "Mark as not completed")
+    }
 }

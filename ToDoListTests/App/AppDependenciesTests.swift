@@ -31,6 +31,6 @@ struct AppDependenciesViewModelTests {
 
         await viewModel.load()
 
-        #expect(viewModel.state == .loaded([item]))
+        #expect(viewModel.state == .loaded(TodoListSections(items: [item])))
     }
 }

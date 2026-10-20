@@ -9,3 +9,13 @@ import SwiftUI
         }
     }
 }
+
+/// Composition root: the only place concrete Data types are chosen.
+extension AppDependencies {
+    static func live() -> AppDependencies {
+        AppDependencies(
+            todoItemRepository: InMemoryTodoItemRepository(),
+            dateProvider: SystemDateProvider()
+        )
+    }
+}

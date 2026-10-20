@@ -13,7 +13,7 @@ struct TodoItemMapper {
             id: item.id.uuid,
             title: item.title.value,
             details: item.description,
-            categoryID: item.category.id,
+            categoryID: item.category.id.value,
             dueYear: item.dueDate?.year,
             dueMonth: item.dueDate?.month,
             dueDay: item.dueDate?.day,
@@ -29,7 +29,7 @@ struct TodoItemMapper {
             id: TodoItemID(record.id),
             title: try TodoItemTitle(record.title),
             description: record.details,
-            category: categories.first { $0.id == record.categoryID } ?? .personal,
+            category: categories.first { $0.id.value == record.categoryID } ?? .personal,
             dueDate: dueDate(of: record),
             createdAt: record.createdAt,
             completedAt: record.completedAt

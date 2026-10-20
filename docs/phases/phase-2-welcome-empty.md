@@ -1,6 +1,6 @@
 # Phase 2: Welcome / Empty Tasks
 
-**Status:** in progress (all decisions confirmed; Phases 0 and 1 done)
+**Status:** done (all decisions confirmed and implemented)
 **Design:** `to-do.pen`, frame "Welcome / Empty Tasks" (390x844)
 **Depends on:** Phase 0 (project shell, `TodoItemRepository`), Phase 1 (tokens, `PrimaryButton`, illustration)
 
@@ -54,14 +54,14 @@ Recommendation in **bold**. Status `open` until confirmed.
 | D1 | Start order | **Phase 2 starts after Phases 0 and 1 are done** (needs the test target, `PrimaryButton`, tokens and fonts). Only Xcode project edits already flagged in those phases are needed; Phase 2 itself adds none | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] `GetTodoItemsUseCase` with tests (empty, non-empty, repository failure)
-- [ ] `TodoListViewModel` with `ViewState`, tested first (loading -> empty, loading -> loaded, failure, retry)
-- [ ] `AppRoute` + router; the button navigates to a placeholder Add Task screen
-- [ ] `WelcomeView`: gradient background, `ScreenHeader` (from Phase 1), composed illustration, copy, `PrimaryButton`
-- [ ] Minimal error view with Retry
-- [ ] Previews: empty, loading, error, empty at `.accessibility3`
-- [ ] Composition root; rename the entry point; delete the `ContentView` placeholder
-- [ ] `accessibility-check` and `design-fidelity-checker` pass
+- [x] `GetTodoItemsUseCase` with tests (empty, non-empty, repository failure)
+- [x] `TodoListViewModel` with `ViewState`, tested first (loading -> empty, loading -> loaded, failure, retry)
+- [x] `AppRoute` + router; the button navigates to a placeholder Add Task screen
+- [x] `WelcomeView`: gradient background, `ScreenHeader` (from Phase 1), composed illustration, copy, `PrimaryButton`
+- [x] Minimal error view with Retry
+- [x] Previews: empty, loading, error, empty at `.accessibility3`
+- [x] Composition root; rename the entry point; delete the `ContentView` placeholder
+- [x] `accessibility-check` and `design-fidelity-checker` pass
 
 ## Out of scope
 - The Add Task form (Phase 3)
@@ -72,3 +72,10 @@ Recommendation in **bold**. Status `open` until confirmed.
 - A fresh install shows this screen with no flash of other content.
 - The button opens the placeholder Add Task screen.
 - View model and use case tests are green; the design-fidelity check shows no High differences.
+
+## Build notes
+- Use case, view model (`TodoListViewState`: loading / empty / loaded / error), `AppRouter` and the `AppDependencies.makeTodoListViewModel()` wiring are test-first. `AppDependencies` plus `live()` in `ToDoListApp.swift` together form the composition root.
+- Views are not unit tested (pure rendering). Previews: empty, empty at `.accessibility3`, error, error at `.accessibility3`, placeholder. The loading state is the bare gradient.
+- Reviews: design-fidelity found no High differences; fixed the vertical centering of the illustration block and the 16pt gaps. Accessibility: pinned button gets a `bg` background, error and placeholder views scroll, loading is labelled, error is announced, headers added.
+- Design deviation, deliberate: button bottom padding is 8 plus the safe area (design draws 32 with no home indicator).
+- Carried forward: SF Symbol `list.clipboard` vs design `clipboard-check` still unconfirmed; `PrimaryButton` icon is a fixed 18pt (does not scale with Dynamic Type); emoji in "Welcome 👋" is read aloud by VoiceOver; `TodoItemRepositorySpy` needs per-method errors and call counters in Phases 3-4; the view model drops the error cause (add typed error/logging once Data can really fail); `loaded` placeholder text is replaced in Phase 3; `dateProvider` is unused until Phase 3.

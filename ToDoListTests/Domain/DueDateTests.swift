@@ -34,9 +34,9 @@ struct DueDateTests {
         (2028, 2, 28, 2028, 2, 29),
         (2026, 12, 31, 2027, 1, 1),
     ])
-    func tomorrowHandlesMonthYearAndLeapBoundaries(y: Int, m: Int, d: Int, ey: Int, em: Int, ed: Int) {
+    func tomorrowHandlesMonthYearAndLeapBoundaries(y: Int, m: Int, d: Int, ey: Int, em: Int, ed: Int) throws {
         let provider = DateProviderStub(current: calendar.makeDate(y, m, d))
-        #expect(DueDate.tomorrow(using: provider, calendar: calendar) == DueDate(year: ey, month: em, day: ed))
+        #expect(DueDate.tomorrow(using: provider, calendar: calendar) == (try DueDate(year: ey, month: em, day: ed)))
     }
 
     @Test func nextWeekCrossesMonthEnd() {

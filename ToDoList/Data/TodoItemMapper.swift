@@ -23,21 +23,22 @@ struct TodoItemMapper {
     }
 
     /// An unknown category id falls back to Personal so a removed category never hides a task.
-    /// - Throws: `TodoItemTitleError.empty` when the stored title is blank.
+    /// - Throws: `TodoItemTitleError.empty` when the stored title is blank, or `DueDateError.invalidDate` when the
+    ///   stored due date does not exist (a corrupt record is an error, never silently a different day).
     func toDomain(_ record: TodoItemRecord) throws -> TodoItem {
         TodoItem(
             id: TodoItemID(record.id),
             title: try TodoItemTitle(record.title),
             description: record.details,
             category: categories.first { $0.id.value == record.categoryID } ?? .personal,
-            dueDate: dueDate(of: record),
+            dueDate: try dueDate(of: record),
             createdAt: record.createdAt,
             completedAt: record.completedAt
         )
     }
 
-    private func dueDate(of record: TodoItemRecord) -> DueDate? {
+    private func dueDate(of record: TodoItemRecord) throws -> DueDate? {
         guard let year = record.dueYear, let month = record.dueMonth, let day = record.dueDay else { return nil }
-        return DueDate(year: year, month: month, day: day)
+        return try DueDate(year: year, month: month, day: day)
     }
 }

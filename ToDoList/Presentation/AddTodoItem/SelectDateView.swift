@@ -3,12 +3,12 @@ import SwiftUI
 /// Bottom sheet to pick the due date: quick pills, the system graphical picker and a confirm button.
 struct SelectDateView: View {
     @Bindable var viewModel: AddTodoItemViewModel
-    var calendar: Calendar = .current
-    var today: Date = .now
 
     @Environment(\.dismiss) private var dismiss
 
-    private var adapter: DueDatePickerAdapter { DueDatePickerAdapter(calendar: calendar, fallback: today) }
+    private var calendar: Calendar { viewModel.calendar }
+
+    private var adapter: DueDatePickerAdapter { DueDatePickerAdapter(calendar: calendar, fallback: viewModel.now) }
 
     private var pickedDate: Binding<Date> {
         Binding(
@@ -17,9 +17,8 @@ struct SelectDateView: View {
         )
     }
 
-    /// New dates start today; an already-chosen earlier date stays selectable so it is not silently moved.
     private var allowedRange: PartialRangeFrom<Date> {
-        min(calendar.startOfDay(for: today), pickedDate.wrappedValue)...
+        adapter.date(for: viewModel.earliestSelectableDueDate)...
     }
 
     var body: some View {
@@ -90,14 +89,10 @@ struct SelectDateView: View {
 
 #if DEBUG
 #Preview("Date sheet") {
-    SelectDateView(
-        viewModel: .preview(),
-        calendar: Calendar(identifier: .gregorian),
-        today: Date(timeIntervalSince1970: 1_791_460_800)
-    )
+    SelectDateView(viewModel: .preview())
 }
 #Preview("Date sheet - accessibility3") {
-    SelectDateView(viewModel: .preview(), today: Date(timeIntervalSince1970: 1_791_460_800))
+    SelectDateView(viewModel: .preview())
         .dynamicTypeSize(.accessibility3)
 }
 #endif

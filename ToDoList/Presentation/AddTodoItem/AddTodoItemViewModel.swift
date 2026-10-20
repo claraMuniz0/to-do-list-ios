@@ -21,7 +21,8 @@ final class AddTodoItemViewModel {
     private var storedTitle: String
     private let addTodoItem: AddTodoItemUseCase
     private let dateProvider: DateProvider
-    private let calendar: Calendar
+    /// The injected calendar and clock, shared with the date sheet so it never reads `Calendar.current` or `.now`.
+    let calendar: Calendar
     private let dueDateLabel: DueDateLabel
 
     init(
@@ -51,6 +52,15 @@ final class AddTodoItemViewModel {
     }
 
     var dueDateText: String { dueDateLabel.text(for: dueDate) }
+
+    var now: Date { dateProvider.now() }
+
+    /// New dates start today; an already-chosen earlier date stays reachable so it is not silently moved.
+    var earliestSelectableDueDate: DueDate {
+        let today = DueDate.today(using: dateProvider, calendar: calendar)
+        guard let dueDate else { return today }
+        return min(today, dueDate)
+    }
 
     var selectedQuickDate: QuickDate? {
         guard let dueDate else { return nil }

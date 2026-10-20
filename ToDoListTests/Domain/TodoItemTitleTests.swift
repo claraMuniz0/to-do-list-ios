@@ -33,4 +33,19 @@ struct TodoItemTitleTests {
     @Test func equalTitlesAreEqual() throws {
         #expect(try TodoItemTitle(" A ") == TodoItemTitle("A"))
     }
+
+    @Test func acceptsExactlyTheMaximumLength() throws {
+        #expect(try TodoItemTitle(String(repeating: "a", count: TodoItemTitle.maxLength)).value.count == 120)
+    }
+
+    @Test func rejectsATitleOverTheMaximumLength() {
+        #expect(throws: TodoItemTitleError.tooLong) {
+            try TodoItemTitle(String(repeating: "a", count: TodoItemTitle.maxLength + 1))
+        }
+    }
+
+    @Test func measuresLengthAfterTrimming() throws {
+        let padded = "  " + String(repeating: "a", count: TodoItemTitle.maxLength) + "  "
+        #expect(try TodoItemTitle(padded).value.count == TodoItemTitle.maxLength)
+    }
 }

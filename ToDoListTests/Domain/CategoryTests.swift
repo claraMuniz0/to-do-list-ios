@@ -3,43 +3,60 @@ import Testing
 
 struct CategoryTests {
     @Test func seedsWorkPersonalAndShoppingInOrder() {
-        #expect(Category.defaults.map(\.name) == ["Work", "Personal", "Shopping"])
+        #expect(Category.defaults.map(\.name.value) == ["Work", "Personal", "Shopping"])
     }
 
     @Test func seededCategoriesHaveStableDistinctIDs() {
-        #expect(Category.defaults.map(\.id) == ["work", "personal", "shopping"])
-    }
-
-    @Test func rejectsEmptyName() {
-        #expect(throws: CategoryError.emptyName) {
-            try Category(id: "health", name: "  ", colorKey: "green")
-        }
-    }
-
-    @Test func rejectsEmptyStringName() {
-        #expect(throws: CategoryError.emptyName) {
-            try Category(id: "health", name: "", colorKey: "green")
-        }
-    }
-
-    @Test func seededIDsAreDistinct() {
+        #expect(Category.defaults.map(\.id.value) == ["work", "personal", "shopping"])
         #expect(Set(Category.defaults.map(\.id)).count == Category.defaults.count)
     }
 
-    @Test func differentIDsWithTheSameNameAreNotEqual() throws {
-        let a = try Category(id: "a", name: "Health", colorKey: "green")
-        let b = try Category(id: "b", name: "Health", colorKey: "green")
-        #expect(a != b)
+    @Test func seededCategoriesUseTheirOwnIDAsColorKey() {
+        #expect(Category.defaults.map(\.color.key) == ["work", "personal", "shopping"])
     }
 
-    @Test func trimsName() throws {
-        let category = try Category(id: "health", name: " Health ", colorKey: "green")
-        #expect(category.name == "Health")
+    @Test func differentIDsWithTheSameNameAreNotEqual() throws {
+        let name = try CategoryName("Health"), color = CategoryColor("green")
+        #expect(Category(id: try CategoryID("a"), name: name, color: color)
+            != Category(id: try CategoryID("b"), name: name, color: color))
     }
 
     @Test func sameValuesAreEqual() throws {
-        let a = try Category(id: "health", name: "Health", colorKey: "green")
-        let b = try Category(id: "health", name: "Health", colorKey: "green")
-        #expect(a == b)
+        func make() throws -> Category {
+            Category(id: try CategoryID("health"), name: try CategoryName("Health"), color: CategoryColor("green"))
+        }
+        #expect(try make() == make())
+    }
+}
+
+struct CategoryIDTests {
+    @Test func rejectsBlankID() {
+        #expect(throws: CategoryIDError.empty) { try CategoryID("  ") }
+        #expect(throws: CategoryIDError.empty) { try CategoryID("") }
+    }
+
+    @Test func trimsID() throws {
+        #expect(try CategoryID(" work ").value == "work")
+    }
+}
+
+struct CategoryNameTests {
+    @Test func rejectsBlankName() {
+        #expect(throws: CategoryNameError.empty) { try CategoryName("  ") }
+        #expect(throws: CategoryNameError.empty) { try CategoryName("") }
+    }
+
+    @Test func trimsName() throws {
+        #expect(try CategoryName(" Health ").value == "Health")
+    }
+}
+
+struct CategoryColorTests {
+    @Test func trimsTheKey() {
+        #expect(CategoryColor(" green ").key == "green")
+    }
+
+    @Test func sameKeysAreEqual() {
+        #expect(CategoryColor("green") == CategoryColor("green"))
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+/// Shared collaborators and the factories that wire view models from them; built only in the composition root.
 struct AppDependencies {
     let todoItemRepository: TodoItemRepository
     let dateProvider: DateProvider

@@ -33,6 +33,8 @@ final class SwiftDataTodoItemRepository: TodoItemRepository {
         try save()
     }
 
+    /// Copies every mutable field but never `id` or `createdAt`, which are fixed at creation.
+    /// - Throws: `TodoItemRepositoryError.notFound` for an unknown id.
     func update(_ item: TodoItem) throws {
         guard let stored = try record(for: item.id) else { throw TodoItemRepositoryError.notFound }
         let updated = mapper.toRecord(item)

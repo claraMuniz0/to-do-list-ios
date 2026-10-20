@@ -6,8 +6,11 @@ import SwiftData
 final class TodoItemRecord {
     @Attribute(.unique) var id: UUID
     var title: String
+    /// Not `description`, which would clash with `CustomStringConvertible` on a class.
     var details: String?
+    /// A plain id, not a relationship or a copy of the name and color, so Phase 7 only adds a category record.
     var categoryID: String
+    /// The due date is three integers (all nil or all set), so a time-zone change never shifts the stored day.
     var dueYear: Int?
     var dueMonth: Int?
     var dueDay: Int?

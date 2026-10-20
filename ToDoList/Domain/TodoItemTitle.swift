@@ -10,6 +10,7 @@ enum TodoItemTitleError: Error, Equatable {
 /// - Throws: `TodoItemTitleError.empty` when the input is empty or only whitespace;
 ///   `.tooLong` when the trimmed text exceeds `maxLength`. The form limits typing, so users never see this error.
 struct TodoItemTitle: Equatable {
+    /// The form cuts input at this length, so the `.tooLong` error is a safety net, not a user-facing message.
     static let maxLength = 120
 
     let value: String

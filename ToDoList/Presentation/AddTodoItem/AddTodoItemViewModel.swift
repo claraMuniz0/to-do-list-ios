@@ -13,6 +13,7 @@ final class AddTodoItemViewModel {
     let categories = Category.defaults
     var details = ""
     var category: Category = .personal
+    /// `nil` means no due date; it starts as today and the date sheet's Clear removes it.
     var dueDate: DueDate?
     private(set) var isSaving = false
     private(set) var saveFailed = false
@@ -44,6 +45,7 @@ final class AddTodoItemViewModel {
         set { storedTitle = String(newValue.prefix(TodoItemTitle.maxLength)) }
     }
 
+    /// Also false while a save is running, which blocks a double submit.
     var canSave: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving
     }

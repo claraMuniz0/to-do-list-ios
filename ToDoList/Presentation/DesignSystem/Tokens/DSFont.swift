@@ -1,0 +1,42 @@
+import SwiftUI
+
+/// Typography tokens. Every token scales with Dynamic Type through its `textStyle`.
+/// Falls back to the system font until the family files are bundled and registered.
+enum DSFont: CaseIterable {
+    case screenTitle, emptyTitle, greeting
+    case rowTitle, rowDescription, inputText
+    case chipTag, chipOption, pill, button, toast, stepCount
+
+    struct Spec: Equatable {
+        let family: String
+        let size: CGFloat
+        let weight: Font.Weight
+        let isItalic: Bool
+        let textStyle: Font.TextStyle?
+    }
+
+    var spec: Spec {
+        switch self {
+        case .screenTitle: Spec(family: "Fraunces", size: 36, weight: .semibold, isItalic: true, textStyle: .largeTitle)
+        case .emptyTitle: Spec(family: "Fraunces", size: 26, weight: .bold, isItalic: false, textStyle: .title)
+        case .greeting: Spec(family: "Caveat", size: 24, weight: .semibold, isItalic: false, textStyle: .title2)
+        case .rowTitle: Spec(family: "Bricolage Grotesque", size: 16, weight: .semibold, isItalic: false, textStyle: .body)
+        case .rowDescription: Spec(family: "Bricolage Grotesque", size: 14, weight: .regular, isItalic: false, textStyle: .subheadline)
+        case .inputText: Spec(family: "Bricolage Grotesque", size: 16, weight: .regular, isItalic: false, textStyle: .body)
+        case .chipTag, .stepCount: Spec(family: "Outfit", size: 12, weight: .semibold, isItalic: false, textStyle: .caption)
+        case .chipOption, .pill: Spec(family: "Outfit", size: 14, weight: .semibold, isItalic: false, textStyle: .subheadline)
+        case .button: Spec(family: "Outfit", size: 17, weight: .semibold, isItalic: false, textStyle: .headline)
+        case .toast: Spec(family: "Outfit", size: 15, weight: .semibold, isItalic: false, textStyle: .callout)
+        }
+    }
+
+    var font: Font {
+        let spec = spec
+        let base = Font.custom(spec.family, size: spec.size, relativeTo: spec.textStyle ?? .body).weight(spec.weight)
+        return spec.isItalic ? base.italic() : base
+    }
+}
+
+extension View {
+    func dsFont(_ token: DSFont) -> some View { font(token.font) }
+}

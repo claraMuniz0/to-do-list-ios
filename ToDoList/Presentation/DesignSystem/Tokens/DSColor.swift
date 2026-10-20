@@ -26,4 +26,5 @@ enum DSColor {
 
     static let shadowSoft = Color("shadow-soft")
     static let shadowAccent = Color("shadow-accent")
+    static let toastShadow = Color("toast-shadow")
 }

@@ -77,6 +77,7 @@ struct AddTodoItemView: View {
                     .dsFont(.rowDescription)
                     .foregroundStyle(DSColor.danger)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .onAppear { AccessibilityNotification.Announcement("Couldn't save the task. Try again.").post() }
             }
             PrimaryButton(title: "Save task", systemImage: "checkmark", fullWidth: true, isEnabled: viewModel.canSave) {
                 Task { if await viewModel.save() { onSaved() } }

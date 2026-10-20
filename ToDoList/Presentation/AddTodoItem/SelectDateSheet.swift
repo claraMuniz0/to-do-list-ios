@@ -31,11 +31,15 @@ struct SelectDateSheet: View {
                         .foregroundStyle(DSColor.textPrimary)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()
-                    Button("Clear") { viewModel.clearDueDate() }
-                        .dsFont(.pill)
-                        .foregroundStyle(DSColor.accent)
-                        .frame(minHeight: DSTouchTarget.minimum)
-                        .buttonStyle(.plain)
+                    Button { viewModel.clearDueDate() } label: {
+                        Text("Clear")
+                            .dsFont(.pill)
+                            .foregroundStyle(DSColor.accent)
+                            .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear due date")
                 }
                 quickPills
                 DatePicker("Due date", selection: pickedDate, in: allowedRange, displayedComponents: .date)

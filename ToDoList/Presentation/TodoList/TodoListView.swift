@@ -55,7 +55,7 @@ struct TodoListView: View {
             .padding(.top, 8)
             .padding(.bottom, 16)
         }
-        .background(DSColor.bg.ignoresSafeArea())
+        .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) { quickAdd }
     }
 

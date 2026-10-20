@@ -47,12 +47,15 @@ struct SelectDateSheet: View {
                     .labelsHidden()
                     .tint(DSColor.accent)
                     .environment(\.calendar, calendar)
-                PrimaryButton(title: "Done", systemImage: "checkmark", fullWidth: true) { dismiss() }
+                PrimaryButton(title: "Set date", systemImage: "checkmark", fullWidth: true) { dismiss() }
             }
             .padding(20)
         }
-        .background(DSColor.bg.ignoresSafeArea())
-        .presentationDetents([.large])
+        .background(DSColor.surface.ignoresSafeArea())
+        .presentationBackground(DSColor.surface)
+        .presentationCornerRadius(28)
+        // Designed as a partial sheet; `.large` stays available for accessibility text sizes.
+        .presentationDetents([.height(580), .large])
         .presentationDragIndicator(.visible)
     }
 

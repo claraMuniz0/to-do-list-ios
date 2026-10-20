@@ -37,7 +37,7 @@ struct AddTodoItemView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .bottom) { saveBar }
-        .background(DSColor.bg.ignoresSafeArea())
+        .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
         .accessibilityAction(.escape, onClose)
         .onAppear { isTitleFocused = true }
         .sheet(isPresented: $isDateSheetPresented) {

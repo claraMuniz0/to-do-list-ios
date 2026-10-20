@@ -33,6 +33,7 @@ struct DesignSystemGallery: View {
                             FilterPill(title: "All", isSelected: true) {}
                             FilterPill(title: "Active", isSelected: false) {}
                             FilterPill(title: "Done", isSelected: false) {}
+                        
                         }
                     }
                 }

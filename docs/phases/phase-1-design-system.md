@@ -68,7 +68,7 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 
 ### Components
 - [ ] `CategoryChip` (tag and option styles, selected state)
-- [ ] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.4, no shadow; undesigned, to confirm with the design)
+- [ ] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.6, no shadow; confirmed by the user)
 - [ ] `FilterPill` (selected state)
 - [ ] `ScreenHeader` (subtitle in Caveat accent + italic Fraunces title; used by Welcome, Add Task and Task List)
 - [ ] `AddTaskInput` (placeholder, options button, add button)

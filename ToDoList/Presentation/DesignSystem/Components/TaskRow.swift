@@ -57,6 +57,23 @@ struct TaskRow: View {
 
     private var style: TaskRowStyle { TaskRowStyle(isDone: isDone) }
 
+    private var chip: some View {
+        CategoryChip(
+            label: categoryName,
+            palette: palette,
+            backgroundOverride: style.chipBackground(for: palette),
+            foregroundOverride: style.chipForeground(for: palette)
+        )
+    }
+
+    @ViewBuilder private var stepCount: some View {
+        if let stepProgress {
+            Label("\(stepProgress.completed)/\(stepProgress.total)", systemImage: "checklist")
+                .dsFont(.stepCount)
+                .foregroundStyle(DSColor.textMuted)
+        }
+    }
+
     var body: some View {
         HStack(spacing: 4) {
             checkbox
@@ -70,18 +87,9 @@ struct TaskRow: View {
                         .dsFont(.rowDescription)
                         .foregroundStyle(DSColor.textSecondary)
                 }
-                HStack(spacing: 8) {
-                    CategoryChip(
-                        label: categoryName,
-                        palette: palette,
-                        backgroundOverride: style.chipBackground(for: palette),
-                        foregroundOverride: style.chipForeground(for: palette)
-                    )
-                    if let stepProgress {
-                        Label("\(stepProgress.completed)/\(stepProgress.total)", systemImage: "checklist")
-                            .dsFont(.stepCount)
-                            .foregroundStyle(DSColor.textMuted)
-                    }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { chip; stepCount }
+                    VStack(alignment: .leading, spacing: 6) { chip; stepCount }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

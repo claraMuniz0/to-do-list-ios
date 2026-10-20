@@ -28,10 +28,12 @@ struct DesignSystemGallery: View {
                 }
 
                 section("Filter pill") {
-                    HStack {
-                        FilterPill(title: "All", isSelected: true) {}
-                        FilterPill(title: "Active", isSelected: false) {}
-                        FilterPill(title: "Done", isSelected: false) {}
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            FilterPill(title: "All", isSelected: true) {}
+                            FilterPill(title: "Active", isSelected: false) {}
+                            FilterPill(title: "Done", isSelected: false) {}
+                        }
                     }
                 }
 

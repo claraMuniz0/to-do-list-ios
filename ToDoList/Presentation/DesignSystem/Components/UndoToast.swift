@@ -5,24 +5,45 @@ struct UndoToast: View {
     let message: String
     let onUndo: () -> Void
 
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "trash")
-                .font(.system(size: 18, weight: .regular))
-                .accessibilityHidden(true)
-            Text(message)
+    private var icon: some View {
+        Image(systemName: "trash")
+            .font(.system(size: 18, weight: .regular))
+            .accessibilityHidden(true)
+    }
+
+    private var messageText: some View {
+        Text(message).dsFont(.toast)
+    }
+
+    private var undoButton: some View {
+        Button(action: onUndo) {
+            Text("Undo")
                 .dsFont(.toast)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Button(action: onUndo) {
-                Text("Undo")
-                    .dsFont(.toast)
-                    .foregroundStyle(DSColor.toastAction)
-                    .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
-                    .contentShape(Rectangle())
+                .foregroundStyle(DSColor.toastAction)
+                .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Undo")
+        .accessibilityHint("Restores the deleted task")
+    }
+
+    /// Falls back to stacking the Undo button under the message when the text is too large for one line.
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                icon
+                messageText.frame(maxWidth: .infinity, alignment: .leading)
+                undoButton
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Undo")
-            .accessibilityHint("Restores the deleted task")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 12) {
+                    icon
+                    messageText
+                }
+                undoButton
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .foregroundStyle(DSColor.onAccent)
         .padding(.vertical, 2)

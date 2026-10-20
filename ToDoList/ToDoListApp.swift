@@ -1,15 +1,18 @@
 import SwiftUI
 
 @main struct ToDoListApp: App {
-    private let dependencies = AppDependencies.live()
+    @State private var viewModel: TodoListViewModel
+    @State private var router = AppRouter()
 
     init() {
         FontRegistrar.registerAll()
+        let dependencies = AppDependencies.live()
+        _viewModel = State(initialValue: dependencies.makeTodoListViewModel())
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TodoListView(viewModel: viewModel, router: router)
                 .preferredColorScheme(.light)
         }
     }

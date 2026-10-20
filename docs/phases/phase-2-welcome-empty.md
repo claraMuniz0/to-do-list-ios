@@ -1,6 +1,6 @@
 # Phase 2: Welcome / Empty Tasks
 
-**Status:** not started (all decisions confirmed, ready to start after Phases 0 and 1)
+**Status:** in progress (all decisions confirmed; Phases 0 and 1 done)
 **Design:** `to-do.pen`, frame "Welcome / Empty Tasks" (390x844)
 **Depends on:** Phase 0 (project shell, `TodoItemRepository`), Phase 1 (tokens, `PrimaryButton`, illustration)
 

@@ -3,6 +3,8 @@ import SwiftUI
 /// One scrolling screen that shows every design-system component in every state, for visual review.
 struct DesignSystemGallery: View {
     @State private var inputText = ""
+    @State private var titleText = ""
+    @State private var notesText = ""
 
     var body: some View {
         ScrollView {
@@ -46,6 +48,18 @@ struct DesignSystemGallery: View {
                     TaskRow(title: "Prepare slides", description: "Quarterly review", categoryName: "Work", palette: .blue, isDone: false, onToggle: {})
                     TaskRow(title: "Buy milk", description: nil, categoryName: "Shopping", palette: .green, isDone: false, onToggle: {})
                     TaskRow(title: "Call mom", description: nil, categoryName: "Personal", palette: .brick, isDone: true, onToggle: {})
+                }
+
+                section("Form controls") {
+                    FormField(label: "Task name") { TextInputField(text: $titleText) }
+                    FormField(label: "Description", isOptional: true) { TextAreaField(text: $notesText) }
+                    FormField(label: "Due date") { DateRow(value: "Today, Oct 8") {} }
+                    CircleIconButton(accessibilityLabel: "Close") {}
+                }
+
+                section("Section header") {
+                    SectionHeader(title: "To do", count: 3)
+                    SectionHeader(title: "Completed", count: 1)
                 }
 
                 section("Undo toast") {

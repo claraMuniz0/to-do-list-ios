@@ -1,6 +1,6 @@
 # Phase 1: Design system components
 
-**Status:** built; fonts bundled (OFL, licenses in docs/licenses/fonts, registered at runtime); visual check in the simulator still pending
+**Status:** done (PR #3). Fonts bundled (OFL, licenses in `docs/licenses/fonts`, registered at runtime), app icon and app name "Do it later" set, visual check done on a real device
 **Design:** `to-do.pen`, frame "Components" + the screens that use them
 **Depends on:** Phase 0 (project structure, test target)
 
@@ -58,24 +58,24 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 
 ## Scope
 ### Tokens
-- [ ] Color sets in the asset catalog + `Color` extension (names mirror the .pen variables)
-- [ ] Font registration + typography tokens that scale with Dynamic Type
-- [ ] Radius and shadow tokens (incl. illustration disc shadow `#D94A2B26`, y 8, blur 24)
-- [ ] Toast tokens: background `#2B2118`, Undo color `#FFB4A0`; the toast uses Outfit (`font-ui`) for the message and Undo, not DM Sans (Phase 4 C4)
-- [ ] Welcome background gradient: top `#FFE8D6` to `bg` at 38%
-- [ ] Illustration dot colors: green `#7BC8A0`, peach `#FFC9B8`, blue `#B8C6FF` (coral is `accent`)
-- [ ] Promote the loose raw values (toast, done chip) to named tokens
+- [x] Color sets in the asset catalog + `Color` extension (names mirror the .pen variables)
+- [x] Font registration + typography tokens that scale with Dynamic Type
+- [x] Radius and shadow tokens (incl. illustration disc shadow `#D94A2B26`, y 8, blur 24)
+- [x] Toast tokens: background `#2B2118`, Undo color `#FFB4A0`; the toast uses Outfit (`font-ui`) for the message and Undo, not DM Sans (Phase 4 C4)
+- [x] Welcome background gradient: top `#FFE8D6` to `bg` at 38% (`DSGradient.welcome`)
+- [x] Illustration dot colors: green `#7BC8A0`, peach `#FFC9B8`, blue `#B8C6FF` (coral is `accent`)
+- [x] Promote the loose raw values (toast, done chip) to named tokens
 
 ### Components
-- [ ] `CategoryChip` (tag and option styles, selected state)
-- [ ] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.6, no shadow; confirmed by the user)
-- [ ] `FilterPill` (selected state)
-- [ ] `ScreenHeader` (subtitle in Caveat accent + italic Fraunces title; used by Welcome, Add Task and Task List)
-- [ ] `AddTaskInput` (placeholder, options button, add button)
-- [ ] `TaskRow` (open and done states, optional description, category chip, step count slot unused in MVP)
-- [ ] `UndoToast` (message + Undo action)
-- [ ] `EmptyStateIllustration`: composed from shapes, not a single icon: 200pt `accent-soft` halo, 140pt white disc with warm shadow, a 64pt SF Symbol in accent, and 4 decorative dots (coral 28, green 18, peach 20, blue 12). Parameters: symbol, size, dot set. Reused by Welcome `clipboard-check`, All Done `party-popper`, Search No Results `search-x` (48pt; check in the design whether it uses the same composition)
-- [ ] `DesignSystemGallery` screen
+- [x] `CategoryChip` (tag and option styles, selected state)
+- [x] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.6, no shadow; confirmed by the user)
+- [x] `FilterPill` (selected state)
+- [x] `ScreenHeader` (subtitle in Caveat accent + italic Fraunces title; used by Welcome, Add Task and Task List)
+- [x] `AddTaskInput` (placeholder, options button, add button)
+- [x] `TaskRow` (open and done states, optional description, category chip, step count slot unused in MVP)
+- [x] `UndoToast` (message + Undo action)
+- [x] `EmptyStateIllustration`: composed from shapes, not a single icon: 200pt `accent-soft` halo, 140pt white disc with warm shadow, a 64pt SF Symbol in accent, and 4 decorative dots (coral 28, green 18, peach 20, blue 12). Parameters: symbol, size, dot set. Reused by Welcome `clipboard-check`, All Done `party-popper`, Search No Results `search-x` (48pt; check in the design whether it uses the same composition)
+- [x] `DesignSystemGallery` screen
 
 ### Tests
 Visual components are mostly previews; test only logic: token lookups return the expected colors, category to chip-style mapping, and row state to visual style mapping.
@@ -93,3 +93,18 @@ Visual components are mostly previews; test only logic: token lookups return the
 - The gallery screen renders every component in every state, in a light-only app.
 - Token and mapping tests are green.
 - Nothing in Domain depends on this layer.
+
+## Build notes
+- Colors live in the asset catalog (`DSColor`, `ChipPalette`); added tokens beyond the design variables: `border-control` (`#8E8272`, a stronger edge for form fields because `border` is ~1.2:1), `toast-shadow`, `done-chip-bg`, `shadow-soft`, `shadow-accent`.
+- Fonts are variable files registered at runtime by `FontRegistrar` (no Info.plist or project edit). Bricolage Grotesque defaults to optical size 96 (display cut), so its tokens are built through UIKit with `opsz` matched to the point size (`DSFont.uiFont(for:)`).
+- Shadows are cast from the background shape only (`dsBackground`) so text and icons never get one.
+- Disabled `PrimaryButton`: opacity 0.6, no shadow (confirmed).
+- `FilterPill` is 44pt tall (the design is ~36pt) to meet the touch-target rule.
+- `EmptyStateIllustration` takes a `layout:` (`.welcome`, `.celebration`, `.noResults`) because the design uses three geometries.
+- Project-file edits made with permission: `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` and `INFOPLIST_KEY_CFBundleDisplayName = "Do it later"`.
+- Simulator text can look soft; checked on a real device and it renders fine.
+
+## Carried forward
+- "+ New" option chip (surface fill, border, accent text) is not a palette chip: Phase 7.
+- Toast VoiceOver announcement and option-chip button traits belong to the screens that host them.
+- SF Symbols for the illustrations (`list.clipboard`, `party.popper`, `magnifyingglass`) and `checklist` are unconfirmed proposals.

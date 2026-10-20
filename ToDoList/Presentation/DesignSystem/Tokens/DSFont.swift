@@ -15,6 +15,7 @@ enum DSFont: CaseIterable {
         let textStyle: Font.TextStyle?
     }
 
+    /// Several tokens share a spec (`chipTag`/`stepCount`, `chipOption`/`pill`) on purpose: they are separate tokens so each can change without affecting the other.
     var spec: Spec {
         switch self {
         case .screenTitle: Spec(family: "Fraunces", size: 36, weight: .semibold, isItalic: true, textStyle: .largeTitle)
@@ -33,6 +34,7 @@ enum DSFont: CaseIterable {
     /// Registers the bundled files once, lazily, so previews (which skip the App init) get them too.
     private static let registerFonts: Void = { FontRegistrar.registerAll() }()
 
+    /// Falls back to `.body` scaling when `textStyle` is nil. Reading it registers the fonts first, so call sites never need to.
     var font: Font {
         Self.registerFonts
         let spec = spec

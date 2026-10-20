@@ -14,6 +14,7 @@ enum DSColor {
     static let onAccent = Color("on-accent")
     static let danger = Color("danger")
 
+    /// Neutral chip fill for a done `TaskRow`, replacing the category palette so done rows read as muted.
     static let doneChipBackground = Color("done-chip-bg")
     static let toastBackground = Color("toast-bg")
     static let toastAction = Color("toast-action")
@@ -22,6 +23,7 @@ enum DSColor {
     static let illustrationGreen = Color("illustration-green")
     static let illustrationPeach = Color("illustration-peach")
     static let illustrationBlue = Color("illustration-blue")
+    /// Shadow tint for the illustration disc; kept separate from `shadowSoft` because it is blurred, not hard-edged.
     static let illustrationShadow = Color("illustration-shadow")
 
     static let shadowSoft = Color("shadow-soft")

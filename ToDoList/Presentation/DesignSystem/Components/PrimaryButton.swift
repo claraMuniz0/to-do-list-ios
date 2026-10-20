@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Visual state of a `PrimaryButton`. The design does not define a disabled state yet;
-/// opacity 0.4 without shadow is the confirmed Phase 1 choice.
+/// opacity 0.6 without shadow is the confirmed Phase 1 choice.
 struct PrimaryButtonAppearance: Equatable {
     let isEnabled: Bool
 
@@ -9,6 +9,7 @@ struct PrimaryButtonAppearance: Equatable {
     var showsShadow: Bool { isEnabled }
 }
 
+/// When `isEnabled` is false the button is dimmed, loses its shadow and ignores taps (it stays visible rather than hidden).
 struct PrimaryButton: View {
     let title: String
     let systemImage: String?

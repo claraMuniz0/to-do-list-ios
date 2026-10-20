@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Submitting from the keyboard and tapping the plus both call `onAdd`; the caller must ignore empty text.
 struct AddTaskInput: View {
     @Binding var text: String
     let placeholder: String

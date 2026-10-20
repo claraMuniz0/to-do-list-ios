@@ -4,6 +4,7 @@ import Foundation
 /// Registers the bundled font files at runtime, so no Info.plist `UIAppFonts` entry is needed.
 /// All five families are SIL OFL; license texts live in `docs/licenses/fonts`.
 enum FontRegistrar {
+    /// Base names of the `.ttf` files in the bundle; a name missing from the bundle is reported as a failure by `registerAll`.
     static let fontFileNames = [
         "Fraunces", "Fraunces-Italic", "BricolageGrotesque", "Outfit", "Caveat",
         "DMMono-Regular", "DMMono-Medium",

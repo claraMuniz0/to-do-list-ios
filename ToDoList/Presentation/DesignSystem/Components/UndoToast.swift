@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// The trash icon is fixed, so this toast only fits delete-undo. The "Undo" button's hint names the deleted task, which the host must restore.
 struct UndoToast: View {
     let message: String
     let onUndo: () -> Void

@@ -26,6 +26,8 @@ struct TaskRowStepProgress: Equatable {
     let total: Int
 }
 
+/// The description is hidden when `isDone`, and the checkbox is the only interactive element: the row body is not tappable.
+/// `stepProgress` is display data only; the row never computes it.
 struct TaskRow: View {
     let title: String
     let description: String?

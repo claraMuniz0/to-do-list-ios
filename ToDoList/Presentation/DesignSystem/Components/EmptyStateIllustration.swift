@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Palette for illustration dots, kept apart from `ChipPalette` because the two evolve independently.
 enum IllustrationDotColor: Equatable {
     case coral, green, peach, blue
 
@@ -54,6 +55,7 @@ struct EmptyStateIllustrationLayout: Equatable {
     )
 }
 
+/// Decorative only: hidden from VoiceOver, so the surrounding screen must carry the meaning in its own text.
 struct EmptyStateIllustration: View {
     let symbol: String
     let layout: EmptyStateIllustrationLayout

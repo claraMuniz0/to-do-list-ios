@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Corner radii. `pill` is deliberately huge so any height renders fully rounded.
 enum DSRadius {
     static let md: CGFloat = 16
     static let pill: CGFloat = 999
@@ -8,10 +9,13 @@ enum DSRadius {
 /// Visual sizes vs. hit areas: interactive controls keep at least `minimum` points to tap.
 enum DSTouchTarget {
     static let minimum: CGFloat = 44
+    /// Visual size of the options icon frame; the hit area is still padded up to `minimum`.
     static let moreOptions: CGFloat = 40
+    /// Drawn ring size of the task checkbox; the tappable frame is `minimum`.
     static let checkboxRing: CGFloat = 26
 }
 
+/// A hard-edged offset shadow (radius 0) matches the design's flat look; only illustration and toast are blurred.
 struct DSShadow: Equatable {
     let color: Color
     let radius: CGFloat
@@ -31,6 +35,7 @@ extension View {
         background { shape.fill(fill).dsShadow(shadow) }
     }
 
+    /// Applies the shadow without horizontal offset, as no design token uses one.
     func dsShadow(_ shadow: DSShadow) -> some View {
         self.shadow(color: shadow.color, radius: shadow.radius, x: 0, y: shadow.y)
     }

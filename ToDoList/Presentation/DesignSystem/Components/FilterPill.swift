@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Selection is conveyed by the `.isSelected` trait as well as color, so it does not rely on color alone.
 struct FilterPill: View {
     let title: String
     let isSelected: Bool

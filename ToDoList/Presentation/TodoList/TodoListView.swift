@@ -56,6 +56,8 @@ struct TodoListView: View {
             .padding(.bottom, 16)
         }
         .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
+        .scrollDismissesKeyboard(.immediately)
+        .dismissKeyboardOnTap()
         .safeAreaInset(edge: .bottom, spacing: 0) { quickAdd }
     }
 

@@ -39,7 +39,8 @@ struct AddTodoItemView: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboard(.immediately)
+        .dismissKeyboardOnTap()
         .safeAreaInset(edge: .bottom) { saveBar }
         .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
         .accessibilityAction(.escape, onClose)

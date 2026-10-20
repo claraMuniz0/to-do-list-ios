@@ -107,7 +107,7 @@ struct TodoListViewModelTests {
         done.complete(at: Date(timeIntervalSince1970: 5))
         let (viewModel, _) = makeSUT(items: [makeTodoItem(title: "Open"), done])
         await viewModel.load()
-        guard case .loaded(let sections) = viewModel.state else { return Issue.record("not loaded") }
+        guard case .loaded(let sections) = viewModel.state else { Issue.record("not loaded"); return }
         #expect(sections.todo.map(\.title.value) == ["Open"])
         #expect(sections.completed.map(\.title.value) == ["Done"])
     }
@@ -137,7 +137,7 @@ struct TodoListViewModelTests {
 
         await viewModel.toggle(id: item.id)
 
-        guard case .loaded(let sections) = viewModel.state else { return Issue.record("not loaded") }
+        guard case .loaded(let sections) = viewModel.state else { Issue.record("not loaded"); return }
         #expect(sections.todo.isEmpty)
         #expect(sections.completed.map(\.id) == [item.id])
         #expect(spy.updatedItems.count == 1)
@@ -151,7 +151,7 @@ struct TodoListViewModelTests {
 
         await viewModel.toggle(id: item.id)
 
-        guard case .loaded(let sections) = viewModel.state else { return Issue.record("not loaded") }
+        guard case .loaded(let sections) = viewModel.state else { Issue.record("not loaded"); return }
         #expect(sections.todo.map(\.id) == [item.id])
     }
 
@@ -162,7 +162,7 @@ struct TodoListViewModelTests {
         await viewModel.toggle(id: TodoItemID())
 
         #expect(viewModel.actionFailed)
-        guard case .loaded(let sections) = viewModel.state else { return Issue.record("not loaded") }
+        guard case .loaded(let sections) = viewModel.state else { Issue.record("not loaded"); return }
         #expect(sections.todo.count == 1)
     }
 
@@ -187,7 +187,7 @@ struct TodoListViewModelTests {
 
         #expect(added)
         #expect(spy.storedItems.last?.title.value == "Pay rent")
-        guard case .loaded(let sections) = viewModel.state else { return Issue.record("not loaded") }
+        guard case .loaded(let sections) = viewModel.state else { Issue.record("not loaded"); return }
         #expect(sections.todo.count == 2)
     }
 

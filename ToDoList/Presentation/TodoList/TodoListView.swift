@@ -26,8 +26,8 @@ struct TodoListView: View {
                 .accessibilityLabel("Loading tasks")
         case .empty:
             WelcomeView(onAddFirstTask: { router.present(.addTodoItem) })
-        case .loaded(let items):
-            Text("\(items.count) tasks")
+        case .loaded(let sections):
+            Text("\(sections.todo.count) tasks")
         case .error:
             TodoListErrorView(onRetry: { Task { await viewModel.retry() } })
         }

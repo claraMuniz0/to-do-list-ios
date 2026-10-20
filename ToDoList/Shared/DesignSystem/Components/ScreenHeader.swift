@@ -12,9 +12,10 @@ struct ScreenHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(subtitle)
+            Text(subtitle + " ")
                 .dsFont(.greeting)
                 .foregroundStyle(DSColor.accent)
+            
             Text(title)
                 .dsFont(.screenTitle)
                 .foregroundStyle(DSColor.accent)

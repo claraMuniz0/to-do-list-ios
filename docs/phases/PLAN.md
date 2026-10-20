@@ -16,7 +16,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - **Components seen on screens but not yet in the library:** Save Button, Category Option, Quick Add Input, Undo Toast.
 - **Done when:** a preview screen renders every component, with no business logic.
 
-## Phase 2: Welcome / Empty Tasks
+## Phase 2: Welcome / Empty Tasks (done)
 - Welcome screen with the "Add First Task" button.
 - First-run / empty state and navigation to Add Task.
 - **Done when:** a fresh install shows this screen and the button opens an empty Add Task screen.

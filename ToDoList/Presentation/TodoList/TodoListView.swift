@@ -73,6 +73,8 @@ struct TodoListView: View {
                     isDone: isDone,
                     onToggle: { Task { await viewModel.toggle(id: item.id) } }
                 )
+                // A toggled row changes section; without a state-dependent identity LazyVStack reuses it and keeps the old look.
+                .id("\(item.id.uuid)-\(isDone)")
             }
         }
     }

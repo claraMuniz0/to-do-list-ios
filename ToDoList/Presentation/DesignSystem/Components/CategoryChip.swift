@@ -12,6 +12,19 @@ enum CategoryChipStyle: Equatable, CaseIterable {
     var selectionStrokeWidth: CGFloat { self == .tag ? 0 : 2 }
 }
 
+/// Resolves chip colors: an override (e.g. a done `TaskRow`) wins over the palette.
+struct CategoryChipColors {
+    let background: Color
+    let foreground: Color
+
+    init(palette: ChipPalette, backgroundOverride: Color?, foregroundOverride: Color?) {
+        background = backgroundOverride ?? palette.background
+        foreground = foregroundOverride ?? palette.foreground
+    }
+
+    static func stroke(isSelected: Bool) -> Color { isSelected ? DSColor.accent : .clear }
+}
+
 struct CategoryChip: View {
     let style: CategoryChipStyle
     let isSelected: Bool
@@ -38,15 +51,16 @@ struct CategoryChip: View {
     }
 
     var body: some View {
-        Text(label)
+        let colors = CategoryChipColors(palette: palette, backgroundOverride: backgroundOverride, foregroundOverride: foregroundOverride)
+        return Text(label)
             .dsFont(style.font)
-            .foregroundStyle(foregroundOverride ?? palette.foreground)
+            .foregroundStyle(colors.foreground)
             .padding(.vertical, style.verticalPadding)
             .padding(.horizontal, style.horizontalPadding)
-            .background(backgroundOverride ?? palette.background, in: Capsule())
+            .background(colors.background, in: Capsule())
             .overlay {
                 Capsule().strokeBorder(
-                    isSelected ? DSColor.accent : Color.clear,
+                    CategoryChipColors.stroke(isSelected: isSelected),
                     lineWidth: style.selectionStrokeWidth
                 )
             }

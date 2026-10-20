@@ -6,7 +6,7 @@ import Testing
 struct AddTodoItemViewModelTests {
     private let calendar = Calendar.utcGregorian
     private var now: Date { calendar.makeDate(2026, 10, 8) }
-    private let today = DueDate(year: 2026, month: 10, day: 8)
+    private let today = makeDueDate(2026, 10, 8)
 
     private func makeSUT(initialTitle: String = "") -> (viewModel: AddTodoItemViewModel, spy: TodoItemRepositorySpy) {
         let spy = TodoItemRepositorySpy()
@@ -63,7 +63,7 @@ struct AddTodoItemViewModelTests {
         #expect(item?.title.value == "Call the dentist")
         #expect(item?.description == "Friday")
         #expect(item?.category == .work)
-        #expect(item?.dueDate == DueDate(year: 2026, month: 10, day: 9))
+        #expect(item?.dueDate == makeDueDate(2026, 10, 9))
         #expect(!viewModel.saveFailed)
     }
 
@@ -100,9 +100,9 @@ struct AddTodoItemViewModelTests {
     @Test func quickDateOptionsSetTheDueDate() {
         let (viewModel, _) = makeSUT()
         viewModel.selectTomorrow()
-        #expect(viewModel.dueDate == DueDate(year: 2026, month: 10, day: 9))
+        #expect(viewModel.dueDate == makeDueDate(2026, 10, 9))
         viewModel.selectNextWeek()
-        #expect(viewModel.dueDate == DueDate(year: 2026, month: 10, day: 15))
+        #expect(viewModel.dueDate == makeDueDate(2026, 10, 15))
         viewModel.selectToday()
         #expect(viewModel.dueDate == today)
     }
@@ -114,7 +114,7 @@ struct AddTodoItemViewModelTests {
         #expect(viewModel.selectedQuickDate == .tomorrow)
         viewModel.selectNextWeek()
         #expect(viewModel.selectedQuickDate == .nextWeek)
-        viewModel.dueDate = DueDate(year: 2026, month: 12, day: 25)
+        viewModel.dueDate = makeDueDate(2026, 12, 25)
         #expect(viewModel.selectedQuickDate == nil)
         viewModel.clearDueDate()
         #expect(viewModel.selectedQuickDate == nil)
@@ -125,5 +125,28 @@ struct AddTodoItemViewModelTests {
         #expect(viewModel.dueDateText == "Today, Oct 8")
         viewModel.clearDueDate()
         #expect(viewModel.dueDateText == "No due date")
+    }
+
+    // MARK: - Date sheet inputs
+
+    @Test func exposesTheInjectedCalendarAndTheCurrentInstantForTheDateSheet() {
+        let (viewModel, _) = makeSUT()
+        #expect(viewModel.calendar == calendar)
+        #expect(viewModel.now == now)
+    }
+
+    @Test func earliestSelectableDateIsTodayForANewOrFutureDate() {
+        let (viewModel, _) = makeSUT()
+        #expect(viewModel.earliestSelectableDueDate == today)
+        viewModel.selectNextWeek()
+        #expect(viewModel.earliestSelectableDueDate == today)
+        viewModel.clearDueDate()
+        #expect(viewModel.earliestSelectableDueDate == today)
+    }
+
+    @Test func earliestSelectableDateKeepsAnAlreadyChosenPastDateReachable() {
+        let (viewModel, _) = makeSUT()
+        viewModel.dueDate = makeDueDate(2026, 10, 1)
+        #expect(viewModel.earliestSelectableDueDate == makeDueDate(2026, 10, 1))
     }
 }

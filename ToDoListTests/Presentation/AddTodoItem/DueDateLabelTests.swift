@@ -13,19 +13,19 @@ struct DueDateLabelTests {
     }
 
     @Test func todayIsPrefixedWithToday() {
-        #expect(label.text(for: DueDate(year: 2026, month: 10, day: 8)) == "Today, Oct 8")
+        #expect(label.text(for: makeDueDate(2026, 10, 8)) == "Today, Oct 8")
     }
 
     @Test func tomorrowIsPrefixedWithTomorrow() {
-        #expect(label.text(for: DueDate(year: 2026, month: 10, day: 9)) == "Tomorrow, Oct 9")
+        #expect(label.text(for: makeDueDate(2026, 10, 9)) == "Tomorrow, Oct 9")
     }
 
     @Test func otherDaysUseTheWeekday() {
-        #expect(label.text(for: DueDate(year: 2026, month: 10, day: 13)) == "Tue, Oct 13")
+        #expect(label.text(for: makeDueDate(2026, 10, 13)) == "Tue, Oct 13")
     }
 
     @Test func pastDaysUseTheWeekday() {
-        #expect(label.text(for: DueDate(year: 2026, month: 10, day: 7)) == "Wed, Oct 7")
+        #expect(label.text(for: makeDueDate(2026, 10, 7)) == "Wed, Oct 7")
     }
 
     @Test func tomorrowAcrossAMonthBoundary() {
@@ -34,7 +34,7 @@ struct DueDateLabelTests {
             calendar: calendar,
             locale: Locale(identifier: "en_US")
         )
-        #expect(endOfMonth.text(for: DueDate(year: 2026, month: 11, day: 1)) == "Tomorrow, Nov 1")
+        #expect(endOfMonth.text(for: makeDueDate(2026, 11, 1)) == "Tomorrow, Nov 1")
     }
 
     @Test func noDateReadsNoDueDate() {

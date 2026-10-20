@@ -27,19 +27,19 @@ struct TodoListSectionsTests {
     }
 
     @Test func openItemsSortByDueDateAscending() {
-        let early = open("Early", due: DueDate(year: 2026, month: 10, day: 1))
-        let late = open("Late", due: DueDate(year: 2026, month: 11, day: 1))
+        let early = open("Early", due: makeDueDate(2026, 10, 1))
+        let late = open("Late", due: makeDueDate(2026, 11, 1))
         #expect(titles(TodoListSections(items: [late, early]).todo) == ["Early", "Late"])
     }
 
     @Test func itemsWithoutDueDateComeLast() {
-        let dated = open("Dated", due: DueDate(year: 2030, month: 1, day: 1))
+        let dated = open("Dated", due: makeDueDate(2030, 1, 1))
         let undated = open("Undated", created: 1)
         #expect(titles(TodoListSections(items: [undated, dated]).todo) == ["Dated", "Undated"])
     }
 
     @Test func sameDueDateSortsByOldestCreatedFirst() {
-        let due = DueDate(year: 2026, month: 10, day: 8)
+        let due = makeDueDate(2026, 10, 8)
         let older = open("Older", due: due, created: 1), newer = open("Newer", due: due, created: 2)
         #expect(titles(TodoListSections(items: [newer, older]).todo) == ["Older", "Newer"])
     }

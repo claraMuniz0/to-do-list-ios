@@ -52,8 +52,8 @@ struct TodoItemTests {
 
     @Test func rescheduleSetsAndClearsTheDueDate() {
         var item = makeTodoItem()
-        item.reschedule(DueDate(year: 2026, month: 10, day: 8))
-        #expect(item.dueDate == DueDate(year: 2026, month: 10, day: 8))
+        item.reschedule(makeDueDate(2026, 10, 8))
+        #expect(item.dueDate == makeDueDate(2026, 10, 8))
         item.reschedule(nil)
         #expect(item.dueDate == nil)
     }
@@ -97,7 +97,7 @@ struct TodoItemTests {
     }
 
     @Test func renameLeavesOtherFieldsUntouched() throws {
-        var item = makeTodoItem(description: "Notes", category: .work, dueDate: DueDate(year: 2026, month: 10, day: 8), createdAt: now)
+        var item = makeTodoItem(description: "Notes", category: .work, dueDate: makeDueDate(2026, 10, 8), createdAt: now)
         let original = item
         item.rename(try TodoItemTitle("New"))
         #expect(item.id == original.id)

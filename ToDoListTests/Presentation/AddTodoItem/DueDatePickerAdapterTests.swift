@@ -8,7 +8,7 @@ struct DueDatePickerAdapterTests {
     private var sut: DueDatePickerAdapter { DueDatePickerAdapter(calendar: calendar, fallback: fallback) }
 
     @Test func convertsADueDateToItsStartOfDay() {
-        let date = sut.date(for: DueDate(year: 2026, month: 10, day: 20))
+        let date = sut.date(for: makeDueDate(2026, 10, 20))
         #expect(date == calendar.makeDate(2026, 10, 20, hour: 0))
     }
 
@@ -17,11 +17,11 @@ struct DueDatePickerAdapterTests {
     }
 
     @Test func convertsAPickedDateIgnoringTheTimeOfDay() {
-        #expect(sut.dueDate(from: calendar.makeDate(2026, 12, 31, hour: 23)) == DueDate(year: 2026, month: 12, day: 31))
+        #expect(sut.dueDate(from: calendar.makeDate(2026, 12, 31, hour: 23)) == makeDueDate(2026, 12, 31))
     }
 
     @Test func roundTripsAcrossAMonthBoundary() {
-        let due = DueDate(year: 2027, month: 1, day: 1)
+        let due = makeDueDate(2027, 1, 1)
         #expect(sut.dueDate(from: sut.date(for: due)) == due)
     }
 }

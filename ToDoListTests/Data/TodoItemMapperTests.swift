@@ -10,7 +10,7 @@ struct TodoItemMapperTests {
             title: "Call the dentist",
             description: "Ask about Friday",
             category: .work,
-            dueDate: DueDate(year: 2026, month: 10, day: 8)
+            dueDate: makeDueDate(2026, 10, 8)
         )
         #expect(try mapper.toDomain(mapper.toRecord(item)) == item)
     }
@@ -27,7 +27,7 @@ struct TodoItemMapperTests {
     }
 
     @Test func storesDueDateAsYearMonthDayAndCategoryAsID() {
-        let record = mapper.toRecord(makeTodoItem(category: .shopping, dueDate: DueDate(year: 2026, month: 1, day: 31)))
+        let record = mapper.toRecord(makeTodoItem(category: .shopping, dueDate: makeDueDate(2026, 1, 31)))
         #expect(record.dueYear == 2026 && record.dueMonth == 1 && record.dueDay == 31)
         #expect(record.categoryID == "shopping")
     }
@@ -42,5 +42,17 @@ struct TodoItemMapperTests {
         let record = mapper.toRecord(makeTodoItem())
         record.title = "   "
         #expect(throws: TodoItemTitleError.empty) { try mapper.toDomain(record) }
+    }
+
+    @Test func partialStoredDueDateMapsToNil() throws {
+        let record = mapper.toRecord(makeTodoItem(dueDate: makeDueDate(2026, 10, 8)))
+        record.dueMonth = nil
+        #expect(try mapper.toDomain(record).dueDate == nil)
+    }
+
+    @Test func corruptStoredDueDateThrowsInsteadOfBecomingAnInvalidDate() {
+        let record = mapper.toRecord(makeTodoItem(dueDate: makeDueDate(2026, 10, 8)))
+        record.dueMonth = 13
+        #expect(throws: DueDateError.invalidDate) { try mapper.toDomain(record) }
     }
 }

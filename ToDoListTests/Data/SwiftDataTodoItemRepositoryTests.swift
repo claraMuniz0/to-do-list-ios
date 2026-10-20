@@ -15,7 +15,7 @@ struct SwiftDataTodoItemRepositoryTests {
 
     @Test func addThenFindByID() async throws {
         let repository = try makeRepository()
-        let item = makeTodoItem(description: "Notes", category: .work, dueDate: DueDate(year: 2026, month: 10, day: 8))
+        let item = makeTodoItem(description: "Notes", category: .work, dueDate: makeDueDate(2026, 10, 8))
         try await repository.add(item)
         #expect(try await repository.task(id: item.id) == item)
     }

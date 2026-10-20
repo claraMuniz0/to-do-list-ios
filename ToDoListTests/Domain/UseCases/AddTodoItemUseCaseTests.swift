@@ -12,7 +12,7 @@ struct AddTodoItemUseCaseTests {
 
     @Test func storesAndReturnsTheNewItem() async throws {
         let spy = TodoItemRepositorySpy()
-        let dueDate = DueDate(year: 2026, month: 10, day: 9)
+        let dueDate = makeDueDate(2026, 10, 9)
 
         let item = try await makeUseCase(spy).execute(
             title: "  Call the dentist ", description: "Friday", category: .work, dueDate: dueDate
@@ -64,7 +64,7 @@ struct AddTodoItemUseCaseTests {
         let item = try await makeUseCase(spy).quickAdd(title: "Pay rent")
 
         #expect(item.category == .personal)
-        #expect(item.dueDate == DueDate(year: 2026, month: 10, day: 8))
+        #expect(item.dueDate == makeDueDate(2026, 10, 8))
         #expect(item.description == nil)
         #expect(spy.storedItems == [item])
     }

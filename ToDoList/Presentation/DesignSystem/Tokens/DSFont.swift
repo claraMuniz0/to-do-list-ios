@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Typography tokens. Every token scales with Dynamic Type through its `textStyle`.
-/// Falls back to the system font until the family files are bundled and registered.
+/// Families are bundled and registered by `FontRegistrar`.
 enum DSFont: CaseIterable {
     case screenTitle, emptyTitle, greeting
     case rowTitle, rowDescription, inputText
@@ -30,7 +30,11 @@ enum DSFont: CaseIterable {
         }
     }
 
+    /// Registers the bundled files once, lazily, so previews (which skip the App init) get them too.
+    private static let registerFonts: Void = { FontRegistrar.registerAll() }()
+
     var font: Font {
+        Self.registerFonts
         let spec = spec
         let base = Font.custom(spec.family, size: spec.size, relativeTo: spec.textStyle ?? .body).weight(spec.weight)
         return spec.isItalic ? base.italic() : base

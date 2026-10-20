@@ -3,6 +3,10 @@ import SwiftUI
 @main struct ToDoListApp: App {
     private let dependencies = AppDependencies.live()
 
+    init() {
+        FontRegistrar.registerAll()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

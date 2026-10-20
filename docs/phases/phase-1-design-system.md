@@ -1,6 +1,6 @@
 # Phase 1: Design system components
 
-**Status:** built except font bundling (blocked on permission to download/bundle font files); visual check in the simulator still pending
+**Status:** built; fonts bundled (OFL, licenses in docs/licenses/fonts, registered at runtime); visual check in the simulator still pending
 **Design:** `to-do.pen`, frame "Components" + the screens that use them
 **Depends on:** Phase 0 (project structure, test target)
 

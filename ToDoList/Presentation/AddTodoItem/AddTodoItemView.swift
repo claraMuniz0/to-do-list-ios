@@ -46,7 +46,7 @@ struct AddTodoItemView: View {
         .accessibilityAction(.escape, onClose)
         .onAppear { isTitleFocused = true }
         .sheet(isPresented: $isDateSheetPresented) {
-            SelectDateSheet(viewModel: viewModel)
+            SelectDateView(viewModel: viewModel)
         }
     }
 

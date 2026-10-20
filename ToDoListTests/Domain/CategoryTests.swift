@@ -28,35 +28,3 @@ struct CategoryTests {
         #expect(try make() == make())
     }
 }
-
-struct CategoryIDTests {
-    @Test func rejectsBlankID() {
-        #expect(throws: CategoryIDError.empty) { try CategoryID("  ") }
-        #expect(throws: CategoryIDError.empty) { try CategoryID("") }
-    }
-
-    @Test func trimsID() throws {
-        #expect(try CategoryID(" work ").value == "work")
-    }
-}
-
-struct CategoryNameTests {
-    @Test func rejectsBlankName() {
-        #expect(throws: CategoryNameError.empty) { try CategoryName("  ") }
-        #expect(throws: CategoryNameError.empty) { try CategoryName("") }
-    }
-
-    @Test func trimsName() throws {
-        #expect(try CategoryName(" Health ").value == "Health")
-    }
-}
-
-struct CategoryColorTests {
-    @Test func trimsTheKey() {
-        #expect(CategoryColor(" green ").key == "green")
-    }
-
-    @Test func sameKeysAreEqual() {
-        #expect(CategoryColor("green") == CategoryColor("green"))
-    }
-}

@@ -116,7 +116,7 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 - Domain, view model and repository tests are green; the design-fidelity check shows no High differences.
 
 ## Build notes
-- Test-first throughout Domain, Data and the two view models (red `test:` commit, then green `feat:`). Exceptions: the router prefill change (`AppRoute.addTodoItem(prefill:)`) and the SwiftUI views (`AddTodoItemView`, `SelectDateSheet`, `TodoListView`) were not preceded by a red commit; views have previews, not unit tests.
+- Test-first throughout Domain, Data and the two view models (red `test:` commit, then green `feat:`). Exceptions: the router prefill change (`AppRoute.addTodoItem(prefill:)`) and the SwiftUI views (`AddTodoItemView`, `SelectDateView`, `TodoListView`) were not preceded by a red commit; views have previews, not unit tests.
 - Persistence: `TodoItemRecord` (`@Model`) + `TodoItemMapper` + `SwiftDataTodoItemRepository` (`@MainActor`, main context, holds its `ModelContainer`, which a `ModelContext` does not retain). `allTasks()` is sorted oldest created first. `AppDependencies.live()` is disk-backed and `inMemory()` serves tests and previews.
 - Domain: `Category` is now `CategoryID` + `CategoryName` + `CategoryColor`; `TodoItemTitle.maxLength` is 120 (`.tooLong`); `AddTodoItemUseCase` (with `quickAdd`), `ToggleTodoItemCompletionUseCase` (one toggle use case instead of complete + reopen), `TodoListSections` (ordering as a pure type).
 - Presentation: `AddTodoItemViewModel`, `DueDateLabel` ("Today, Oct 8" with a fixed order, the locale only supplies names), `DueDatePickerAdapter`, `TodoListViewModel` `.loaded(TodoListSections)` with `toggle` and `quickAdd`.

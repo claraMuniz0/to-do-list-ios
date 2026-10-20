@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Bottom sheet to pick the due date: quick pills, the system graphical picker and a confirm button.
-struct SelectDateSheet: View {
+struct SelectDateView: View {
     @Bindable var viewModel: AddTodoItemViewModel
     var calendar: Calendar = .current
     var today: Date = .now
@@ -75,14 +75,14 @@ struct SelectDateSheet: View {
 
 #if DEBUG
 #Preview("Date sheet") {
-    SelectDateSheet(
+    SelectDateView(
         viewModel: .preview(),
         calendar: Calendar(identifier: .gregorian),
         today: Date(timeIntervalSince1970: 1_791_460_800)
     )
 }
 #Preview("Date sheet - accessibility3") {
-    SelectDateSheet(viewModel: .preview(), today: Date(timeIntervalSince1970: 1_791_460_800))
+    SelectDateView(viewModel: .preview(), today: Date(timeIntervalSince1970: 1_791_460_800))
         .dynamicTypeSize(.accessibility3)
 }
 #endif

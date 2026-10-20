@@ -44,9 +44,20 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - "New category" sheet (name, one of 6 colors, live preview), "+ New" in the forms, the "New category" row in the Categories filter. Built-in categories keep stable ids; Phase 3 stores the category as a plain id so no migration is needed.
 - All decisions confirmed; built after Phase 5.
 
+## Claude foundation (prerequisite for Phases 8 and 9)
+- `ClaudeClient` over `URLSession` (Messages API, forced tool call), `ClaudeError`, API key read from a git-ignored config file, test doubles. No UI.
+- All decisions confirmed; built first, by one agent.
+
+## Phase 8: Steps (manual + Claude)
+- Steps on a task (add, tick, rename, delete, reorder, progress, "2/5" on the row), "Break it down", "Suggest more" and the Suggested steps sheet.
+- All decisions confirmed; built in parallel with Phase 9 after the foundation.
+
+## Phase 9: Smart Add
+- Describe screen (sentence, counter, examples) and Review screen (the Add form prefilled by Claude, banner, Save). Date only, no priority, no mic.
+- All decisions confirmed; built in parallel with Phase 8 after the foundation.
+
 ## Post-MVP backlog (to be phased later)
-- **Steps:** manual sub-steps on a task.
-- **Claude features:** Smart Add (describe a task in a sentence), "Suggest steps", "Break it down".
+- See [backlog](backlog-post-mvp.md).
 
 ## Phase files
 - [Phase 0: Foundation](phase-0-foundation.md)
@@ -57,4 +68,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - [Phase 5: Task List](phase-5-task-list.md)
 - [Phase 6: Search & Sort](phase-6-search-sort.md)
 - [Phase 7: Custom Categories](phase-7-categories.md)
+- [Claude foundation](claude-foundation.md)
+- [Phase 8: Steps](phase-8-steps.md)
+- [Phase 9: Smart Add](phase-9-smart-add.md)
 - [Post-MVP backlog](backlog-post-mvp.md)

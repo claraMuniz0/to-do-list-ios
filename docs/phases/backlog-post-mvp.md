@@ -1,6 +1,5 @@
 # Post-MVP backlog
 
-To be split into phases later.
+Steps and Claude features moved to [Phase 8](phase-8-steps.md), [Phase 9](phase-9-smart-add.md) and the [Claude foundation](claude-foundation.md).
 
-- **Steps:** manual sub-steps on a task
-- **Claude features:** Smart Add (describe a task in a sentence), "Suggest steps", "Break it down"
+Nothing else queued.

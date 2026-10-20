@@ -15,6 +15,7 @@ struct AddTodoItemViewModelTests {
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
             dateProvider: provider,
             calendar: calendar,
+            locale: Locale(identifier: "en_US"),
             initialTitle: initialTitle
         )
         return (viewModel, spy)

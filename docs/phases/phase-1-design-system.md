@@ -104,6 +104,8 @@ Visual components are mostly previews; test only logic: token lookups return the
 - Project-file edits made with permission: `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` and `INFOPLIST_KEY_CFBundleDisplayName = "Do it later"`.
 - Simulator text can look soft; checked on a real device and it renders fine.
 
+- Layout: the design system lives in `ToDoList/Shared/DesignSystem/` (Tokens, Components, Gallery, Fonts), outside `Presentation`, because it is feature-agnostic; tests mirror it in `ToDoListTests/Shared/DesignSystem/`. `Presentation` depends on it, never the reverse.
+
 ## Carried forward
 - "+ New" option chip (surface fill, border, accent text) is not a palette chip: Phase 7.
 - Toast VoiceOver announcement and option-chip button traits belong to the screens that host them.

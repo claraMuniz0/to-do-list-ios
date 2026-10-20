@@ -11,7 +11,7 @@ Decide the layer by what the code IS, not by convenience. Dependencies point inw
 1. Business rule or state meaningful without UI/framework? -> **Domain**: entity, value object, use case.
 2. A capability Domain needs from outside (store, clock, id generator), no implementation? -> **Domain**: protocol, no framework types in its signature (`TodoItemRepository`).
 3. Shapes data for display or holds UI state? -> **Presentation**: view model, route enum, view-local formatting.
-4. A view, screen, styling or component? -> **Presentation** (`Presentation/<Feature>/` or `Presentation/DesignSystem/`); depends on a view model, never on a repository or use case directly.
+4. A view, screen, styling or component? -> **Presentation** (`Presentation/<Feature>/`) or, if reusable and feature-agnostic, **Shared/DesignSystem** (`Shared/DesignSystem/`); depends on a view model, never on a repository or use case directly.
 5. Talks to SwiftData, files, network, system services? -> **Data**: repository implementations, `@Model` storage records (`TodoItemRecord`), mappers.
 6. Composition root (wiring the repository into use cases and view models)? -> the `@main` file only.
 
@@ -22,6 +22,6 @@ Decide the layer by what the code IS, not by convenience. Dependencies point inw
 - Only means "how do we show this" (colors, display strings): Presentation.
 
 ## When ambiguous
-An entity method that returns a display string mixes layers: keep the rule in Domain, move formatting to Presentation. Never create a "Shared"/"Common"/"Utils" layer to dodge the decision.
+An entity method that returns a display string mixes layers: keep the rule in Domain, move formatting to Presentation. `Shared/` holds only `Shared/DesignSystem/` (feature-agnostic UI); never create other "Shared"/"Common"/"Utils" folders or layers to dodge the decision.
 
 State the decision in one line before creating the file: "X goes in <layer> because <rule>." Then name it with `naming-convention`. Unsure whether a new dependency is allowed? Check the imports against the direction above; adding a package needs explicit user permission.

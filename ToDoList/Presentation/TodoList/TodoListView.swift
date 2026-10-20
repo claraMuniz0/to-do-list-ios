@@ -13,6 +13,10 @@ struct TodoListView: View {
             content
         }
         .task { await viewModel.load() }
+        // The Add Task cover hides the bar without removing it, so close the keyboard when it opens.
+        .onChange(of: router.presentedRoute) { _, route in
+            if route != nil { UIApplication.shared.dismissKeyboard() }
+        }
         .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismiss() } })) { route in
             switch route {
             case .addTodoItem(let prefill):
@@ -100,6 +104,8 @@ struct TodoListView: View {
         }
         .padding(.vertical, 8)
         .background(DSColor.bg)
+        // The bar only exists in the loaded state; leaving it must not leave the keyboard open.
+        .onDisappear { UIApplication.shared.dismissKeyboard() }
     }
 
     private func addQuickly() {

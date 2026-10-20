@@ -24,10 +24,8 @@ struct AddTaskInput: View {
             TextField(
                 "New task",
                 text: $text,
-                prompt: Text(placeholder).foregroundStyle(DSColor.textMuted),
-                axis: .vertical
+                prompt: Text(placeholder).foregroundStyle(DSColor.textMuted)
             )
-            .lineLimit(1...4)
             .dsFont(.inputText)
             .foregroundStyle(DSColor.textPrimary)
             .submitLabel(.done)

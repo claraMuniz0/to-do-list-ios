@@ -48,4 +48,27 @@ struct TodoItemTitleTests {
         let padded = "  " + String(repeating: "a", count: TodoItemTitle.maxLength) + "  "
         #expect(try TodoItemTitle(padded).value.count == TodoItemTitle.maxLength)
     }
+
+    // MARK: - isBlank
+
+    @Test(arguments: ["", " ", "   ", "\n\t", "\u{00A0}\u{2003}"])
+    func blankTextIsBlank(text: String) {
+        #expect(TodoItemTitle.isBlank(text))
+    }
+
+    @Test(arguments: ["a", "  a ", "Buy milk", "\nBuy milk\n"])
+    func textWithContentIsNotBlank(text: String) {
+        #expect(!TodoItemTitle.isBlank(text))
+    }
+
+    @Test func isBlankAgreesWithTheEmptyErrorOfTheInitializer() {
+        for text in ["", "  ", "\n", "ok", " ok "] {
+            let throwsEmpty = (try? TodoItemTitle(text)) == nil
+            #expect(TodoItemTitle.isBlank(text) == throwsEmpty)
+        }
+    }
+
+    @Test func aLongTitleIsNotBlankEvenThoughTheInitializerRejectsIt() {
+        #expect(!TodoItemTitle.isBlank(String(repeating: "a", count: TodoItemTitle.maxLength + 1)))
+    }
 }

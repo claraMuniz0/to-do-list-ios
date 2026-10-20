@@ -20,13 +20,17 @@ struct AddTodoItemView: View {
             VStack(alignment: .leading, spacing: 24) {
                 CircleIconButton(accessibilityLabel: "Close", action: onClose)
                 ScreenHeader(subtitle: "What's on your mind?", title: "New task")
+                
                 FormField(label: "Task name") {
                     TextInputField(text: $viewModel.title, isFocused: $isTitleFocused)
                 }
+                
                 FormField(label: "Description", isOptional: true) {
                     TextAreaField(text: $viewModel.details)
                 }
+                
                 FormField(label: "Category") { categoryChips }
+                
                 FormField(label: "Due date") {
                     DateRow(value: viewModel.dueDateText) { isDateSheetPresented = true }
                 }

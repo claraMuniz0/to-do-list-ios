@@ -24,7 +24,7 @@ private struct FormControlChrome: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: DSRadius.md, style: .continuous)
         content
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
             .background(DSColor.surface, in: shape)
             .overlay { shape.strokeBorder(border.color, lineWidth: border.lineWidth) }
@@ -164,7 +164,6 @@ struct DateRow: View {
                     .accessibilityHidden(true)
             }
             .modifier(FormControlChrome(isFocused: false, minHeight: FormControlMetrics.dateRowMinHeight))
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Due date, \(value)")

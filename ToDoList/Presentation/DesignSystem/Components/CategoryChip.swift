@@ -17,21 +17,33 @@ struct CategoryChip: View {
     let isSelected: Bool
     let label: String
     let palette: ChipPalette
+    let backgroundOverride: Color?
+    let foregroundOverride: Color?
 
-    init(style: CategoryChipStyle = .tag, isSelected: Bool = false, label: String, palette: ChipPalette) {
+    /// `backgroundOverride`/`foregroundOverride` let a host (e.g. a done `TaskRow`) neutralize the palette.
+    init(
+        style: CategoryChipStyle = .tag,
+        isSelected: Bool = false,
+        label: String,
+        palette: ChipPalette,
+        backgroundOverride: Color? = nil,
+        foregroundOverride: Color? = nil
+    ) {
         self.style = style
         self.isSelected = isSelected
         self.label = label
         self.palette = palette
+        self.backgroundOverride = backgroundOverride
+        self.foregroundOverride = foregroundOverride
     }
 
     var body: some View {
         Text(label)
             .dsFont(style.font)
-            .foregroundStyle(palette.foreground)
+            .foregroundStyle(foregroundOverride ?? palette.foreground)
             .padding(.vertical, style.verticalPadding)
             .padding(.horizontal, style.horizontalPadding)
-            .background(palette.background, in: Capsule())
+            .background(backgroundOverride ?? palette.background, in: Capsule())
             .overlay {
                 Capsule().strokeBorder(
                     isSelected ? DSColor.accent : Color.clear,

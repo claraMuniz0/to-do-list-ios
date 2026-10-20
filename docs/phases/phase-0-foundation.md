@@ -1,6 +1,15 @@
 # Phase 0: Project foundation
 
-**Status:** not started (all decisions confirmed, ready to start)
+**Status:** done (built and reviewed)
+
+**Test command (pinned):** `xcodebuild test -project ToDoListApp.xcodeproj -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 17'`
+
+**Notes from the build**
+- The Xcode target/module is still named `MyApp` (not renamed; only the `@main` struct became `ToDoListApp`). Tests use `@testable import MyApp`.
+- `SWIFT_DEFAULT_ACTOR_ISOLATION` changed from `MainActor` to `nonisolated` so Domain types are not implicitly main-actor bound. View models must be marked `@MainActor` explicitly.
+- Foundation's `Category` makes the name ambiguous in the test target; `ToDoListTests/Helpers/Category+Testing.swift` aliases it.
+- `ContentView` placeholder stays until Phase 2 (A4).
+- Review findings deferred to Phase 3 (which owns these types): validate `DueDate` (invalid month/day, remove fallbacks), validate or wrap `Category.id`/`colorKey`, replace `try!` in the category seeds, consider renaming `TodoItem.description` (collides with `CustomStringConvertible`) or a `TodoItemDescription` value object.
 
 ## Goal
 A green, empty shell with the Clean Architecture layers in place, so Phase 1+ can start with a failing test instead of project setup.
@@ -60,14 +69,14 @@ Recommendation in **bold**. Status: `open` until you confirm.
 | E3 | Dependency injection | **Manual, in a composition root** in the `@main` file. No third-party container | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] Confirm the decisions above (this file is updated with the final answers)
-- [ ] Add the test target and pin the test command in the repo docs
-- [ ] Rename the app entry point, set deployment target / devices / bundle ID
-- [ ] Folders: `Domain/`, `Presentation/`, `Data/`; test folders mirror them
-- [ ] First red→green→refactor loop on one tiny value object (`TodoItemTitle`) to prove the toolchain end to end
-- [ ] `TodoItem` entity skeleton with `TodoItemID` and `Category`
-- [ ] `TodoItemRepository` protocol (Domain) and `InMemoryTodoItemRepository` (Data), with tests
-- [ ] Composition root wiring the in-memory repository
+- [x] Confirm the decisions above (this file is updated with the final answers)
+- [x] Add the test target and pin the test command in the repo docs
+- [x] Rename the app entry point, set deployment target / devices / bundle ID
+- [x] Folders: `Domain/`, `Presentation/`, `Data/`; test folders mirror them
+- [x] First red→green→refactor loop on one tiny value object (`TodoItemTitle`) to prove the toolchain end to end
+- [x] `TodoItem` entity skeleton with `TodoItemID` and `Category`
+- [x] `TodoItemRepository` protocol (Domain) and `InMemoryTodoItemRepository` (Data), with tests
+- [x] Composition root wiring the in-memory repository
 
 ## Out of scope
 - Persistent storage implementation (decided in D4, built in Phase 3)

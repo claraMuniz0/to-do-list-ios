@@ -6,7 +6,7 @@ description: Scaffold ONE design-system SwiftUI component (e.g. CategoryChip, Pr
 # New design-system component
 
 Source of truth: `docs/phases/phase-1-design-system.md` (decisions P1-1..P1-7 are binding). Light mode only.
-Assumed location (adjust to actual repo layout): `ToDoList/Presentation/DesignSystem/`, tests mirrored under the test target.
+Assumed location (adjust to actual repo layout): `ToDoList/Shared/DesignSystem/` (Tokens, Components, Gallery, Fonts), tests mirrored under `ToDoListTests/Shared/DesignSystem/`.
 
 ## Before writing
 - [ ] Check the design-to-component table in the phase doc. If the request is really an override of an existing component (Save Button = PrimaryButton, Category Option = CategoryChip, Today Pill = FilterPill), extend that component with a parameter. Do not create a wrapper.

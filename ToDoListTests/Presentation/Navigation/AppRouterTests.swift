@@ -9,13 +9,19 @@ struct AppRouterTests {
 
     @Test func presentingARouteExposesIt() {
         let router = AppRouter()
-        router.present(.addTodoItem)
-        #expect(router.presentedRoute == .addTodoItem)
+        router.present(.addTodoItem(prefill: ""))
+        #expect(router.presentedRoute == .addTodoItem(prefill: ""))
+    }
+
+    @Test func presentingCarriesThePrefillText() {
+        let router = AppRouter()
+        router.present(.addTodoItem(prefill: "Call the dentist"))
+        #expect(router.presentedRoute == .addTodoItem(prefill: "Call the dentist"))
     }
 
     @Test func dismissClearsThePresentedRoute() {
         let router = AppRouter()
-        router.present(.addTodoItem)
+        router.present(.addTodoItem(prefill: ""))
         router.dismiss()
         #expect(router.presentedRoute == nil)
     }

@@ -25,7 +25,7 @@ struct TodoListView: View {
                 .accessibilityElement()
                 .accessibilityLabel("Loading tasks")
         case .empty:
-            WelcomeView(onAddFirstTask: { router.present(.addTodoItem) })
+            WelcomeView(onAddFirstTask: { router.present(.addTodoItem(prefill: "")) })
         case .loaded(let sections):
             Text("\(sections.todo.count) tasks")
         case .error:

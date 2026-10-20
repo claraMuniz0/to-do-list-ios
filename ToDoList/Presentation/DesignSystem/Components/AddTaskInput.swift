@@ -21,7 +21,7 @@ struct AddTaskInput: View {
     var body: some View {
         HStack(spacing: 8) {
             TextField(
-                "",
+                "New task",
                 text: $text,
                 prompt: Text(placeholder).foregroundStyle(DSColor.textMuted)
             )

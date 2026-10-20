@@ -108,8 +108,10 @@ struct TaskRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isDone ? "Mark \(title) as not done" : "Mark \(title) as done")
-        .accessibilityValue(isDone ? "Done" : "Not done")
+        .accessibilityLabel(title)
+        .accessibilityValue(isDone ? "Completed" : "Not completed")
+        .accessibilityHint("Double tap to toggle")
+        .accessibilityAddTraits(.isToggle)
     }
 }
 

@@ -1,6 +1,6 @@
 # Phase 1: Design system components
 
-**Status:** not started (decisions confirmed, ready to start after Phase 0)
+**Status:** built except font bundling (blocked on permission to download/bundle font files); visual check in the simulator still pending
 **Design:** `to-do.pen`, frame "Components" + the screens that use them
 **Depends on:** Phase 0 (project structure, test target)
 
@@ -43,6 +43,10 @@ Several things in the design look like separate components but are one component
 | trash-2 | `trash` |
 | sliders-horizontal | `slider.horizontal.3` |
 | sparkles | `sparkles` |
+| clipboard-check (proposal, unconfirmed) | `list.clipboard` |
+| party-popper (proposal, unconfirmed) | `party.popper` |
+| search-x (proposal, unconfirmed) | `magnifyingglass` |
+| list-checks (proposal, unconfirmed) | `checklist` |
 
 The design uses about 25 Lucide icons in total (status-bar signal/wifi/battery are system UI and are not drawn). Only the five above are mapped now. Each later phase adds the icons it needs to this table, including the three illustration icons (`clipboard-check`, `party-popper`, `search-x`).
 

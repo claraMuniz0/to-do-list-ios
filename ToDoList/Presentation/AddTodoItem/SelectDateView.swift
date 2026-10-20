@@ -25,22 +25,7 @@ struct SelectDateView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                HStack {
-                    Text("Due date")
-                        .dsFont(.emptyTitle)
-                        .foregroundStyle(DSColor.textPrimary)
-                        .accessibilityAddTraits(.isHeader)
-                    Spacer()
-                    Button { viewModel.clearDueDate() } label: {
-                        Text("Clear")
-                            .dsFont(.pill)
-                            .foregroundStyle(DSColor.accent)
-                            .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Clear due date")
-                }
+                header
                 quickPills
                 DatePicker("Due date", selection: pickedDate, in: allowedRange, displayedComponents: .date)
                     .datePickerStyle(.graphical)
@@ -57,6 +42,36 @@ struct SelectDateView: View {
         // Designed as a partial sheet; `.large` stays available for accessibility text sizes.
         .presentationDetents([.height(580), .large])
         .presentationDragIndicator(.visible)
+    }
+
+    /// Stacks the title above "Clear" when they do not fit on one line (large text sizes).
+    private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack { title; Spacer(); clearButton }
+            VStack(alignment: .leading, spacing: 4) { title; clearButton }
+        }
+    }
+
+    private var title: some View {
+        Text("Due date")
+            .dsFont(.emptyTitle)
+            .foregroundStyle(DSColor.textPrimary)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var clearButton: some View {
+        Button {
+            viewModel.clearDueDate()
+            AccessibilityNotification.Announcement("Due date cleared").post()
+        } label: {
+            Text("Clear")
+                .dsFont(.pill)
+                .foregroundStyle(DSColor.accent)
+                .frame(minWidth: DSTouchTarget.minimum, minHeight: DSTouchTarget.minimum)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Clear due date")
     }
 
     private var quickPills: some View {

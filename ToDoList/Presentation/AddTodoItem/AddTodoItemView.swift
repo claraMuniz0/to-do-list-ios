@@ -19,6 +19,7 @@ struct AddTodoItemView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 CircleIconButton(accessibilityLabel: "Close", action: onClose)
+                    .accessibilityHint("Discards the task")
                 ScreenHeader(subtitle: "What's on your mind?", title: "New task")
                 
                 FormField(label: "Task name") {
@@ -26,7 +27,7 @@ struct AddTodoItemView: View {
                 }
                 
                 FormField(label: "Description", isOptional: true) {
-                    TextAreaField(text: $viewModel.details)
+                    TextAreaField(text: $viewModel.details, accessibilityLabel: "Description, optional")
                 }
                 
                 FormField(label: "Category") { categoryChips }
@@ -44,7 +45,10 @@ struct AddTodoItemView: View {
         .safeAreaInset(edge: .bottom) { saveBar }
         .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
         .accessibilityAction(.escape, onClose)
-        .onAppear { isTitleFocused = true }
+        .onAppear {
+            isTitleFocused = true
+            AccessibilityNotification.ScreenChanged().post()
+        }
         .sheet(isPresented: $isDateSheetPresented) {
             SelectDateView(viewModel: viewModel)
         }
@@ -55,6 +59,8 @@ struct AddTodoItemView: View {
             HStack(spacing: 8) { chips }
             VStack(alignment: .leading, spacing: 8) { chips }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Category")
     }
 
     private var chips: some View {
@@ -66,6 +72,8 @@ struct AddTodoItemView: View {
                     label: category.name.value,
                     palette: ChipPalette(colorKey: category.color.key)
                 )
+                // The Button owns label and selected trait so VoiceOver does not read them twice.
+                .accessibilityHidden(true)
                 .frame(minHeight: DSTouchTarget.minimum)
                 .contentShape(Rectangle())
             }
@@ -84,7 +92,8 @@ struct AddTodoItemView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .onAppear { AccessibilityNotification.Announcement("Couldn't save the task. Try again.").post() }
             }
-            PrimaryButton(title: "Save task", systemImage: "checkmark", fullWidth: true, isEnabled: viewModel.canSave) {
+            PrimaryButton(title: "Save task", systemImage: "checkmark", fullWidth: true, isEnabled: viewModel.canSave,
+                          disabledHint: "Enter a task name first") {
                 Task { if await viewModel.save() { onSaved() } }
             }
         }

@@ -5,7 +5,7 @@ import SwiftUI
 struct PrimaryButtonAppearance: Equatable {
     let isEnabled: Bool
 
-    var opacity: Double { isEnabled ? 1 : 0.4 }
+    var opacity: Double { isEnabled ? 1 : 0.6 }
     var showsShadow: Bool { isEnabled }
 }
 

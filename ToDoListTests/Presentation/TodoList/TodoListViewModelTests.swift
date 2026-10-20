@@ -54,4 +54,43 @@ struct TodoListViewModelTests {
         await viewModel.retry()
         #expect(viewModel.state == .error)
     }
+
+    @Test func retryShowsLoadingWhileReloading() async {
+        let (viewModel, spy) = makeSUT(error: TodoItemRepositoryError.notFound)
+        await viewModel.load()
+        spy.errorToThrow = nil
+        var stateDuringReload: TodoListViewState?
+        spy.onAllTasks = { stateDuringReload = viewModel.state }
+
+        await viewModel.retry()
+
+        #expect(stateDuringReload == .loading)
+    }
+
+    @Test func anyThrownErrorEndsInTheErrorState() async {
+        struct UnrelatedError: Error {}
+        let (viewModel, _) = makeSUT(error: UnrelatedError())
+        await viewModel.load()
+        #expect(viewModel.state == .error)
+    }
+
+    @Test func aFailingReloadDropsPreviouslyLoadedItems() async {
+        let (viewModel, spy) = makeSUT(items: [makeTodoItem()])
+        await viewModel.load()
+        spy.errorToThrow = TodoItemRepositoryError.notFound
+
+        await viewModel.load()
+
+        #expect(viewModel.state == .error)
+    }
+
+    @Test func reloadingAfterTheLastTaskIsGoneEndsEmpty() async {
+        let (viewModel, spy) = makeSUT(items: [makeTodoItem()])
+        await viewModel.load()
+        spy.storedItems = []
+
+        await viewModel.retry()
+
+        #expect(viewModel.state == .empty)
+    }
 }

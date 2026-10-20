@@ -3,6 +3,7 @@
 final class TodoItemRepositorySpy: TodoItemRepository {
     var storedItems: [TodoItem] = []
     var errorToThrow: Error?
+    var onAllTasks: (() -> Void)?
     private(set) var allTasksCallCount = 0
 
     func add(_ item: TodoItem) async throws {
@@ -25,6 +26,7 @@ final class TodoItemRepositorySpy: TodoItemRepository {
 
     func allTasks() async throws -> [TodoItem] {
         allTasksCallCount += 1
+        onAllTasks?()
         if let errorToThrow { throw errorToThrow }
         return storedItems
     }

@@ -14,6 +14,11 @@ struct SectionHeader: View {
         "\(title.uppercased()) · \(count)"
     }
 
+    /// Spoken form: the visual "·" would be read as "middle dot".
+    static func accessibilityLabel(title: String, count: Int) -> String {
+        "\(title), \(count) \(count == 1 ? "task" : "tasks")"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Text(Self.label(title: title, count: count))
@@ -24,7 +29,8 @@ struct SectionHeader: View {
             Rectangle().fill(DSColor.border).frame(height: 1)
                 .accessibilityHidden(true)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Self.accessibilityLabel(title: title, count: count))
         .accessibilityAddTraits(.isHeader)
     }
 }

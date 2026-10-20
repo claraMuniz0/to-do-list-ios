@@ -11,6 +11,17 @@ struct TaskRowStyle: Equatable {
     var shadow: DSShadow { isDone ? .none : .soft }
     var showsCheckmark: Bool { isDone }
 
+    var accessibilityValue: String { isDone ? "Completed" : "Not completed" }
+    var toggleActionName: String { isDone ? "Mark as not completed" : "Mark as completed" }
+
+    /// One spoken label for the whole row. The description is skipped when done because it is not shown.
+    func accessibilityLabel(title: String, description: String?, categoryName: String) -> String {
+        var parts = [title]
+        if let description, !description.isEmpty, !isDone { parts.append(description) }
+        parts.append(categoryName)
+        return parts.joined(separator: ", ")
+    }
+
     func chipBackground(for palette: ChipPalette) -> Color {
         isDone ? DSColor.doneChipBackground : palette.background
     }
@@ -57,6 +68,10 @@ struct TaskRow: View {
 
     private var style: TaskRowStyle { TaskRowStyle(isDone: isDone) }
 
+    @ScaledMetric(relativeTo: .body) private var ringSize = DSTouchTarget.checkboxRing
+    @ScaledMetric(relativeTo: .body) private var checkmarkSize: CGFloat = 14
+    private var touchSize: CGFloat { max(DSTouchTarget.minimum, ringSize + 18) }
+
     private var chip: some View {
         CategoryChip(
             label: categoryName,
@@ -93,8 +108,14 @@ struct TaskRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
         }
+        // The whole row is one VoiceOver element; the visible checkbox stays a real Button for touch and pointer.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(style.accessibilityLabel(title: title, description: description, categoryName: categoryName))
+        .accessibilityValue(style.accessibilityValue)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, onToggle)
+        .accessibilityAction(named: style.toggleActionName, onToggle)
         .padding(EdgeInsets(top: 14, leading: 8, bottom: 14, trailing: 16))
         .dsBackground(style.surfaceFill, in: RoundedRectangle(cornerRadius: DSRadius.md), shadow: style.shadow)
         .overlay { RoundedRectangle(cornerRadius: DSRadius.md).strokeBorder(DSColor.border, lineWidth: 1) }
@@ -106,21 +127,17 @@ struct TaskRow: View {
                 Circle()
                     .fill(isDone ? DSColor.accent : Color.clear)
                     .overlay { Circle().strokeBorder(DSColor.accent, lineWidth: 2) }
-                    .frame(width: DSTouchTarget.checkboxRing, height: DSTouchTarget.checkboxRing)
+                    .frame(width: ringSize, height: ringSize)
                 if style.showsCheckmark {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: checkmarkSize, weight: .bold))
                         .foregroundStyle(DSColor.onAccent)
                 }
             }
-            .frame(width: DSTouchTarget.minimum, height: DSTouchTarget.minimum)
+            .frame(width: touchSize, height: touchSize)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(title)
-        .accessibilityValue(isDone ? "Completed" : "Not completed")
-        .accessibilityHint("Double tap to toggle")
-        .accessibilityAddTraits(.isToggle)
     }
 }
 

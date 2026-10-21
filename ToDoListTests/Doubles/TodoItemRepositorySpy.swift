@@ -1,11 +1,18 @@
 @testable import MyApp
 
+/// A neutral failure for tests that only need "the repository threw", not a specific repository error.
+struct StubFailure: Error, Equatable {}
+
 final class TodoItemRepositorySpy: TodoItemRepository {
     var storedItems: [TodoItem] = []
     var errorToThrow: Error?
+    /// Fails only that operation, so a use case's second repository step can fail after its first succeeded.
+    var updateError: Error?
+    var deleteError: Error?
     var onAllTasks: (() -> Void)?
     private(set) var allTasksCallCount = 0
     private(set) var updatedItems: [TodoItem] = []
+    private(set) var deletedIDs: [TodoItemID] = []
 
     func add(_ item: TodoItem) async throws {
         if let errorToThrow { throw errorToThrow }
@@ -14,6 +21,7 @@ final class TodoItemRepositorySpy: TodoItemRepository {
 
     func update(_ item: TodoItem) async throws {
         if let errorToThrow { throw errorToThrow }
+        if let updateError { throw updateError }
         guard let index = storedItems.firstIndex(where: { $0.id == item.id }) else {
             throw TodoItemRepositoryError.notFound
         }
@@ -23,6 +31,10 @@ final class TodoItemRepositorySpy: TodoItemRepository {
 
     func delete(id: TodoItemID) async throws {
         if let errorToThrow { throw errorToThrow }
+        if let deleteError { throw deleteError }
+        guard storedItems.contains(where: { $0.id == id }) else { throw TodoItemRepositoryError.notFound }
+        storedItems.removeAll { $0.id == id }
+        deletedIDs.append(id)
     }
 
     func task(id: TodoItemID) async throws -> TodoItem? {

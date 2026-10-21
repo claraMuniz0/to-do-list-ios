@@ -1,26 +1,31 @@
 import SwiftUI
 
-/// Full-screen Add Task form. Renders the view model and forwards intent; holds no business logic.
-struct AddTodoItemView: View {
-    @Bindable var viewModel: AddTodoItemViewModel
-    let onClose: () -> Void
-    let onSaved: () -> Void
+/// Full-screen Add and Edit Task form. Renders the view model and forwards intent; holds no business logic.
+struct TodoItemFormView: View {
+    @Bindable var viewModel: TodoItemFormViewModel
+    let onFinish: (TodoItemFormOutcome) -> Void
 
     @FocusState private var isTitleFocused: Bool
     @State private var isDateSheetPresented = false
+    @State private var isEditFlow: Bool
 
-    init(viewModel: AddTodoItemViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
+    init(viewModel: TodoItemFormViewModel,
+         onFinish: @escaping (TodoItemFormOutcome) -> Void,
+         isEditFlow: Bool = false
+    ) {
         self.viewModel = viewModel
-        self.onClose = onClose
-        self.onSaved = onSaved
+        self.onFinish = onFinish
+        self.isEditFlow = isEditFlow
     }
+
+    private func close() { onFinish(.cancelled) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                CircleIconButton(accessibilityLabel: "Close", action: onClose)
-                    .accessibilityHint("Discards the task")
-                ScreenHeader(subtitle: "What's on your mind?", title: "New task")
+                CircleIconButton(accessibilityLabel: "Close", action: close)
+                    .accessibilityHint(viewModel.canDelete ? "Discards your changes" : "Discards the task")
+                ScreenHeader(subtitle: viewModel.screenSubtitle, title: viewModel.screenTitle)
                 
                 FormField(label: "Task name") {
                     TextInputField(text: $viewModel.title, isFocused: $isTitleFocused)
@@ -44,10 +49,19 @@ struct AddTodoItemView: View {
         .dismissKeyboardOnTap()
         .safeAreaInset(edge: .bottom) { saveBar }
         .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
-        .accessibilityAction(.escape, onClose)
+        .accessibilityAction(.escape, close)
+        .task { await viewModel.load() }
         .onAppear {
-            isTitleFocused = true
+            if !isEditFlow {
+                isTitleFocused = true
+            }
+            
             AccessibilityNotification.ScreenChanged().post()
+        }
+        .onChange(of: viewModel.loadFailed) { _, failed in
+            guard failed else { return }
+            AccessibilityNotification.Announcement("Couldn't open the task.").post()
+            close()
         }
         .sheet(isPresented: $isDateSheetPresented) {
             SelectDateView(viewModel: viewModel)
@@ -92,9 +106,21 @@ struct AddTodoItemView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .onAppear { AccessibilityNotification.Announcement("Couldn't save the task. Try again.").post() }
             }
-            PrimaryButton(title: "Save task", systemImage: "checkmark", fullWidth: true, isEnabled: viewModel.canSave,
+            if viewModel.deleteFailed {
+                Text("Couldn't delete the task. Try again.")
+                    .dsFont(.rowDescription)
+                    .foregroundStyle(DSColor.danger)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onAppear { AccessibilityNotification.Announcement("Couldn't delete the task. Try again.").post() }
+            }
+            if viewModel.canDelete {
+                DestructiveTextButton(title: "Delete task", systemImage: "trash") {
+                    Task { if let deleted = await viewModel.delete() { onFinish(.deleted(deleted)) } }
+                }
+            }
+            PrimaryButton(title: viewModel.saveButtonTitle, systemImage: "checkmark", fullWidth: true, isEnabled: viewModel.canSave,
                           disabledHint: "Enter a task name first") {
-                Task { if await viewModel.save() { onSaved() } }
+                Task { if await viewModel.save() { onFinish(.saved) } }
             }
         }
         .padding(.horizontal, 20)
@@ -117,48 +143,80 @@ private struct FixedDateProvider: DateProvider {
     func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) } // 2026-10-08 12:00 UTC
 }
 
-extension AddTodoItemViewModel {
+extension TodoItem {
+    /// Sample for the Edit previews (a Shopping task, so the real category shows as selected).
+    static let previewGroceries = TodoItem(
+        title: try! TodoItemTitle("Buy groceries for the week"),
+        description: "Milk, eggs, bread and fruit. Don't forget the reusable bags!",
+        category: .shopping,
+        dueDate: try? DueDate(year: 2026, month: 10, day: 9),
+        createdAt: Date(timeIntervalSince1970: 1_791_000_000)
+    )
+}
+
+extension TodoItemFormViewModel {
     /// Deterministic, in-memory view model for previews.
     static func preview(
         title: String = "",
         details: String = "",
-        failingSave: Bool = false
-    ) -> AddTodoItemViewModel {
+        failingSave: Bool = false,
+        editing item: TodoItem? = nil
+    ) -> TodoItemFormViewModel {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
         let provider = FixedDateProvider()
         let repository: TodoItemRepository = failingSave ? FailingRepository() : InMemoryTodoItemRepository()
-        let viewModel = AddTodoItemViewModel(
+        let viewModel = TodoItemFormViewModel(
+            mode: item.map { .edit($0.id) } ?? .add,
             addTodoItem: AddTodoItemUseCase(repository: repository, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: repository),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: repository),
+            getTodoItem: GetTodoItemUseCase(repository: repository),
             dateProvider: provider,
             calendar: calendar,
             locale: Locale(identifier: "en_US"),
             initialTitle: title
         )
         viewModel.details = details
+        if let item {
+            Task {
+                try? await repository.add(item)
+                await viewModel.load()
+            }
+        }
         return viewModel
     }
 }
 
 #Preview("Empty") {
-    AddTodoItemView(viewModel: .preview(), onClose: {}, onSaved: {})
+    TodoItemFormView(viewModel: .preview(), onFinish: { _ in })
 }
 #Preview("Filled") {
-    AddTodoItemView(
+    TodoItemFormView(
         viewModel: .preview(title: "Call the dentist", details: "Ask about the Tuesday slot."),
-        onClose: {}, onSaved: {}
+        onFinish: { _ in }
     )
 }
 #Preview("Save disabled") {
-    AddTodoItemView(viewModel: .preview(title: "   "), onClose: {}, onSaved: {})
+    TodoItemFormView(viewModel: .preview(title: "   "), onFinish: { _ in })
 }
 #Preview("Save failed") {
-    let viewModel = AddTodoItemViewModel.preview(title: "Call the dentist", failingSave: true)
-    return AddTodoItemView(viewModel: viewModel, onClose: {}, onSaved: {})
+    let viewModel = TodoItemFormViewModel.preview(title: "Call the dentist", failingSave: true)
+    return TodoItemFormView(viewModel: viewModel, onFinish: { _ in })
         .task { _ = await viewModel.save() }
 }
+#Preview("Edit") {
+    TodoItemFormView(
+        viewModel: .preview(editing: .previewGroceries),
+        onFinish: { _ in }
+    )
+}
+#Preview("Edit - accessibility3") {
+    TodoItemFormView(viewModel: .preview(editing: .previewGroceries), onFinish: { _ in })
+        .dynamicTypeSize(.accessibility3)
+}
 #Preview("Accessibility3") {
-    AddTodoItemView(viewModel: .preview(title: "Call the dentist"), onClose: {}, onSaved: {})
+    TodoItemFormView(viewModel: .preview(title: "Call the dentist"), onFinish: { _ in })
         .dynamicTypeSize(.accessibility3)
 }
 #endif

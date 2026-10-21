@@ -4,9 +4,12 @@ import SwiftUI
 struct TodoListView: View {
     let viewModel: TodoListViewModel
     let router: AppRouter
-    let makeAddViewModel: (String) -> AddTodoItemViewModel
+    let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverIsOn
+    @Environment(\.accessibilitySwitchControlEnabled) private var switchControlIsOn
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -20,15 +23,53 @@ struct TodoListView: View {
         .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismiss() } })) { route in
             switch route {
             case .addTodoItem(let prefill):
-                AddTodoItemCover(
-                    makeViewModel: { makeAddViewModel(prefill) },
-                    onClose: router.dismiss,
-                    onSaved: {
-                        router.dismiss()
-                        Task { await viewModel.load() }
-                    }
+                TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm)
+                
+            case .editTodoItem(let id):
+                TodoItemFormCover(
+                    makeViewModel: { makeFormViewModel(.edit(id), "") },
+                    onFinish: finishForm,
+                    isEditFlow: true
                 )
             }
+        }
+        .overlay(alignment: .bottom) {
+            if !isListLoaded { undoToast.padding(.bottom, 24) }
+        }
+        .animation(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .default : nil, value: viewModel.undoState)
+    }
+
+    private var isListLoaded: Bool {
+        if case .loaded = viewModel.state { return true }
+        return false
+    }
+
+    private func finishForm(_ outcome: TodoItemFormOutcome) {
+        router.dismiss()
+        switch outcome {
+        case .saved: Task { await viewModel.load() }
+        case .deleted(let item): Task { await viewModel.didDelete(item) }
+        case .cancelled: break
+        }
+    }
+
+    /// Visible for 5 seconds (until used when VoiceOver or Switch Control is on); `.task(id:)` restarts the timer
+    /// when a second delete replaces the toast.
+    @ViewBuilder private var undoToast: some View {
+        if let undo = viewModel.undoState {
+            UndoToast(message: "Task deleted") { Task { await viewModel.undo() } }
+                .padding(.horizontal, 20)
+                .transition(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .move(edge: .bottom).combined(with: .opacity) : .opacity)
+                .task(id: undo) {
+                    // A cancelled sleep means a newer toast or a dismissal took over, so ending the timer is correct.
+                    try? await Task.sleep(for: UndoToastPolicy.announcementDelay)
+                    guard !Task.isCancelled else { return }
+                    AccessibilityNotification.Announcement("Deleted \(undo.item.title.value). Undo available.").post()
+                    let assistiveTechnologyIsOn = voiceOverIsOn || switchControlIsOn
+                    guard let delay = UndoToastPolicy.autoDismissDelay(assistiveTechnologyIsOn: assistiveTechnologyIsOn) else { return }
+                    try? await Task.sleep(for: delay)
+                    if !Task.isCancelled { viewModel.dismissUndo() }
+                }
         }
     }
 
@@ -77,6 +118,7 @@ struct TodoListView: View {
                     categoryName: item.category.name.value,
                     palette: ChipPalette(colorKey: item.category.color.key),
                     isDone: isDone,
+                    onOpen: { router.present(.editTodoItem(id: item.id)) },
                     onToggle: { Task { await viewModel.toggle(id: item.id) } }
                 )
                 // A toggled row changes section; without a state-dependent identity LazyVStack reuses it and keeps the old look.
@@ -87,6 +129,7 @@ struct TodoListView: View {
 
     private var quickAdd: some View {
         VStack(spacing: 8) {
+            undoToast
             if viewModel.actionFailed {
                 Text("Something went wrong. Try again.")
                     .dsFont(.rowDescription)
@@ -118,19 +161,23 @@ struct TodoListView: View {
 }
 
 /// Holds the form's view model in `@State` so it is created once per presentation, not on every list re-render.
-private struct AddTodoItemCover: View {
-    @State private var viewModel: AddTodoItemViewModel
-    let onClose: () -> Void
-    let onSaved: () -> Void
+private struct TodoItemFormCover: View {
+    @State private var viewModel: TodoItemFormViewModel
+    @State private var isEditFlow: Bool
+    let onFinish: (TodoItemFormOutcome) -> Void
 
-    init(makeViewModel: () -> AddTodoItemViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
+    init(
+        makeViewModel: () -> TodoItemFormViewModel,
+        onFinish: @escaping (TodoItemFormOutcome) -> Void,
+        isEditFlow: Bool = false
+    ) {
         _viewModel = State(initialValue: makeViewModel())
-        self.onClose = onClose
-        self.onSaved = onSaved
+        self.onFinish = onFinish
+        self.isEditFlow = isEditFlow
     }
 
     var body: some View {
-        AddTodoItemView(viewModel: viewModel, onClose: onClose, onSaved: onSaved)
+        TodoItemFormView(viewModel: viewModel, onFinish: onFinish, isEditFlow: isEditFlow)
     }
 }
 
@@ -149,7 +196,7 @@ private struct TodoListPreviewHost: View {
     var body: some View {
         Group {
             if let viewModel {
-                TodoListView(viewModel: viewModel, router: router, makeAddViewModel: { .preview(title: $0) })
+                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) })
             }
         }
         .task {

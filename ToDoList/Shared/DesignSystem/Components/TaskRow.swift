@@ -13,6 +13,7 @@ struct TaskRowStyle: Equatable {
 
     var accessibilityValue: String { isDone ? "Completed" : "Not completed" }
     var toggleActionName: String { isDone ? "Mark as not completed" : "Mark as completed" }
+    var openHint: String { "Opens the task for editing" }
 
     /// One spoken label for the whole row. The description is skipped when done because it is not shown.
     func accessibilityLabel(title: String, description: String?, categoryName: String) -> String {
@@ -37,7 +38,7 @@ struct TaskRowStepProgress: Equatable {
     let total: Int
 }
 
-/// The description is hidden when `isDone`, and the checkbox is the only interactive element: the row body is not tappable.
+/// The description is hidden when `isDone`. The checkbox toggles completion; tapping the rest of the row calls `onOpen`.
 /// `stepProgress` is display data only; the row never computes it.
 struct TaskRow: View {
     let title: String
@@ -46,6 +47,7 @@ struct TaskRow: View {
     let palette: ChipPalette
     let isDone: Bool
     let stepProgress: TaskRowStepProgress?
+    let onOpen: () -> Void
     let onToggle: () -> Void
 
     init(
@@ -55,6 +57,7 @@ struct TaskRow: View {
         palette: ChipPalette,
         isDone: Bool = false,
         stepProgress: TaskRowStepProgress? = nil,
+        onOpen: @escaping () -> Void = {},
         onToggle: @escaping () -> Void
     ) {
         self.title = title
@@ -63,6 +66,7 @@ struct TaskRow: View {
         self.palette = palette
         self.isDone = isDone
         self.stepProgress = stepProgress
+        self.onOpen = onOpen
         self.onToggle = onToggle
     }
 
@@ -113,12 +117,15 @@ struct TaskRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(style.accessibilityLabel(title: title, description: description, categoryName: categoryName))
         .accessibilityValue(style.accessibilityValue)
+        .accessibilityHint(style.openHint)
         .accessibilityAddTraits(.isButton)
-        .accessibilityAction(.default, onToggle)
+        .accessibilityAction(.default, onOpen)
         .accessibilityAction(named: style.toggleActionName, onToggle)
         .padding(EdgeInsets(top: 14, leading: 8, bottom: 14, trailing: 16))
         .dsBackground(style.surfaceFill, in: RoundedRectangle(cornerRadius: DSRadius.md), shadow: style.shadow)
         .overlay { RoundedRectangle(cornerRadius: DSRadius.md).strokeBorder(DSColor.border, lineWidth: 1) }
+        .contentShape(RoundedRectangle(cornerRadius: DSRadius.md))
+        .onTapGesture(perform: onOpen)
     }
 
     private var checkbox: some View {

@@ -62,6 +62,10 @@ struct DesignSystemGallery: View {
                     SectionHeader(title: "Completed", count: 1)
                 }
 
+                section("Destructive text button") {
+                    DestructiveTextButton(title: "Delete task", systemImage: "trash") {}
+                }
+
                 section("Undo toast") {
                     UndoToast(message: "Task deleted", onUndo: {})
                 }

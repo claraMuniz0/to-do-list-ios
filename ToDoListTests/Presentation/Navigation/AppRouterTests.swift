@@ -31,4 +31,23 @@ struct AppRouterTests {
         router.dismiss()
         #expect(router.presentedRoute == nil)
     }
+
+    @Test func presentingEditCarriesTheTaskID() {
+        let router = AppRouter()
+        let id = TodoItemID()
+        router.present(.editTodoItem(id: id))
+        #expect(router.presentedRoute == .editTodoItem(id: id))
+    }
+
+    @Test func editRoutesForDifferentTasksAreDifferent() {
+        #expect(AppRoute.editTodoItem(id: TodoItemID()) != AppRoute.editTodoItem(id: TodoItemID()))
+    }
+
+    @Test func presentingAnotherRouteReplacesTheCurrentOne() {
+        let router = AppRouter()
+        router.present(.addTodoItem(prefill: ""))
+        let id = TodoItemID()
+        router.present(.editTodoItem(id: id))
+        #expect(router.presentedRoute == .editTodoItem(id: id))
+    }
 }

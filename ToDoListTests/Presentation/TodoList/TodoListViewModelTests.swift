@@ -15,7 +15,8 @@ struct TodoListViewModelTests {
         let viewModel = TodoListViewModel(
             getTodoItems: GetTodoItemsUseCase(repository: spy),
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: spy, dateProvider: provider),
-            addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: .utcGregorian)
+            addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: .utcGregorian),
+            restoreTodoItem: RestoreTodoItemUseCase(repository: spy)
         )
         return (viewModel, spy)
     }
@@ -208,5 +209,80 @@ struct TodoListViewModelTests {
 
         #expect(await viewModel.quickAdd(title: "New") == false)
         #expect(viewModel.actionFailed)
+    }
+
+    // MARK: - Undo delete
+
+    @Test func startsWithoutAnUndo() {
+        #expect(makeSUT().viewModel.undoState == nil)
+    }
+
+    @Test func aDeletedItemOffersUndoAndTheListNoLongerShowsIt() async {
+        let kept = makeTodoItem(title: "Kept")
+        let (viewModel, _) = makeSUT(items: [kept])
+        let deleted = makeTodoItem(title: "Deleted")
+
+        await viewModel.didDelete(deleted)
+
+        #expect(viewModel.undoState == UndoState(item: deleted))
+        #expect(viewModel.state == .loaded(TodoListSections(items: [kept])))
+    }
+
+    @Test func aSecondDeleteReplacesTheToastAndMakesTheFirstFinal() async {
+        let (viewModel, spy) = makeSUT()
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+
+        await viewModel.didDelete(first)
+        await viewModel.didDelete(second)
+        await viewModel.undo()
+
+        #expect(spy.storedItems == [second])
+        #expect(viewModel.undoState == nil)
+    }
+
+    @Test func undoRestoresTheSameItemAndClearsTheToast() async {
+        var deleted = makeTodoItem(title: "Deleted", description: "Text", createdAt: Date(timeIntervalSince1970: 7))
+        deleted.complete(at: Date(timeIntervalSince1970: 9))
+        let (viewModel, spy) = makeSUT()
+        await viewModel.didDelete(deleted)
+
+        await viewModel.undo()
+
+        #expect(spy.storedItems == [deleted])
+        #expect(viewModel.undoState == nil)
+        #expect(viewModel.state == .loaded(TodoListSections(items: [deleted])))
+        #expect(!viewModel.actionFailed)
+    }
+
+    @Test func aFailedUndoFlagsTheFailureAndClosesTheToast() async {
+        let deleted = makeTodoItem()
+        let (viewModel, spy) = makeSUT()
+        await viewModel.didDelete(deleted)
+        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
+
+        await viewModel.undo()
+
+        #expect(spy.storedItems.isEmpty)
+        #expect(viewModel.actionFailed)
+        #expect(viewModel.undoState == nil)
+    }
+
+    @Test func dismissingTheToastKeepsTheDeleteFinal() async {
+        let (viewModel, spy) = makeSUT()
+        await viewModel.didDelete(makeTodoItem())
+
+        viewModel.dismissUndo()
+        await viewModel.undo()
+
+        #expect(viewModel.undoState == nil)
+        #expect(spy.storedItems.isEmpty)
+    }
+
+    @Test func undoWithNothingToUndoDoesNothing() async {
+        let (viewModel, spy) = makeSUT()
+        await viewModel.undo()
+        #expect(spy.storedItems.isEmpty)
+        #expect(!viewModel.actionFailed)
     }
 }

@@ -10,14 +10,19 @@ struct AppDependencies {
         TodoListViewModel(
             getTodoItems: GetTodoItemsUseCase(repository: todoItemRepository),
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider),
-            addTodoItem: makeAddTodoItemUseCase()
+            addTodoItem: makeAddTodoItemUseCase(),
+            restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository)
         )
     }
 
     @MainActor
-    func makeAddTodoItemViewModel(initialTitle: String = "") -> AddTodoItemViewModel {
-        AddTodoItemViewModel(
+    func makeTodoItemFormViewModel(mode: TodoItemFormMode = .add, initialTitle: String = "") -> TodoItemFormViewModel {
+        TodoItemFormViewModel(
+            mode: mode,
             addTodoItem: makeAddTodoItemUseCase(),
+            updateTodoItem: UpdateTodoItemUseCase(repository: todoItemRepository),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
+            getTodoItem: GetTodoItemUseCase(repository: todoItemRepository),
             dateProvider: dateProvider,
             calendar: calendar,
             initialTitle: initialTitle

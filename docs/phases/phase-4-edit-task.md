@@ -1,6 +1,6 @@
 # Phase 4: Edit Task
 
-**Status:** not started (all decisions confirmed, ready to start after Phase 3)
+**Status:** done (all decisions confirmed and implemented, reviews applied)
 **Design:** `to-do.pen`: "Edit Task – Break it down" (the base Edit screen), "Task List – Swipe to Delete", "Undo Toast", and the list frame shown after a delete
 **Depends on:** Phase 3 (form pieces, list, SwiftData repository, router), Phase 1 (`UndoToast`)
 
@@ -70,13 +70,13 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 | D1 | Phase size and order | **One small macro phase**, after Phase 3: generalize the form view model, then Update, then Delete and Restore, then the toast | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] Refactor the Phase 3 add-form view model into a mode-based form view model (green to green)
-- [ ] `TodoItem.changeDescription(_:)`, `TodoItemRepositoryError.notFound`
-- [ ] `UpdateTodoItemUseCase`, `DeleteTodoItemUseCase`, `RestoreTodoItemUseCase`, each tested first; the SwiftData repository's `update`, `delete`, `task(id:)` covered with an in-memory container
-- [ ] Edit mode in the form view (prefilled, "Edit task" header, "Save changes", "Delete task")
-- [ ] `DestructiveTextButton` and toast tokens; `UndoToast` wired to `TodoListViewModel`
-- [ ] Tapping a row opens Edit (open and completed rows); the circle still toggles completion
-- [ ] Previews per state; `accessibility-check`; `design-fidelity-checker`
+- [x] Refactor the Phase 3 add-form view model into a mode-based form view model (green to green)
+- [x] `TodoItem.changeDescription(_:)`, `TodoItemRepositoryError.notFound` (both already existed from Phases 0 and 3)
+- [x] `UpdateTodoItemUseCase`, `DeleteTodoItemUseCase`, `RestoreTodoItemUseCase` (plus `GetTodoItemUseCase` for the Edit prefill), each tested first; the SwiftData repository's `update`, `delete`, `task(id:)` were already covered
+- [x] Edit mode in the form view (prefilled, "Edit task" header, "Save changes", "Delete task")
+- [x] `DestructiveTextButton` and toast tokens; `UndoToast` wired to `TodoListViewModel`
+- [x] Tapping a row opens Edit (open and completed rows); the circle still toggles completion
+- [x] Previews per state; `accessibility-check`; `design-fidelity-checker`
 
 ## Out of scope
 - Swipe to delete and any delete confirmation (moved to Phase 5, Task List), "Break it down", suggested and manual steps, "+ New" category, Smart add
@@ -86,3 +86,19 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 - A task can be edited (title, description, category, due date) and the list shows the change.
 - A task can be deleted from the Edit screen, the toast shows for 5 seconds, and Undo brings back the same task in the same place.
 - Use case, repository and view model tests are green; the design-fidelity check shows no High differences.
+
+## Build notes
+- Already in the repo before this phase: `changeDescription`, `notFound`, the repository's `update`, `delete` and `task(id:)`, `UndoToast` and the `toast-bg` and `toast-action` tokens.
+- Use cases and the view models were built test-first (red `test:`, then green `feat:`). Exceptions: the `GetTodoItemUseCase` red step was committed without a separate run; the `.editTodoItem` route landed in the same commit as the UI files (`TodoItemFormView`, `TodoListView`, `TaskRow`, `DestructiveTextButton`), which have previews, not unit tests; Update and Restore share one red and one green commit.
+- `AddTodoItemViewModel` became `TodoItemFormViewModel` with a `TodoItemFormMode` (`.add` or `.edit(id)`); `AddTodoItemView` became `TodoItemFormView`, which reports a `TodoItemFormOutcome` (`saved`, `deleted(item)`, `cancelled`). The folder stays `AddTodoItem/` (decision: no Xcode project changes).
+- `TodoListViewModel` owns `undoState`, `didDelete(_:)`, `undo()` and `dismissUndo()`; the view runs the timer. `UndoToastPolicy` holds the pure rules: 5 seconds, no auto-dismiss while VoiceOver or Switch Control is on, a 0.6s announcement delay, no slide under Reduce Motion.
+- Delete runs immediately and Undo re-adds the same item through `add` (same id, `createdAt`, `completedAt`). A second delete replaces the toast and makes the first delete final. When the last task is deleted the toast shows over the Welcome screen.
+- `TaskRow` takes `onOpen`: the checkbox toggles, the rest of the row opens Edit. VoiceOver's default action is open, toggling is a named action. No unit test pins the tap wiring (view-level).
+- Reviews applied: toast reachable for assistive tech, Reduce Motion, row hint, use case failure paths tested through per-operation spy errors. Contrast of `danger` on `bg` is 6.2:1 (passes).
+- Known deviations: "Break it down" pill and "+ New" chip not built; the Delete label uses the 17pt `.button` token (design: 16pt); the toast uses Outfit instead of DM Sans (flag for the design).
+
+## Follow-ups (not done in this phase)
+- At the largest text sizes the Edit bottom bar (error, Delete, Save) can take a lot of height; consider moving Delete into the scroll content.
+- Voice Control has no obvious way to toggle a row, because the checkbox is hidden from VoiceOver.
+- Edit mode auto-focuses the title, as in the design; consider skipping it for VoiceOver users.
+- Form view model errors are reduced to flags (`loadFailed`, `saveFailed`, `deleteFailed`); a typed failure would keep the cause.

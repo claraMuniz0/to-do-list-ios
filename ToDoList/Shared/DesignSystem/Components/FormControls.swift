@@ -18,7 +18,6 @@ struct FormControlBorder: Equatable {
 private struct FormControlChrome: ViewModifier {
     let isFocused: Bool
     let minHeight: CGFloat
-    var onTap: (() -> Void)?
 
     func body(content: Content) -> some View {
         let border = FormControlBorder(isFocused: isFocused)
@@ -92,7 +91,7 @@ struct TextInputField: View {
 
     var body: some View {
         field
-            .modifier(FormControlChrome(isFocused: focused, minHeight: FormControlMetrics.singleLineMinHeight, onTap: focus))
+            .modifier(FormControlChrome(isFocused: focused, minHeight: FormControlMetrics.singleLineMinHeight))
     }
 
     private func focus() {
@@ -143,7 +142,7 @@ struct TextAreaField: View {
         .dsFont(.inputText)
         .foregroundStyle(DSColor.textPrimary)
         .focused($isFocused)
-        .modifier(FormControlChrome(isFocused: isFocused, minHeight: FormControlMetrics.textAreaMinHeight, onTap: { isFocused = true }))
+        .modifier(FormControlChrome(isFocused: isFocused, minHeight: FormControlMetrics.textAreaMinHeight))
     }
 }
 

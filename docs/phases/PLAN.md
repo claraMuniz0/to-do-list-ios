@@ -34,7 +34,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 5: Task List (post-MVP core)
 - Swipe to delete (and the delete-confirmation question), the "All caught up" state, and the filters (Active / Done / Categories).
-- All decisions confirmed.
+- Done.
 
 ## Phase 6: Search & Sort
 - Search (recent searches, category scope, results, no results with "Add as task") and a Sort menu with three options (the sort menu is undesigned, flagged for the designer).

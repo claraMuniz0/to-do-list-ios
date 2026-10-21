@@ -9,7 +9,8 @@ struct UpdateTodoItemUseCaseTests {
         _ spy: TodoItemRepositorySpy,
         id: TodoItemID,
         title: String = "New title",
-        description: String? = "New description"
+        description: String? = "New description",
+        dueDate: DueDate? = makeDueDate(2026, 10, 20)
     ) async throws -> TodoItem {
         try await UpdateTodoItemUseCase(repository: spy).execute(
             id: id, title: title, description: description, category: .work, dueDate: dueDate
@@ -58,7 +59,7 @@ struct UpdateTodoItemUseCaseTests {
         let item = makeTodoItem(title: "Old")
         spy.storedItems = [item]
 
-        await #expect(throws: TodoItemTitleError.self) {
+        await #expect(throws: TodoItemTitleError.empty) {
             try await update(spy, id: item.id, title: "  ")
         }
         #expect(spy.updatedItems.isEmpty)
@@ -71,5 +72,46 @@ struct UpdateTodoItemUseCaseTests {
             try await update(spy, id: TodoItemID())
         }
         #expect(spy.updatedItems.isEmpty)
+    }
+
+    @Test func aNilDueDateClearsTheStoredOne() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(dueDate: makeDueDate(2026, 10, 1))
+        spy.storedItems = [item]
+
+        let updated = try await update(spy, id: item.id, dueDate: nil)
+
+        #expect(updated.dueDate == nil)
+    }
+
+    @Test func aNilDescriptionClearsTheStoredOne() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(description: "Something")
+        spy.storedItems = [item]
+
+        #expect(try await update(spy, id: item.id, description: nil).description == nil)
+    }
+
+    @Test func aTooLongTitleThrowsBeforeTouchingTheRepository() async {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(title: "Old")
+        spy.storedItems = [item]
+
+        await #expect(throws: TodoItemTitleError.tooLong) {
+            try await update(spy, id: item.id, title: String(repeating: "a", count: TodoItemTitle.maxLength + 1))
+        }
+        #expect(spy.storedItems == [item])
+    }
+
+    @Test func aFailureWhileUpdatingPropagatesAndKeepsTheStoredItem() async {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(title: "Old")
+        spy.storedItems = [item]
+        spy.updateError = StubFailure()
+
+        await #expect(throws: StubFailure()) {
+            try await update(spy, id: item.id)
+        }
+        #expect(spy.storedItems == [item])
     }
 }

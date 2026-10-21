@@ -18,8 +18,8 @@ struct GetTodoItemUseCaseTests {
 
     @Test func repositoryFailurePropagatesUnchanged() async {
         let spy = TodoItemRepositorySpy()
-        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
-        await #expect(throws: TodoItemRepositoryError.alreadyExists) {
+        spy.errorToThrow = StubFailure()
+        await #expect(throws: StubFailure()) {
             try await GetTodoItemUseCase(repository: spy).execute(id: TodoItemID())
         }
     }

@@ -62,4 +62,9 @@ struct TaskRowStyleTests {
         #expect(TaskRowStyle(isDone: false).toggleActionName == "Mark as completed")
         #expect(TaskRowStyle(isDone: true).toggleActionName == "Mark as not completed")
     }
+
+    @Test func rowHintSaysTheDefaultActionOpensTheTask() {
+        #expect(TaskRowStyle(isDone: false).openHint == "Opens the task for editing")
+        #expect(TaskRowStyle(isDone: true).openHint == "Opens the task for editing")
+    }
 }

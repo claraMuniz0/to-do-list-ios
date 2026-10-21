@@ -29,10 +29,22 @@ struct DeleteTodoItemUseCaseTests {
         let spy = TodoItemRepositorySpy()
         let item = makeTodoItem()
         spy.storedItems = [item]
-        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
+        spy.errorToThrow = StubFailure()
 
-        await #expect(throws: TodoItemRepositoryError.alreadyExists) {
+        await #expect(throws: StubFailure()) {
             try await DeleteTodoItemUseCase(repository: spy).execute(id: item.id)
         }
+    }
+
+    @Test func aFailureWhileDeletingPropagatesAndKeepsTheItem() async {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem()
+        spy.storedItems = [item]
+        spy.deleteError = StubFailure()
+
+        await #expect(throws: StubFailure()) {
+            try await DeleteTodoItemUseCase(repository: spy).execute(id: item.id)
+        }
+        #expect(spy.storedItems == [item])
     }
 }

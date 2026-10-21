@@ -110,6 +110,7 @@ struct TodoListView: View {
 
     private func addQuickly() {
         let title = quickAddText
+        
         Task {
             if await viewModel.quickAdd(title: title) { quickAddText = "" }
         }

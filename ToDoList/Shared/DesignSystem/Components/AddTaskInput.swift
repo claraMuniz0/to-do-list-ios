@@ -31,8 +31,10 @@ struct AddTaskInput: View {
     var body: some View {
         let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
         let shape = stacked ? AnyShape(RoundedRectangle(cornerRadius: 28, style: .continuous)) : AnyShape(Capsule())
+        
         layout {
             field
+            
             if stacked {
                 HStack(spacing: 8) { Spacer(minLength: 0); optionsButton; addButton }
             } else {
@@ -80,7 +82,13 @@ struct AddTaskInput: View {
     }
 
     private var addButton: some View {
-        Button(action: onAdd) {
+        Button {
+            if text.isEmpty {
+                onOptions()
+            } else {
+                onAdd()
+            }
+        } label: {
             Image(systemName: "plus")
                 .font(.system(size: plusIconSize, weight: .semibold))
                 .foregroundStyle(DSColor.onAccent)

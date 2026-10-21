@@ -60,6 +60,7 @@ final class TodoListViewModel {
     @discardableResult
     func quickAdd(title: String) async -> Bool {
         guard !TodoItemTitle.isBlank(title) else { return false }
+        
         return await perform { _ = try await addTodoItem.quickAdd(title: title) }
     }
 

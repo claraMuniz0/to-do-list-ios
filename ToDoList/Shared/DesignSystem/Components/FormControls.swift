@@ -23,6 +23,7 @@ private struct FormControlChrome: ViewModifier {
     func body(content: Content) -> some View {
         let border = FormControlBorder(isFocused: isFocused)
         let shape = RoundedRectangle(cornerRadius: DSRadius.md, style: .continuous)
+        
         content
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
@@ -31,7 +32,6 @@ private struct FormControlChrome: ViewModifier {
             .overlay { shape.strokeBorder(border.color, lineWidth: border.lineWidth) }
             // The whole box focuses the field, not just the text line.
             .contentShape(shape)
-            .onTapGesture { onTap?() }
     }
 }
 

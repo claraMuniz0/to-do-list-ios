@@ -40,6 +40,12 @@ struct DesignSystemGallery: View {
                     }
                 }
 
+                section("Category filter row") {
+                    CategoryFilterRow(name: "Work", openCount: 2, palette: .blue, isSelected: true) {}
+                    CategoryFilterRow(name: "Personal", openCount: 1, palette: .brick, isSelected: false) {}
+                    CategoryFilterRow(name: "Shopping", openCount: 0, palette: .green, isSelected: false) {}
+                }
+
                 section("Add task input") {
                     AddTaskInput(text: $inputText, onOptions: {}, onAdd: {})
                 }

@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 @testable import MyApp
 
@@ -9,5 +10,13 @@ struct FilterPillTests {
 
     @Test func plainPillHasNoSpokenValue() {
         #expect(FilterPill.accessibilityValue(isExpanded: nil) == nil)
+    }
+
+    @Test func unselectedPillOutlineUsesTheControlBorderForContrast() {
+        #expect(FilterPill.borderColor(isSelected: false).lightHex == DSColor.borderControl.lightHex)
+    }
+
+    @Test func selectedPillHasNoOutline() {
+        #expect(FilterPill.borderColor(isSelected: true) == .clear)
     }
 }

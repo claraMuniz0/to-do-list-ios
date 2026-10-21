@@ -14,7 +14,7 @@ struct CategoryFilterRowStyleTests {
 
     @Test func unselectedRowHasThinBorderAndEmptyIndicator() {
         let style = CategoryFilterRowStyle(isSelected: false)
-        #expect(style.borderColor.lightHex == DSColor.border.lightHex)
+        #expect(style.borderColor.lightHex == DSColor.borderControl.lightHex)
         #expect(style.borderWidth == 1)
         #expect(style.indicatorFill == .clear)
         #expect(style.indicatorStroke.lightHex == DSColor.textMuted.lightHex)

@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 @testable import MyApp
 
@@ -25,5 +26,14 @@ struct SectionHeaderTests {
     @Test func spokenLabelWithoutCountIsTheTitle() {
         #expect(SectionHeader.accessibilityLabel(title: "Showing · Work", count: nil) == "Showing, Work")
         #expect(SectionHeader.accessibilityLabel(title: "Categories", count: nil) == "Categories")
+    }
+
+    @Test func labelUsesTheMonoSectionTokenTrackedAndMuted() {
+        #expect(SectionHeader.font == .sectionLabel)
+        #expect(SectionHeader.tracking == 1.4)
+        #expect(SectionHeader.labelColor.lightHex == DSColor.textMuted.lightHex)
+        #expect(DSFont.sectionLabel.spec.family == "DM Mono")
+        #expect(DSFont.sectionLabel.spec.size == 12)
+        #expect(DSFont.sectionLabel.spec.weight == .medium)
     }
 }

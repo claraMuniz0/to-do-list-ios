@@ -6,6 +6,7 @@ final class TodoItemRepositorySpy: TodoItemRepository {
     var onAllTasks: (() -> Void)?
     private(set) var allTasksCallCount = 0
     private(set) var updatedItems: [TodoItem] = []
+    private(set) var deletedIDs: [TodoItemID] = []
 
     func add(_ item: TodoItem) async throws {
         if let errorToThrow { throw errorToThrow }
@@ -23,6 +24,9 @@ final class TodoItemRepositorySpy: TodoItemRepository {
 
     func delete(id: TodoItemID) async throws {
         if let errorToThrow { throw errorToThrow }
+        guard storedItems.contains(where: { $0.id == id }) else { throw TodoItemRepositoryError.notFound }
+        storedItems.removeAll { $0.id == id }
+        deletedIDs.append(id)
     }
 
     func task(id: TodoItemID) async throws -> TodoItem? {

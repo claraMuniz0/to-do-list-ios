@@ -89,12 +89,19 @@ struct TodoListView: View {
     }
 
     private func list(_ sections: TodoListSections) -> some View {
-        ScrollView {
+        let visible = viewModel.visibleSections
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
                 ScreenHeader(subtitle: viewModel.subtitle, title: "My Tasks")
                     .padding(.bottom, 8)
-                section("To do", items: sections.todo, isDone: false)
-                section("Completed", items: sections.completed, isDone: true)
+                filterPills
+                if viewModel.isCategoriesPanelOpen { categoriesPanel }
+                if case .category(let category) = viewModel.selectedFilter {
+                    section("Showing · \(category.name.value)", items: visible.todo, isDone: false, showsCount: false)
+                } else {
+                    section("To do", items: visible.todo, isDone: false)
+                    section("Completed", items: visible.completed, isDone: true)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -106,10 +113,37 @@ struct TodoListView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { quickAdd }
     }
 
+    private var filterPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                pill("All", .all)
+                pill("Active", .active)
+                pill("Done", .done)
+                FilterPill(title: "Categories", isSelected: viewModel.isCategoriesPanelOpen) { viewModel.toggleCategories() }
+            }
+        }
+    }
+
+    private func pill(_ title: String, _ filter: TodoListFilter) -> some View {
+        FilterPill(title: title, isSelected: viewModel.selectedFilter == filter) { viewModel.select(filter) }
+    }
+
+    @ViewBuilder private var categoriesPanel: some View {
+        SectionHeader(title: "Categories").padding(.top, 8)
+        ForEach(viewModel.categoryCounts, id: \.category) { entry in
+            CategoryFilterRow(
+                name: entry.category.name.value,
+                openCount: entry.openCount,
+                palette: ChipPalette(colorKey: entry.category.color.key),
+                isSelected: viewModel.selectedFilter == .category(entry.category)
+            ) { viewModel.selectCategory(entry.category) }
+        }
+    }
+
     @ViewBuilder
-    private func section(_ title: String, items: [TodoItem], isDone: Bool) -> some View {
+    private func section(_ title: String, items: [TodoItem], isDone: Bool, showsCount: Bool = true) -> some View {
         if !items.isEmpty {
-            SectionHeader(title: title, count: items.count)
+            SectionHeader(title: title, count: showsCount ? items.count : nil)
                 .padding(.top, 8)
             ForEach(items, id: \.id) { item in
                 TaskRow(
@@ -190,6 +224,7 @@ private struct PreviewDateProvider: DateProvider {
 private struct TodoListPreviewHost: View {
     let openCount: Int
     let completedCount: Int
+    var filter: TodoListFilter = .all
     @State private var viewModel: TodoListViewModel?
     @State private var router = AppRouter()
 
@@ -223,6 +258,8 @@ private struct TodoListPreviewHost: View {
             }
             viewModel = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
                 .makeTodoListViewModel()
+            await viewModel?.load()
+            viewModel?.select(filter)
         }
     }
 }
@@ -230,6 +267,9 @@ private struct TodoListPreviewHost: View {
 #Preview("Mixed") { TodoListPreviewHost(openCount: 3, completedCount: 2) }
 #Preview("Only open") { TodoListPreviewHost(openCount: 3, completedCount: 0) }
 #Preview("Only completed") { TodoListPreviewHost(openCount: 0, completedCount: 2) }
+#Preview("Filter - Active") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .active) }
+#Preview("Filter - Done") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .done) }
+#Preview("Filter - Categories") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .category(.work)) }
 #Preview("Accessibility3") {
     TodoListPreviewHost(openCount: 3, completedCount: 2).dynamicTypeSize(.accessibility3)
 }

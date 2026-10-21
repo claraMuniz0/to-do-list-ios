@@ -21,7 +21,7 @@ struct AllCaughtUpView: View {
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
-        .padding(.top, 24)
+        .padding(.top, 44)
     }
 }
 

@@ -23,8 +23,10 @@ struct SwipeToDeleteRow<Content: View>: View {
                 .accessibilityHidden(true)
             content
                 .dsShadow(offset < 0 ? .swipedRow : .none)
-                .offset(x: offset)
+                // The catcher goes before `.offset`: offset only moves the drawing, so an overlay added after it would stay
+                // on the row's original frame and cover the revealed Delete button.
                 .overlay { if isOpen { closeCatcher } }
+                .offset(x: offset)
                 .accessibilityAction(named: SwipeDeleteAction.accessibilityLabel(taskTitle: taskTitle), onDelete)
         }
         .simultaneousGesture(drag)

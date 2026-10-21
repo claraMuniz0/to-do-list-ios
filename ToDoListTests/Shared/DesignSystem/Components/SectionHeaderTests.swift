@@ -28,6 +28,16 @@ struct SectionHeaderTests {
         #expect(SectionHeader.accessibilityLabel(title: "Categories", count: nil) == "Categories")
     }
 
+    @Test func ruleShowsUnlessTheHeaderHasATrailingLink() {
+        #expect(SectionHeader.showsRule(hasTrailingAction: false) == true)
+        #expect(SectionHeader.showsRule(hasTrailingAction: true) == false)
+    }
+
+    @Test func resultCountTitlesUppercaseWithoutTheDot() {
+        #expect(SectionHeader.label(title: "2 results", count: nil) == "2 RESULTS")
+        #expect(SectionHeader.accessibilityLabel(title: "2 results", count: nil) == "2 results")
+    }
+
     @Test func labelUsesTheMonoSectionTokenTrackedAndMuted() {
         #expect(SectionHeader.font == .sectionLabel)
         #expect(SectionHeader.tracking == 1.4)

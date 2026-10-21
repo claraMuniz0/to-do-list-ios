@@ -97,12 +97,36 @@ struct TodoListView: View {
         }
     }
 
+    /// System menu with a checkmark on the active order. Same 44pt circular surface button as the other header icons.
+    private var sortMenu: some View {
+        Menu {
+            Picker("Sort by", selection: Binding(get: { viewModel.sortOrder }, set: { viewModel.selectSortOrder($0) })) {
+                ForEach(TodoItemSortOrder.allCases, id: \.self) { order in
+                    Text(order.title).tag(order)
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.system(size: 20, weight: .regular))
+                .foregroundStyle(DSColor.textPrimary)
+                .frame(width: DSTouchTarget.minimum, height: DSTouchTarget.minimum)
+                .background(DSColor.surface, in: Circle())
+                .overlay(Circle().stroke(DSColor.border, lineWidth: 1))
+        }
+        .accessibilityLabel("Sort")
+        .accessibilityValue(viewModel.sortOrder.title)
+        .accessibilityHint("Choose how tasks are ordered")
+    }
+
     private func list(_ sections: TodoListSections) -> some View {
         let visible = viewModel.visibleSections
         return ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
-                ScreenHeader(subtitle: viewModel.subtitle, title: "My Tasks")
-                    .padding(.bottom, 8)
+                HStack(alignment: .top, spacing: 8) {
+                    ScreenHeader(subtitle: viewModel.subtitle, title: "My Tasks")
+                    sortMenu
+                }
+                .padding(.bottom, 8)
                 filterPills
                 if viewModel.isCategoriesPanelOpen { categoriesPanel }
                 if viewModel.isAllCaughtUp {

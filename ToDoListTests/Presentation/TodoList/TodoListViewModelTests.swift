@@ -6,7 +6,8 @@ import Testing
 struct TodoListViewModelTests {
     private func makeSUT(
         items: [TodoItem] = [],
-        error: Error? = nil
+        error: Error? = nil,
+        sortOrders: SortOrderRepositorySpy = SortOrderRepositorySpy()
     ) -> (viewModel: TodoListViewModel, spy: TodoItemRepositorySpy) {
         let spy = TodoItemRepositorySpy()
         spy.storedItems = items
@@ -17,7 +18,8 @@ struct TodoListViewModelTests {
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: spy, dateProvider: provider),
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: .utcGregorian),
             restoreTodoItem: RestoreTodoItemUseCase(repository: spy),
-            deleteTodoItem: DeleteTodoItemUseCase(repository: spy)
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
+            sortOrderRepository: sortOrders
         )
         return (viewModel, spy)
     }
@@ -614,5 +616,73 @@ struct TodoListViewModelTests {
         failing.select(.category(.work))
         #expect(failing.emptyFilterMessage == nil)
         #expect(!failing.isAllCaughtUp)
+    }
+
+    private func titles(_ items: [TodoItem]) -> [String] { items.map(\.title.value) }
+
+    @Test func startsWithTheDefaultSortOrder() {
+        #expect(makeSUT().viewModel.sortOrder == .dueDate)
+    }
+
+    @Test func startsWithTheRememberedSortOrder() {
+        let sortOrders = SortOrderRepositorySpy(stored: .titleAZ)
+        #expect(makeSUT(sortOrders: sortOrders).viewModel.sortOrder == .titleAZ)
+    }
+
+    @Test func loadingOrdersOpenTasksByTheRememberedSortOrder() async {
+        let items = [makeTodoItem(title: "B"), makeTodoItem(title: "A")]
+        let (viewModel, _) = makeSUT(items: items, sortOrders: SortOrderRepositorySpy(stored: .titleAZ))
+        await viewModel.load()
+        #expect(titles(viewModel.visibleSections.todo) == ["A", "B"])
+    }
+
+    @Test func choosingASortOrderReordersTheLoadedListWithoutReloading() async {
+        let items = [
+            makeTodoItem(title: "Old", createdAt: Date(timeIntervalSince1970: 1)),
+            makeTodoItem(title: "New", createdAt: Date(timeIntervalSince1970: 2)),
+        ]
+        let (viewModel, spy) = makeSUT(items: items)
+        await viewModel.load()
+
+        viewModel.selectSortOrder(.newestFirst)
+
+        #expect(viewModel.sortOrder == .newestFirst)
+        #expect(titles(viewModel.visibleSections.todo) == ["New", "Old"])
+        #expect(spy.allTasksCallCount == 1)
+    }
+
+    @Test func choosingASortOrderKeepsTheSelectedFilterAndSorts() async {
+        let items = [
+            makeTodoItem(title: "Old", createdAt: Date(timeIntervalSince1970: 1)),
+            makeTodoItem(title: "New", createdAt: Date(timeIntervalSince1970: 2)),
+        ]
+        let (viewModel, _) = makeSUT(items: items)
+        await viewModel.load()
+        viewModel.select(.active)
+
+        viewModel.selectSortOrder(.newestFirst)
+
+        #expect(viewModel.selectedFilter == .active)
+        #expect(titles(viewModel.visibleSections.todo) == ["New", "Old"])
+    }
+
+    @Test func choosingASortOrderRemembersIt() {
+        let sortOrders = SortOrderRepositorySpy()
+        makeSUT(sortOrders: sortOrders).viewModel.selectSortOrder(.newestFirst)
+        #expect(sortOrders.stored == .newestFirst)
+    }
+
+    @Test func choosingTheActiveSortOrderAgainDoesNotSaveAgain() {
+        let sortOrders = SortOrderRepositorySpy()
+        makeSUT(sortOrders: sortOrders).viewModel.selectSortOrder(.dueDate)
+        #expect(sortOrders.saveCallCount == 0)
+    }
+
+    @Test func theSortOrderSurvivesReloads() async {
+        let (viewModel, _) = makeSUT(items: [makeTodoItem(title: "B"), makeTodoItem(title: "A")])
+        await viewModel.load()
+        viewModel.selectSortOrder(.titleAZ)
+        await viewModel.load()
+        #expect(titles(viewModel.visibleSections.todo) == ["A", "B"])
     }
 }

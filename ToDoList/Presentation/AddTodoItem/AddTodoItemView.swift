@@ -130,6 +130,9 @@ extension TodoItemFormViewModel {
         let repository: TodoItemRepository = failingSave ? FailingRepository() : InMemoryTodoItemRepository()
         let viewModel = TodoItemFormViewModel(
             addTodoItem: AddTodoItemUseCase(repository: repository, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: repository),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: repository),
+            getTodoItem: GetTodoItemUseCase(repository: repository),
             dateProvider: provider,
             calendar: calendar,
             locale: Locale(identifier: "en_US"),

@@ -7,6 +7,8 @@ struct TodoListView: View {
     let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
+    /// Only one row can be swiped open at a time; opening another closes the first.
+    @State private var openSwipeID: TodoItemID?
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverIsOn
     @Environment(\.accessibilitySwitchControlEnabled) private var switchControlIsOn
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -178,18 +180,36 @@ struct TodoListView: View {
             SectionHeader(title: title, count: showsCount ? items.count : nil)
                 .padding(.top, 8)
             ForEach(items, id: \.id) { item in
-                TaskRow(
-                    title: item.title.value,
-                    description: item.description,
-                    categoryName: item.category.name.value,
-                    palette: ChipPalette(colorKey: item.category.color.key),
-                    isDone: isDone,
-                    onOpen: { router.present(.editTodoItem(id: item.id)) },
-                    onToggle: { Task { await viewModel.toggle(id: item.id) } }
-                )
+                SwipeToDeleteRow(
+                    isOpen: openSwipeID == item.id,
+                    taskTitle: item.title.value,
+                    onOpenChange: { setSwipe(open: $0, for: item.id) },
+                    onDelete: {
+                        openSwipeID = nil
+                        Task { await viewModel.delete(id: item.id) }
+                    }
+                ) {
+                    TaskRow(
+                        title: item.title.value,
+                        description: item.description,
+                        categoryName: item.category.name.value,
+                        palette: ChipPalette(colorKey: item.category.color.key),
+                        isDone: isDone,
+                        onOpen: { router.present(.editTodoItem(id: item.id)) },
+                        onToggle: { Task { await viewModel.toggle(id: item.id) } }
+                    )
+                }
                 // A toggled row changes section; without a state-dependent identity LazyVStack reuses it and keeps the old look.
                 .id("\(item.id.uuid)-\(isDone)")
             }
+        }
+    }
+
+    private func setSwipe(open: Bool, for id: TodoItemID) {
+        if open {
+            openSwipeID = id
+        } else if openSwipeID == id {
+            openSwipeID = nil
         }
     }
 

@@ -1,6 +1,6 @@
 # Phase 5: Task List
 
-**Status:** not started (all decisions confirmed, ready to start after Phases 3 and 4)
+**Status:** all decisions confirmed, kickoff re-checked against the code after Phases 3, 4 and 10; ready to start (branch `feat-phase-5-task-list-new-features`)
 **Design:** `to-do.pen`: "Task List", "Task List – Swipe to Delete", "Task List – Categories", "Task List – All Done", "Task List – Delete Undo" (the Undo Toast frame)
 **Depends on:** Phases 3 and 4 (list, `TodoListViewModel` with `ViewState`, SwiftData repository, Edit, `DeleteTodoItemUseCase`, `RestoreTodoItemUseCase`, Undo toast, `DateProvider`, `DueDate`, static `Category` set)
 
@@ -8,7 +8,16 @@
 Complete the task list experience beyond the MVP core: faster deletion, an "all caught up" state, and filtering.
 
 ## Repo state at kickoff
-The repo still has only the Xcode template (`ToDoList/ContentView.swift`, `ToDoListWindow.swift`, assets). Phases 0 to 4 are fully planned but no code exists, so everything below builds on planned types. Names used here come from Phases 0 to 4; if they change during implementation, update this file.
+Phases 0 to 4 and 10 are implemented (the earlier "template only" note is obsolete). What this phase builds on, as it exists:
+- `TodoListViewModel` (`Presentation/TodoList`): `state: TodoListViewState` (`.loading`, `.empty`, `.loaded(TodoListSections)`, `.error`), `subtitle`, `toggle`, `quickAdd`, `didDelete(_:)`, `undo()`, `dismissUndo()`, `undoState`. It has **no** `DeleteTodoItemUseCase` yet: Edit deletes inside the form view model and reports `.deleted(item)`.
+- `TodoListSections` (Domain) holds the ordering; `TodoListView` renders `ScreenHeader`, `SectionHeader`, `TaskRow` in a `LazyVStack`, with `AddTaskInput` and the Undo toast in a bottom inset.
+- `FilterPill` exists with a selected state and the `.isSelected` trait; not yet used on the list. `Category.defaults` (work, personal, shopping) and the chip palettes exist. `EmptyStateIllustration` exists (Welcome), `AllCaughtUpIllustration` does not.
+- `AppDependencies.makeTodoListViewModel()` is the composition point to extend.
+
+## Drift from the plan (apply during implementation)
+- **State naming:** the file says `ViewState.loaded`; the real type is `TodoListViewState.loaded(TodoListSections)`. F4 extends it: keep `TodoListSections` as the unfiltered source and add filter/count state next to it (no breaking change to existing tests).
+- **A7/Phase 4 C3:** swipe delete needs `DeleteTodoItemUseCase` injected into `TodoListViewModel` (new `delete(_:)` that sets `undoState`); `didDelete(_:)` (Edit path) and `delete(_:)` converge on one private path.
+- **Subtitle:** current code comment already anticipates the filters; B1 keeps "N tasks left".
 
 ## What the design actually contains
 **Task List base** (reference, built in Phase 3)

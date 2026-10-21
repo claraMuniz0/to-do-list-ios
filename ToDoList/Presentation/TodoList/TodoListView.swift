@@ -4,7 +4,7 @@ import SwiftUI
 struct TodoListView: View {
     let viewModel: TodoListViewModel
     let router: AppRouter
-    let makeAddViewModel: (String) -> TodoItemFormViewModel
+    let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
 
@@ -20,15 +20,42 @@ struct TodoListView: View {
         .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismiss() } })) { route in
             switch route {
             case .addTodoItem(let prefill):
-                AddTodoItemCover(
-                    makeViewModel: { makeAddViewModel(prefill) },
-                    onClose: router.dismiss,
-                    onSaved: {
-                        router.dismiss()
-                        Task { await viewModel.load() }
-                    }
-                )
+                TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm)
+            case .editTodoItem(let id):
+                TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: finishForm)
             }
+        }
+        .overlay(alignment: .bottom) {
+            if !isListLoaded { undoToast.padding(.bottom, 24) }
+        }
+        .animation(.default, value: viewModel.undoState)
+    }
+
+    private var isListLoaded: Bool {
+        if case .loaded = viewModel.state { return true }
+        return false
+    }
+
+    private func finishForm(_ outcome: TodoItemFormOutcome) {
+        router.dismiss()
+        switch outcome {
+        case .saved: Task { await viewModel.load() }
+        case .deleted(let item): Task { await viewModel.didDelete(item) }
+        case .cancelled: break
+        }
+    }
+
+    /// Visible for 5 seconds; `.task(id:)` restarts the timer when a second delete replaces the toast.
+    @ViewBuilder private var undoToast: some View {
+        if let undo = viewModel.undoState {
+            UndoToast(message: "Task deleted") { Task { await viewModel.undo() } }
+                .padding(.horizontal, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .task(id: undo) {
+                    AccessibilityNotification.Announcement("Task deleted. Undo available.").post()
+                    try? await Task.sleep(for: .seconds(5))
+                    if !Task.isCancelled { viewModel.dismissUndo() }
+                }
         }
     }
 
@@ -77,6 +104,7 @@ struct TodoListView: View {
                     categoryName: item.category.name.value,
                     palette: ChipPalette(colorKey: item.category.color.key),
                     isDone: isDone,
+                    onOpen: { router.present(.editTodoItem(id: item.id)) },
                     onToggle: { Task { await viewModel.toggle(id: item.id) } }
                 )
                 // A toggled row changes section; without a state-dependent identity LazyVStack reuses it and keeps the old look.
@@ -87,6 +115,7 @@ struct TodoListView: View {
 
     private var quickAdd: some View {
         VStack(spacing: 8) {
+            undoToast
             if viewModel.actionFailed {
                 Text("Something went wrong. Try again.")
                     .dsFont(.rowDescription)
@@ -118,19 +147,17 @@ struct TodoListView: View {
 }
 
 /// Holds the form's view model in `@State` so it is created once per presentation, not on every list re-render.
-private struct AddTodoItemCover: View {
+private struct TodoItemFormCover: View {
     @State private var viewModel: TodoItemFormViewModel
-    let onClose: () -> Void
-    let onSaved: () -> Void
+    let onFinish: (TodoItemFormOutcome) -> Void
 
-    init(makeViewModel: () -> TodoItemFormViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
+    init(makeViewModel: () -> TodoItemFormViewModel, onFinish: @escaping (TodoItemFormOutcome) -> Void) {
         _viewModel = State(initialValue: makeViewModel())
-        self.onClose = onClose
-        self.onSaved = onSaved
+        self.onFinish = onFinish
     }
 
     var body: some View {
-        AddTodoItemView(viewModel: viewModel, onClose: onClose, onSaved: onSaved)
+        TodoItemFormView(viewModel: viewModel, onFinish: onFinish)
     }
 }
 
@@ -149,7 +176,7 @@ private struct TodoListPreviewHost: View {
     var body: some View {
         Group {
             if let viewModel {
-                TodoListView(viewModel: viewModel, router: router, makeAddViewModel: { .preview(title: $0) })
+                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) })
             }
         }
         .task {

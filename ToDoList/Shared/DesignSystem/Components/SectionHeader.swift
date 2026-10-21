@@ -1,22 +1,25 @@
 import SwiftUI
 
-/// "TO DO · 3" style label followed by a thin rule.
+/// "TO DO · 3" style label followed by a thin rule. Without a count (the Categories panel headers) only the title shows.
 struct SectionHeader: View {
     let title: String
-    let count: Int
+    let count: Int?
 
-    init(title: String, count: Int) {
+    init(title: String, count: Int? = nil) {
         self.title = title
         self.count = count
     }
 
-    static func label(title: String, count: Int) -> String {
-        "\(title.uppercased()) · \(count)"
+    static func label(title: String, count: Int?) -> String {
+        guard let count else { return title.uppercased() }
+        return "\(title.uppercased()) · \(count)"
     }
 
     /// Spoken form: the visual "·" would be read as "middle dot".
-    static func accessibilityLabel(title: String, count: Int) -> String {
-        "\(title), \(count) \(count == 1 ? "task" : "tasks")"
+    static func accessibilityLabel(title: String, count: Int?) -> String {
+        let spokenTitle = title.replacingOccurrences(of: " · ", with: ", ")
+        guard let count else { return spokenTitle }
+        return "\(spokenTitle), \(count) \(count == 1 ? "task" : "tasks")"
     }
 
     var body: some View {

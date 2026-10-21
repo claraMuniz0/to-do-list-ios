@@ -453,4 +453,34 @@ struct TodoListViewModelTests {
 
         #expect(!viewModel.isAllCaughtUp)
     }
+
+    // MARK: - Empty filter messages
+
+    @Test func doneFilterWithoutCompletedTasksExplainsItself() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.select(.done)
+        #expect(viewModel.emptyFilterMessage == "Nothing completed yet")
+    }
+
+    @Test func categoryWithoutOpenTasksNamesTheCategory() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(category: .personal), completedItem("Done", category: .work)])
+        viewModel.select(.category(.work))
+        #expect(viewModel.emptyFilterMessage == "No open tasks in Work")
+    }
+
+    @Test func noMessageWhileTheFilterHasContent() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(category: .work), completedItem("Done")])
+        for filter in [TodoListFilter.all, .active, .done, .category(.work)] {
+            viewModel.select(filter)
+            #expect(viewModel.emptyFilterMessage == nil)
+        }
+    }
+
+    @Test func noMessageWhenAllCaughtUpOrNotLoaded() async {
+        #expect(makeSUT().viewModel.emptyFilterMessage == nil)
+        let (viewModel, _) = await loadedSUT([completedItem("A")])
+        viewModel.select(.active)
+        #expect(viewModel.isAllCaughtUp)
+        #expect(viewModel.emptyFilterMessage == nil)
+    }
 }

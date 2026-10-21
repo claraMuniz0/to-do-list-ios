@@ -13,14 +13,27 @@ struct EmptyStateIllustrationLayoutTests {
         #expect(layout.dots.map(\.color) == [.coral, .green, .peach, .blue])
     }
 
-    @Test func celebrationHasSmallerDiscAndOneDot() {
+    @Test func celebrationHasSmallerDiscAndConfetti() {
         let layout = EmptyStateIllustrationLayout.celebration
         #expect(layout.canvas == 200)
         #expect(layout.halo == 200)
         #expect(layout.disc == 120)
         #expect(layout.symbolSize == 64)
-        #expect(layout.dots.count == 1)
-        #expect(layout.dots[0].color == .blue)
+        #expect(layout.dots.count == 7)
+        #expect(layout.dots.filter { $0.barSize != nil }.count == 3)
+    }
+
+    @Test func celebrationConfettiStaysInsideTheCanvas() {
+        let layout = EmptyStateIllustrationLayout.celebration
+        for piece in layout.dots {
+            let size = piece.barSize ?? CGSize(width: piece.diameter, height: piece.diameter)
+            #expect(piece.x >= 0 && piece.y >= 0)
+            #expect(piece.x + size.width <= layout.canvas && piece.y + size.height <= layout.canvas)
+        }
+    }
+
+    @Test func circularDotsHaveNoBarSize() {
+        #expect(EmptyStateIllustrationLayout.welcome.dots.allSatisfy { $0.barSize == nil })
     }
 
     @Test func noResultsIsCompactWithTwoDots() {

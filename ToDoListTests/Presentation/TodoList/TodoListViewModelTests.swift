@@ -257,12 +257,13 @@ struct TodoListViewModelTests {
 
     @Test func aFailedUndoFlagsTheFailureAndClosesTheToast() async {
         let deleted = makeTodoItem()
-        let (viewModel, spy) = makeSUT(items: [deleted])
+        let (viewModel, spy) = makeSUT()
         await viewModel.didDelete(deleted)
+        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
 
         await viewModel.undo()
 
-        #expect(spy.storedItems == [deleted])
+        #expect(spy.storedItems.isEmpty)
         #expect(viewModel.actionFailed)
         #expect(viewModel.undoState == nil)
     }

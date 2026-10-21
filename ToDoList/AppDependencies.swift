@@ -10,7 +10,8 @@ struct AppDependencies {
         TodoListViewModel(
             getTodoItems: GetTodoItemsUseCase(repository: todoItemRepository),
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider),
-            addTodoItem: makeAddTodoItemUseCase()
+            addTodoItem: makeAddTodoItemUseCase(),
+            restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository)
         )
     }
 

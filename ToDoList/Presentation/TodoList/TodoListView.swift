@@ -194,7 +194,6 @@ struct TodoListView: View {
                     onDelete: {
                         openSwipeID = nil
                         Task { await viewModel.delete(id: item.id) }
-                        print("deveria ter deletado")
                     }
                 ) {
                     TaskRow(

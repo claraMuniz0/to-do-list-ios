@@ -22,13 +22,16 @@ struct IllustrationDot: Equatable {
     let y: CGFloat
     let diameter: CGFloat
     let barSize: CGSize?
+    /// Degrees, around the piece's center; only bars are rotated in the design.
+    let rotation: Double
 
-    init(color: IllustrationDotColor, x: CGFloat, y: CGFloat, diameter: CGFloat = 0, barSize: CGSize? = nil) {
+    init(color: IllustrationDotColor, x: CGFloat, y: CGFloat, diameter: CGFloat = 0, barSize: CGSize? = nil, rotation: Double = 0) {
         self.color = color
         self.x = x
         self.y = y
         self.diameter = diameter
         self.barSize = barSize
+        self.rotation = rotation
     }
 }
 
@@ -57,11 +60,11 @@ struct EmptyStateIllustrationLayout: Equatable {
         dots: [
             IllustrationDot(color: .coral, x: 22, y: 40, diameter: 12),
             IllustrationDot(color: .green, x: 166, y: 52, diameter: 14),
-            IllustrationDot(color: .peach, x: 8, y: 118, barSize: CGSize(width: 17, height: 13)),
-            IllustrationDot(color: .blue, x: 173, y: 138, barSize: CGSize(width: 17, height: 14)),
+            IllustrationDot(color: .peach, x: 8.5, y: 121.5, barSize: CGSize(width: 16, height: 6), rotation: 30),
+            IllustrationDot(color: .blue, x: 173.5, y: 142, barSize: CGSize(width: 16, height: 6), rotation: -35),
             IllustrationDot(color: .coral, x: 150, y: 12, diameter: 10),
             IllustrationDot(color: .blue, x: 52, y: 172, diameter: 10),
-            IllustrationDot(color: .green, x: 118, y: 173, barSize: CGSize(width: 15, height: 10)),
+            IllustrationDot(color: .green, x: 118.5, y: 175, barSize: CGSize(width: 14, height: 6), rotation: 20),
         ]
     )
 
@@ -106,6 +109,7 @@ extension EmptyStateIllustration {
         if let bar = dot.barSize {
             RoundedRectangle(cornerRadius: 3).fill(dot.color.color)
                 .frame(width: bar.width, height: bar.height)
+                .rotationEffect(.degrees(dot.rotation))
                 .position(x: dot.x + bar.width / 2, y: dot.y + bar.height / 2)
         } else {
             Circle().fill(dot.color.color)

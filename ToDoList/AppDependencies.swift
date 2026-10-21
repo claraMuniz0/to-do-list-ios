@@ -4,6 +4,7 @@ struct AppDependencies {
     let todoItemRepository: TodoItemRepository
     let dateProvider: DateProvider
     var calendar: Calendar = .current
+    var sortOrderRepository: SortOrderRepository = UserDefaultsSortOrderRepository()
 
     @MainActor
     func makeTodoListViewModel() -> TodoListViewModel {
@@ -12,7 +13,8 @@ struct AppDependencies {
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider),
             addTodoItem: makeAddTodoItemUseCase(),
             restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository),
-            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository)
+            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
+            sortOrderRepository: sortOrderRepository
         )
     }
 

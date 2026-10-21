@@ -13,10 +13,11 @@ final class TodoItemFormViewModel {
     let categories = Category.defaults
     var details = ""
     var category: Category = .personal
-    /// `nil` means no due date; it starts as today and the date sheet's Clear removes it.
+    /// `nil` means no due date. Add mode starts as today; edit mode starts empty until `load()` fills it. The date sheet's Clear removes it.
     var dueDate: DueDate?
     private(set) var isSaving = false
     private(set) var saveFailed = false
+    /// Set when `delete()` failed; the task is still stored and the form stays open so the user can retry.
     private(set) var deleteFailed = false
     /// Set when the item being edited could not be loaded; the view reports it and closes.
     private(set) var loadFailed = false
@@ -86,7 +87,7 @@ final class TodoItemFormViewModel {
         set { storedTitle = String(newValue.prefix(TodoItemTitle.maxLength)) }
     }
 
-    /// Also false while a save is running, which blocks a double submit.
+    /// Also false while a save or delete is running, which blocks a double submit.
     var canSave: Bool {
         !TodoItemTitle.isBlank(title) && !isSaving
     }
@@ -116,6 +117,7 @@ final class TodoItemFormViewModel {
     func clearDueDate() { dueDate = nil }
 
     /// Returns whether the task was stored; a failure sets `saveFailed` and keeps the form editable.
+    /// In edit mode a task deleted elsewhere since `load()` also lands here (`notFound`), not as a separate error.
     func save() async -> Bool {
         guard canSave else { return false }
         isSaving = true

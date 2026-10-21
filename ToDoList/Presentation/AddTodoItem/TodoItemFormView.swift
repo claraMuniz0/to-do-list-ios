@@ -7,10 +7,15 @@ struct TodoItemFormView: View {
 
     @FocusState private var isTitleFocused: Bool
     @State private var isDateSheetPresented = false
+    @State private var isEditFlow: Bool
 
-    init(viewModel: TodoItemFormViewModel, onFinish: @escaping (TodoItemFormOutcome) -> Void) {
+    init(viewModel: TodoItemFormViewModel,
+         onFinish: @escaping (TodoItemFormOutcome) -> Void,
+         isEditFlow: Bool = false
+    ) {
         self.viewModel = viewModel
         self.onFinish = onFinish
+        self.isEditFlow = isEditFlow
     }
 
     private func close() { onFinish(.cancelled) }
@@ -47,7 +52,10 @@ struct TodoItemFormView: View {
         .accessibilityAction(.escape, close)
         .task { await viewModel.load() }
         .onAppear {
-            isTitleFocused = true
+            if !isEditFlow {
+                isTitleFocused = true
+            }
+            
             AccessibilityNotification.ScreenChanged().post()
         }
         .onChange(of: viewModel.loadFailed) { _, failed in

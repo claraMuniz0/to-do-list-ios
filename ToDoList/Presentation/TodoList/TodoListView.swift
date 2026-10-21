@@ -24,8 +24,13 @@ struct TodoListView: View {
             switch route {
             case .addTodoItem(let prefill):
                 TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm)
+                
             case .editTodoItem(let id):
-                TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: finishForm)
+                TodoItemFormCover(
+                    makeViewModel: { makeFormViewModel(.edit(id), "") },
+                    onFinish: finishForm,
+                    isEditFlow: true
+                )
             }
         }
         .overlay(alignment: .bottom) {
@@ -158,15 +163,21 @@ struct TodoListView: View {
 /// Holds the form's view model in `@State` so it is created once per presentation, not on every list re-render.
 private struct TodoItemFormCover: View {
     @State private var viewModel: TodoItemFormViewModel
+    @State private var isEditFlow: Bool
     let onFinish: (TodoItemFormOutcome) -> Void
 
-    init(makeViewModel: () -> TodoItemFormViewModel, onFinish: @escaping (TodoItemFormOutcome) -> Void) {
+    init(
+        makeViewModel: () -> TodoItemFormViewModel,
+        onFinish: @escaping (TodoItemFormOutcome) -> Void,
+        isEditFlow: Bool = false
+    ) {
         _viewModel = State(initialValue: makeViewModel())
         self.onFinish = onFinish
+        self.isEditFlow = isEditFlow
     }
 
     var body: some View {
-        TodoItemFormView(viewModel: viewModel, onFinish: onFinish)
+        TodoItemFormView(viewModel: viewModel, onFinish: onFinish, isEditFlow: isEditFlow)
     }
 }
 

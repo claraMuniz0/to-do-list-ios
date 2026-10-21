@@ -16,7 +16,6 @@ struct AllCaughtUpView: View {
             Text(message)
                 .dsFont(.inputText)
                 .foregroundStyle(DSColor.textSecondary)
-                .lineSpacing(4)
                 .frame(maxWidth: 280)
             SoftPillButton(title: viewCompletedTitle, action: onViewCompleted)
         }

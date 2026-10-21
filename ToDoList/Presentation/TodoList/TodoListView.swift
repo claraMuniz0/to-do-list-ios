@@ -39,6 +39,13 @@ struct TodoListView: View {
             if !isListLoaded { undoToast.padding(.bottom, 24) }
         }
         .animation(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .default : nil, value: viewModel.undoState)
+        // The list swaps silently for VoiceOver users otherwise.
+        .onChange(of: viewModel.isAllCaughtUp) { _, isOn in
+            if isOn { AccessibilityNotification.Announcement("All caught up").post() }
+        }
+        .onChange(of: viewModel.emptyFilterMessage) { _, message in
+            if let message { AccessibilityNotification.Announcement(message).post() }
+        }
     }
 
     private var isListLoaded: Bool {

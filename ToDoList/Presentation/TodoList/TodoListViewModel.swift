@@ -53,11 +53,13 @@ final class TodoListViewModel {
         return count == 1 ? "1 task left" : "\(count) tasks left"
     }
 
+    /// Empty before the first successful load.
     var visibleSections: TodoListSections {
         guard case .loaded(let sections) = state else { return TodoListSections(items: []) }
         return selectedFilter.apply(to: sections)
     }
 
+    /// Lists the default categories only, in their fixed order; tasks of other categories are not counted until custom categories exist.
     var categoryCounts: [CategoryCount] {
         let open: [TodoItem]
         if case .loaded(let sections) = state { open = sections.todo } else { open = [] }
@@ -66,6 +68,7 @@ final class TodoListViewModel {
         }
     }
 
+    /// Derived from the filter: the panel is open exactly while a category is selected, so the two can never disagree.
     var isCategoriesPanelOpen: Bool {
         if case .category = selectedFilter { return true }
         return false

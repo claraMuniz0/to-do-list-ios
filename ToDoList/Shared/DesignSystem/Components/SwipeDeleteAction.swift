@@ -10,6 +10,7 @@ struct SwipeDeleteAction: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 22
 
+    /// Includes the task title so the VoiceOver action stays unambiguous when several rows are listed in the rotor.
     static func accessibilityLabel(taskTitle: String) -> String { "\(title) \(taskTitle)" }
 
     var body: some View {

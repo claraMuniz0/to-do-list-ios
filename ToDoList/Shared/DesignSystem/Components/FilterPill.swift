@@ -4,12 +4,20 @@ import SwiftUI
 struct FilterPill: View {
     let title: String
     let isSelected: Bool
+    /// Non-nil for a pill that toggles a panel (Categories): VoiceOver then hears Expanded/Collapsed instead of "selected".
+    let isExpanded: Bool?
     let action: () -> Void
 
-    init(title: String, isSelected: Bool = false, action: @escaping () -> Void) {
+    init(title: String, isSelected: Bool = false, isExpanded: Bool? = nil, action: @escaping () -> Void) {
         self.title = title
         self.isSelected = isSelected
+        self.isExpanded = isExpanded
         self.action = action
+    }
+
+    static func accessibilityValue(isExpanded: Bool?) -> String? {
+        guard let isExpanded else { return nil }
+        return isExpanded ? "Expanded" : "Collapsed"
     }
 
     var body: some View {
@@ -27,7 +35,8 @@ struct FilterPill: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityAddTraits(isSelected && isExpanded == nil ? .isSelected : [])
+        .accessibilityValue(Self.accessibilityValue(isExpanded: isExpanded) ?? "")
     }
 }
 

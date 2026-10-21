@@ -114,13 +114,19 @@ struct TodoListView: View {
     }
 
     private var filterPills: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                pill("All", .all)
-                pill("Active", .active)
-                pill("Done", .done)
-                FilterPill(title: "Categories", isSelected: viewModel.isCategoriesPanelOpen) { viewModel.toggleCategories() }
-            }
+        // At accessibility sizes the row would scroll off-screen unseen, so it wraps into a column instead.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { pills }
+            VStack(alignment: .leading, spacing: 8) { pills }
+        }
+    }
+
+    @ViewBuilder private var pills: some View {
+        pill("All", .all)
+        pill("Active", .active)
+        pill("Done", .done)
+        FilterPill(title: "Categories", isSelected: viewModel.isCategoriesPanelOpen, isExpanded: viewModel.isCategoriesPanelOpen) {
+            viewModel.toggleCategories()
         }
     }
 

@@ -28,9 +28,9 @@ struct CategoryFilterRow: View {
     let isSelected: Bool
     let action: () -> Void
 
-    private let indicatorSize: CGFloat = 24
-    private let dotSize: CGFloat = 14
-    private let checkmarkSize: CGFloat = 14
+    @ScaledMetric(relativeTo: .body) private var indicatorSize: CGFloat = 24
+    @ScaledMetric(relativeTo: .body) private var dotSize: CGFloat = 14
+    @ScaledMetric(relativeTo: .body) private var checkmarkSize: CGFloat = 14
 
     var body: some View {
         let style = CategoryFilterRowStyle(isSelected: isSelected)
@@ -45,6 +45,7 @@ struct CategoryFilterRow: View {
                 Text(CategoryFilterRowStyle.countLabel(openCount))
                     .dsFont(.count)
                     .foregroundStyle(DSColor.textSecondary)
+                    .fixedSize()
                 indicator(style)
             }
             .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))

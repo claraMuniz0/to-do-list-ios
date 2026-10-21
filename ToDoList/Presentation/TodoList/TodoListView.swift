@@ -96,8 +96,16 @@ struct TodoListView: View {
                     .padding(.bottom, 8)
                 filterPills
                 if viewModel.isCategoriesPanelOpen { categoriesPanel }
-                if case .category(let category) = viewModel.selectedFilter {
-                    section("Showing · \(category.name.value)", items: visible.todo, isDone: false, showsCount: false)
+                if viewModel.isAllCaughtUp {
+                    AllCaughtUpView(
+                        message: viewModel.allCaughtUpMessage,
+                        viewCompletedTitle: viewModel.viewCompletedTitle,
+                        onViewCompleted: { viewModel.viewCompleted() }
+                    )
+                } else if case .category(let category) = viewModel.selectedFilter {
+                    categoryResults(category, visible)
+                } else if let message = viewModel.emptyFilterMessage {
+                    emptyMessage(message)
                 } else {
                     section("To do", items: visible.todo, isDone: false)
                     section("Completed", items: visible.completed, isDone: true)
@@ -111,6 +119,24 @@ struct TodoListView: View {
         .scrollDismissesKeyboard(.immediately)
         .dismissKeyboardOnTap()
         .safeAreaInset(edge: .bottom, spacing: 0) { quickAdd }
+    }
+
+    @ViewBuilder
+    private func categoryResults(_ category: Category, _ visible: TodoListSections) -> some View {
+        if let message = viewModel.emptyFilterMessage {
+            SectionHeader(title: "Showing · \(category.name.value)").padding(.top, 8)
+            emptyMessage(message)
+        } else {
+            section("Showing · \(category.name.value)", items: visible.todo, isDone: false, showsCount: false)
+        }
+    }
+
+    private func emptyMessage(_ message: String) -> some View {
+        Text(message)
+            .dsFont(.inputText)
+            .foregroundStyle(DSColor.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 24)
     }
 
     private var filterPills: some View {
@@ -273,6 +299,9 @@ private struct TodoListPreviewHost: View {
 #Preview("Mixed") { TodoListPreviewHost(openCount: 3, completedCount: 2) }
 #Preview("Only open") { TodoListPreviewHost(openCount: 3, completedCount: 0) }
 #Preview("Only completed") { TodoListPreviewHost(openCount: 0, completedCount: 2) }
+#Preview("All caught up") { TodoListPreviewHost(openCount: 0, completedCount: 2) }
+#Preview("Filter - Done, empty") { TodoListPreviewHost(openCount: 3, completedCount: 0, filter: .done) }
+#Preview("Filter - Empty category") { TodoListPreviewHost(openCount: 0, completedCount: 2, filter: .category(.shopping)) }
 #Preview("Filter - Active") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .active) }
 #Preview("Filter - Done") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .done) }
 #Preview("Filter - Categories") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .category(.work)) }

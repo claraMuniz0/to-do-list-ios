@@ -1,6 +1,6 @@
 # Phase 5: Task List
 
-**Status:** not started (all decisions confirmed, ready to start after Phases 3 and 4)
+**Status:** done (all decisions confirmed and implemented, reviews applied; open follow-ups below)
 **Design:** `to-do.pen`: "Task List", "Task List – Swipe to Delete", "Task List – Categories", "Task List – All Done", "Task List – Delete Undo" (the Undo Toast frame)
 **Depends on:** Phases 3 and 4 (list, `TodoListViewModel` with `ViewState`, SwiftData repository, Edit, `DeleteTodoItemUseCase`, `RestoreTodoItemUseCase`, Undo toast, `DateProvider`, `DueDate`, static `Category` set)
 
@@ -8,7 +8,16 @@
 Complete the task list experience beyond the MVP core: faster deletion, an "all caught up" state, and filtering.
 
 ## Repo state at kickoff
-The repo still has only the Xcode template (`ToDoList/ContentView.swift`, `ToDoListWindow.swift`, assets). Phases 0 to 4 are fully planned but no code exists, so everything below builds on planned types. Names used here come from Phases 0 to 4; if they change during implementation, update this file.
+Phases 0 to 4 and 10 are implemented (the earlier "template only" note is obsolete). What this phase builds on, as it exists:
+- `TodoListViewModel` (`Presentation/TodoList`): `state: TodoListViewState` (`.loading`, `.empty`, `.loaded(TodoListSections)`, `.error`), `subtitle`, `toggle`, `quickAdd`, `didDelete(_:)`, `undo()`, `dismissUndo()`, `undoState`. It has **no** `DeleteTodoItemUseCase` yet: Edit deletes inside the form view model and reports `.deleted(item)`.
+- `TodoListSections` (Domain) holds the ordering; `TodoListView` renders `ScreenHeader`, `SectionHeader`, `TaskRow` in a `LazyVStack`, with `AddTaskInput` and the Undo toast in a bottom inset.
+- `FilterPill` exists with a selected state and the `.isSelected` trait; not yet used on the list. `Category.defaults` (work, personal, shopping) and the chip palettes exist. `EmptyStateIllustration` exists (Welcome), `AllCaughtUpIllustration` does not.
+- `AppDependencies.makeTodoListViewModel()` is the composition point to extend.
+
+## Drift from the plan (apply during implementation)
+- **State naming:** the file says `ViewState.loaded`; the real type is `TodoListViewState.loaded(TodoListSections)`. F4 extends it: keep `TodoListSections` as the unfiltered source and add filter/count state next to it (no breaking change to existing tests).
+- **A7/Phase 4 C3:** swipe delete needs `DeleteTodoItemUseCase` injected into `TodoListViewModel` (new `delete(_:)` that sets `undoState`); `didDelete(_:)` (Edit path) and `delete(_:)` converge on one private path.
+- **Subtitle:** current code comment already anticipates the filters; B1 keeps "N tasks left".
 
 ## What the design actually contains
 **Task List base** (reference, built in Phase 3)
@@ -99,7 +108,7 @@ Recommendation in **bold**. Status `open` until you answer. Rows marked `assumed
 | F1 | New design-system pieces | `SwipeDeleteAction` (80x78), `CategoryFilterRow` (dot, name, count, check, selected border), `AllCaughtUpIllustration`, "View completed" soft pill button; built with `new-ds-component` at the start of the phase | **As described**; `FilterPill` reused (already designed with selected state) | **confirmed** (recommendation accepted) |
 | F2 | Where the swipe container lives | a reusable `SwipeToDeleteRow` wrapper (generic over content) in the design system, not inside `TaskRow` | **Wrapper**, so `TaskRow` and `TaskRowDone` stay unaware of deletion (naming-convention: `SwipeToDeleteRow`) | **confirmed** (recommendation accepted) |
 | F3 | Where filter logic lives (define-location) | `TodoListFilter` + filtering function in Presentation next to `TodoListViewModel`; no new use case, no repository change | **Presentation**, because it is view-state shaping, not a business rule. If you prefer a Domain `FilterTodoItemsUseCase`, say so (more code, no new behavior) | **confirmed** (recommendation accepted) |
-| F4 | View state | extend `TodoListViewModel.ViewState.loaded` with `selectedFilter`, `categoryCounts`, `isCategoriesPanelOpen`; add `.allCaughtUp` as a derived case or a flag | **Derived flag/case from the loaded data**, tested first | **confirmed** (recommendation accepted) |
+| F4 | View state | view-model properties derived from the loaded data: `selectedFilter`, `visibleSections`, `categoryCounts`, `isCategoriesPanelOpen`, `isAllCaughtUp`, `emptyFilterMessage` (built that way, not inside `TodoListViewState.loaded`) | **Derived flag/case from the loaded data**, tested first | **confirmed** (recommendation accepted) |
 | F5 | Accessibility | filter pills are buttons with selected trait; category rows are single-selection buttons announcing name, count and selected; illustration hidden from VoiceOver; Delete action named; run `accessibility-check` and check `danger` on white (13pt label) contrast | **As described** | assumed |
 | F6 | Xcode project-file edits | none planned (SwiftUI/Foundation only, no new targets). Only E6 option (2) or any image asset would touch the project/assets | **No `.pbxproj` edit expected**; I will ask before any | assumed |
 
@@ -109,12 +118,12 @@ Recommendation in **bold**. Status `open` until you answer. Rows marked `assumed
 | G1 | Phase size and order | **One macro phase** with this order: (1) filter enum and pure filtering, tested; (2) view model state for filters, counts, All caught up; (3) filter pills and category panel UI; (4) All caught up and empty states; (5) swipe to delete. Split swipe into Phase 5b if it grows | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] `TodoListFilter` and a pure filter/count function, tested first (All, Active, Done, category)
-- [ ] `TodoListViewModel`: selected filter, category open counts, All caught up state, "View completed" switching to Done, subtitle and copy formatting (singular/plural)
-- [ ] `FilterPill` row wired to the view model; `CategoryFilterRow` and the Categories panel (no "New category" row)
-- [ ] All caught up view and `AllCaughtUpIllustration`; minimal empty states for Done, Active and an empty category
-- [ ] `SwipeToDeleteRow` and `SwipeDeleteAction`; swipe delete through `DeleteTodoItemUseCase` and the existing Undo toast; VoiceOver "Delete" action
-- [ ] Previews per state (filters, categories, all caught up, swiped row); `accessibility-check`; `design-fidelity-checker`
+- [x] `TodoListFilter` and a pure filter/count function, tested first (All, Active, Done, category)
+- [x] `TodoListViewModel`: selected filter, category open counts, All caught up state, "View completed" switching to Done, subtitle and copy formatting (singular/plural)
+- [x] `FilterPill` row wired to the view model; `CategoryFilterRow` and the Categories panel (no "New category" row)
+- [x] All caught up view and the celebration illustration (extended `EmptyStateIllustration`, not a new type); minimal empty states for Done, Active and an empty category
+- [x] `SwipeToDeleteRow` and `SwipeDeleteAction`; swipe delete through `DeleteTodoItemUseCase` and the existing Undo toast; VoiceOver "Delete" action
+- [x] Previews per state (filters, categories, all caught up, swiped row); `accessibility-check`; `design-fidelity-checker`
 
 ## Out of scope
 - Search and sort (Phase 6 and the backlog), the New Category sheet and the "New category" row (hidden; linked later), steps, Smart add, due date or overdue marker on the row (Phase 3 D3 stands; see below)
@@ -128,3 +137,18 @@ Recommendation in **bold**. Status `open` until you answer. Rows marked `assumed
 - The pills All / Active / Done / Categories filter the list; the Categories panel shows counts and filters by the selected category.
 - With every task completed, the "All caught up" state shows, and "View completed (N)" opens the Done filter.
 - View model, filter and use case tests are green; the design-fidelity check shows no High differences.
+
+## Build notes
+- **Reused instead of new:** the celebration illustration extends `EmptyStateIllustration` (seven confetti pieces, thin rotated bars via `IllustrationDot.barSize`/`rotation`); the ochre piece is drawn coral (no color token). `SoftPillButton`, `CategoryFilterRow`, `SwipeToDeleteRow`/`SwipeReveal`/`SwipeDeleteAction` are new design-system pieces; new font tokens: `count`, `sectionLabel`, `softButton`, `swipeAction`.
+- **Applied app-wide after review:** section headers now DM Mono 12 medium, tracked 1.4, muted; unselected pills and category rows use `borderControl` for 3:1 contrast.
+- **Copy deviations from the design (B3, B4):** "All done", "You finished N of N tasks. Enjoy the break!" (no "today"). Empty-state copy "Nothing completed yet" and "No open tasks in <Category>" was chosen by me; E3 asked for your approval.
+- **Subtitle:** now "All done" when every task is completed (was "No tasks left").
+- **Tooling:** `xcodebuild test` hung at 0% CPU several times; killing that one process by PID and rerunning worked each time.
+
+## Follow-ups (not done in this phase)
+- **Soft pill contrast:** accent on accent-soft is 4.21:1 for the 15pt "View completed" label (needs 4.5:1). Fix needs a darker foreground color token (asset catalog edit, needs permission) or a lighter soft fill.
+- **VoiceOver Delete action placement:** the "Delete <task>" action is attached from outside `TaskRow`; verify with the Actions rotor that it lands on the row's element next to "Mark as completed", or move it inside `TaskRow`.
+- **Announcements:** toggling a task and switching filters are still silent for VoiceOver (All caught up and empty messages are announced).
+- **Untested logic:** `SwipeToDeleteRow`'s drag handling and the host's one-row-open rule (`setSwipe`) are not unit-tested; extract pure functions if they change again.
+- **Minor design diffs:** chevron weight in `SoftPillButton`, the 8/16 vs 10/18 pill padding, the 12 vs 10 row gap, section rule color, swipe shadow reuses the toast color.
+- **Process:** the `fix:` commits do not follow the red/green/refactor convention, and one `test:` commit also edited this phase file.

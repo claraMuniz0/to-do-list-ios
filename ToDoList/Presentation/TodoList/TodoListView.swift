@@ -7,6 +7,8 @@ struct TodoListView: View {
     let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
+    /// Only one row can be swiped open at a time; opening another closes the first.
+    @State private var openSwipeID: TodoItemID?
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverIsOn
     @Environment(\.accessibilitySwitchControlEnabled) private var switchControlIsOn
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -37,6 +39,13 @@ struct TodoListView: View {
             if !isListLoaded { undoToast.padding(.bottom, 24) }
         }
         .animation(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .default : nil, value: viewModel.undoState)
+        // The list swaps silently for VoiceOver users otherwise.
+        .onChange(of: viewModel.isAllCaughtUp) { _, isOn in
+            if isOn { AccessibilityNotification.Announcement("All caught up").post() }
+        }
+        .onChange(of: viewModel.emptyFilterMessage) { _, message in
+            if let message { AccessibilityNotification.Announcement(message).post() }
+        }
     }
 
     private var isListLoaded: Bool {
@@ -89,12 +98,27 @@ struct TodoListView: View {
     }
 
     private func list(_ sections: TodoListSections) -> some View {
-        ScrollView {
+        let visible = viewModel.visibleSections
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
                 ScreenHeader(subtitle: viewModel.subtitle, title: "My Tasks")
                     .padding(.bottom, 8)
-                section("To do", items: sections.todo, isDone: false)
-                section("Completed", items: sections.completed, isDone: true)
+                filterPills
+                if viewModel.isCategoriesPanelOpen { categoriesPanel }
+                if viewModel.isAllCaughtUp {
+                    AllCaughtUpView(
+                        message: viewModel.allCaughtUpMessage,
+                        viewCompletedTitle: viewModel.viewCompletedTitle,
+                        onViewCompleted: { viewModel.viewCompleted() }
+                    )
+                } else if case .category(let category) = viewModel.selectedFilter {
+                    categoryResults(category, visible)
+                } else if let message = viewModel.emptyFilterMessage {
+                    emptyMessage(message)
+                } else {
+                    section("To do", items: visible.todo, isDone: false)
+                    section("Completed", items: visible.completed, isDone: true)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -107,23 +131,92 @@ struct TodoListView: View {
     }
 
     @ViewBuilder
-    private func section(_ title: String, items: [TodoItem], isDone: Bool) -> some View {
+    private func categoryResults(_ category: Category, _ visible: TodoListSections) -> some View {
+        if let message = viewModel.emptyFilterMessage {
+            SectionHeader(title: "Showing · \(category.name.value)").padding(.top, 8)
+            emptyMessage(message)
+        } else {
+            section("Showing · \(category.name.value)", items: visible.todo, isDone: false, showsCount: false)
+        }
+    }
+
+    private func emptyMessage(_ message: String) -> some View {
+        Text(message)
+            .dsFont(.inputText)
+            .foregroundStyle(DSColor.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 24)
+    }
+
+    private var filterPills: some View {
+        // At accessibility sizes the row would scroll off-screen unseen, so it wraps into a column instead.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { pills }
+            VStack(alignment: .leading, spacing: 8) { pills }
+        }
+    }
+
+    @ViewBuilder private var pills: some View {
+        pill("All", .all)
+        pill("Active", .active)
+        pill("Done", .done)
+        FilterPill(title: "Categories", isSelected: viewModel.isCategoriesPanelOpen, isExpanded: viewModel.isCategoriesPanelOpen) {
+            viewModel.toggleCategories()
+        }
+    }
+
+    private func pill(_ title: String, _ filter: TodoListFilter) -> some View {
+        FilterPill(title: title, isSelected: viewModel.selectedFilter == filter) { viewModel.select(filter) }
+    }
+
+    @ViewBuilder private var categoriesPanel: some View {
+        SectionHeader(title: "Categories").padding(.top, 8)
+        ForEach(viewModel.categoryCounts, id: \.category) { entry in
+            CategoryFilterRow(
+                name: entry.category.name.value,
+                openCount: entry.openCount,
+                palette: ChipPalette(colorKey: entry.category.color.key),
+                isSelected: viewModel.selectedFilter == .category(entry.category)
+            ) { viewModel.selectCategory(entry.category) }
+        }
+    }
+
+    @ViewBuilder
+    private func section(_ title: String, items: [TodoItem], isDone: Bool, showsCount: Bool = true) -> some View {
         if !items.isEmpty {
-            SectionHeader(title: title, count: items.count)
+            SectionHeader(title: title, count: showsCount ? items.count : nil)
                 .padding(.top, 8)
             ForEach(items, id: \.id) { item in
-                TaskRow(
-                    title: item.title.value,
-                    description: item.description,
-                    categoryName: item.category.name.value,
-                    palette: ChipPalette(colorKey: item.category.color.key),
-                    isDone: isDone,
-                    onOpen: { router.present(.editTodoItem(id: item.id)) },
-                    onToggle: { Task { await viewModel.toggle(id: item.id) } }
-                )
+                SwipeToDeleteRow(
+                    isOpen: openSwipeID == item.id,
+                    taskTitle: item.title.value,
+                    onOpenChange: { setSwipe(open: $0, for: item.id) },
+                    onDelete: {
+                        openSwipeID = nil
+                        Task { await viewModel.delete(id: item.id) }
+                    }
+                ) {
+                    TaskRow(
+                        title: item.title.value,
+                        description: item.description,
+                        categoryName: item.category.name.value,
+                        palette: ChipPalette(colorKey: item.category.color.key),
+                        isDone: isDone,
+                        onOpen: { router.present(.editTodoItem(id: item.id)) },
+                        onToggle: { Task { await viewModel.toggle(id: item.id) } }
+                    )
+                }
                 // A toggled row changes section; without a state-dependent identity LazyVStack reuses it and keeps the old look.
                 .id("\(item.id.uuid)-\(isDone)")
             }
+        }
+    }
+
+    private func setSwipe(open: Bool, for id: TodoItemID) {
+        if open {
+            openSwipeID = id
+        } else if openSwipeID == id {
+            openSwipeID = nil
         }
     }
 
@@ -190,6 +283,7 @@ private struct PreviewDateProvider: DateProvider {
 private struct TodoListPreviewHost: View {
     let openCount: Int
     let completedCount: Int
+    var filter: TodoListFilter = .all
     @State private var viewModel: TodoListViewModel?
     @State private var router = AppRouter()
 
@@ -223,6 +317,8 @@ private struct TodoListPreviewHost: View {
             }
             viewModel = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
                 .makeTodoListViewModel()
+            await viewModel?.load()
+            viewModel?.select(filter)
         }
     }
 }
@@ -230,6 +326,12 @@ private struct TodoListPreviewHost: View {
 #Preview("Mixed") { TodoListPreviewHost(openCount: 3, completedCount: 2) }
 #Preview("Only open") { TodoListPreviewHost(openCount: 3, completedCount: 0) }
 #Preview("Only completed") { TodoListPreviewHost(openCount: 0, completedCount: 2) }
+#Preview("All caught up") { TodoListPreviewHost(openCount: 0, completedCount: 2) }
+#Preview("Filter - Done, empty") { TodoListPreviewHost(openCount: 3, completedCount: 0, filter: .done) }
+#Preview("Filter - Empty category") { TodoListPreviewHost(openCount: 0, completedCount: 2, filter: .category(.shopping)) }
+#Preview("Filter - Active") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .active) }
+#Preview("Filter - Done") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .done) }
+#Preview("Filter - Categories") { TodoListPreviewHost(openCount: 3, completedCount: 2, filter: .category(.work)) }
 #Preview("Accessibility3") {
     TodoListPreviewHost(openCount: 3, completedCount: 2).dynamicTypeSize(.accessibility3)
 }

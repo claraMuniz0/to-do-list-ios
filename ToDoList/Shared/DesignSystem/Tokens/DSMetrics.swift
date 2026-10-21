@@ -26,6 +26,8 @@ struct DSShadow: Equatable {
     static let accentSmall = DSShadow(color: DSColor.shadowAccent, radius: 0, y: 3)
     static let illustration = DSShadow(color: DSColor.illustrationShadow, radius: 24, y: 8)
     static let toast = DSShadow(color: DSColor.toastShadow, radius: 20, y: 6)
+    /// The lifted look of a row that is slid open; reuses the toast color, which is the closest existing shadow token.
+    static let swipedRow = DSShadow(color: DSColor.toastShadow, radius: 16, y: 4)
 }
 
 extension View {

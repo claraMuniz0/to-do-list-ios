@@ -14,12 +14,25 @@ enum IllustrationDotColor: Equatable {
     }
 }
 
-/// A decorative dot; `x`/`y` are its top-left corner in canvas coordinates.
+/// A decorative confetti piece; `x`/`y` are its top-left corner in canvas coordinates.
+/// A piece with a `barSize` is a small rounded bar instead of a dot.
 struct IllustrationDot: Equatable {
     let color: IllustrationDotColor
     let x: CGFloat
     let y: CGFloat
     let diameter: CGFloat
+    let barSize: CGSize?
+    /// Degrees, around the piece's center; only bars are rotated in the design.
+    let rotation: Double
+
+    init(color: IllustrationDotColor, x: CGFloat, y: CGFloat, diameter: CGFloat = 0, barSize: CGSize? = nil, rotation: Double = 0) {
+        self.color = color
+        self.x = x
+        self.y = y
+        self.diameter = diameter
+        self.barSize = barSize
+        self.rotation = rotation
+    }
 }
 
 /// Geometry of one illustration. The design draws three sizes (Welcome, All Done, No Results),
@@ -43,7 +56,16 @@ struct EmptyStateIllustrationLayout: Equatable {
 
     static let celebration = EmptyStateIllustrationLayout(
         canvas: 200, halo: 200, disc: 120, symbolSize: 64,
-        dots: [IllustrationDot(color: .blue, x: 52, y: 172, diameter: 10)]
+        // The design's ochre dot has no illustration color token yet, so it is drawn coral.
+        dots: [
+            IllustrationDot(color: .coral, x: 22, y: 40, diameter: 12),
+            IllustrationDot(color: .green, x: 166, y: 52, diameter: 14),
+            IllustrationDot(color: .peach, x: 8.5, y: 121.5, barSize: CGSize(width: 16, height: 6), rotation: 30),
+            IllustrationDot(color: .blue, x: 173.5, y: 142, barSize: CGSize(width: 16, height: 6), rotation: -35),
+            IllustrationDot(color: .coral, x: 150, y: 12, diameter: 10),
+            IllustrationDot(color: .blue, x: 52, y: 172, diameter: 10),
+            IllustrationDot(color: .green, x: 118.5, y: 175, barSize: CGSize(width: 14, height: 6), rotation: 20),
+        ]
     )
 
     static let noResults = EmptyStateIllustrationLayout(
@@ -74,13 +96,26 @@ struct EmptyStateIllustration: View {
                 .font(.system(size: layout.symbolSize))
                 .foregroundStyle(DSColor.accent)
             ForEach(Array(layout.dots.enumerated()), id: \.offset) { _, dot in
-                Circle().fill(dot.color.color)
-                    .frame(width: dot.diameter, height: dot.diameter)
-                    .position(x: dot.x + dot.diameter / 2, y: dot.y + dot.diameter / 2)
+                piece(dot)
             }
         }
         .frame(width: layout.canvas, height: layout.canvas)
         .accessibilityHidden(true)
+    }
+}
+
+extension EmptyStateIllustration {
+    @ViewBuilder fileprivate func piece(_ dot: IllustrationDot) -> some View {
+        if let bar = dot.barSize {
+            RoundedRectangle(cornerRadius: 3).fill(dot.color.color)
+                .frame(width: bar.width, height: bar.height)
+                .rotationEffect(.degrees(dot.rotation))
+                .position(x: dot.x + bar.width / 2, y: dot.y + bar.height / 2)
+        } else {
+            Circle().fill(dot.color.color)
+                .frame(width: dot.diameter, height: dot.diameter)
+                .position(x: dot.x + dot.diameter / 2, y: dot.y + dot.diameter / 2)
+        }
     }
 }
 

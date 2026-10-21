@@ -11,7 +11,8 @@ struct AppDependencies {
             getTodoItems: GetTodoItemsUseCase(repository: todoItemRepository),
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider),
             addTodoItem: makeAddTodoItemUseCase(),
-            restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository)
+            restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository)
         )
     }
 

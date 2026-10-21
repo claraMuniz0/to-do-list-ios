@@ -16,7 +16,8 @@ struct TodoListViewModelTests {
             getTodoItems: GetTodoItemsUseCase(repository: spy),
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: spy, dateProvider: provider),
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: .utcGregorian),
-            restoreTodoItem: RestoreTodoItemUseCase(repository: spy)
+            restoreTodoItem: RestoreTodoItemUseCase(repository: spy),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy)
         )
         return (viewModel, spy)
     }
@@ -126,7 +127,7 @@ struct TodoListViewModelTests {
 
         spy.storedItems = [done]
         await viewModel.load()
-        #expect(viewModel.subtitle == "No tasks left")
+        #expect(viewModel.subtitle == "All done")
     }
 
     // MARK: - Toggle
@@ -284,5 +285,334 @@ struct TodoListViewModelTests {
         await viewModel.undo()
         #expect(spy.storedItems.isEmpty)
         #expect(!viewModel.actionFailed)
+    }
+
+    // MARK: - Filters
+
+    private func completedItem(_ title: String, category: Category = .personal) -> TodoItem {
+        var item = makeTodoItem(title: title, category: category)
+        item.complete(at: Date(timeIntervalSince1970: 5))
+        return item
+    }
+
+    private func loadedSUT(_ items: [TodoItem]) async -> (viewModel: TodoListViewModel, spy: TodoItemRepositorySpy) {
+        let sut = makeSUT(items: items)
+        await sut.viewModel.load()
+        return sut
+    }
+
+    @Test func startsWithTheAllFilter() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        #expect(viewModel.selectedFilter == .all)
+    }
+
+    @Test func visibleSectionsFollowTheSelectedFilter() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(title: "Open"), completedItem("Done")])
+
+        viewModel.select(.done)
+        #expect(viewModel.visibleSections.todo.isEmpty)
+        #expect(viewModel.visibleSections.completed.map(\.title.value) == ["Done"])
+
+        viewModel.select(.active)
+        #expect(viewModel.visibleSections.todo.map(\.title.value) == ["Open"])
+        #expect(viewModel.visibleSections.completed.isEmpty)
+    }
+
+    @Test func theFilterSurvivesAReload() async {
+        let (viewModel, spy) = await loadedSUT([makeTodoItem(title: "Open"), completedItem("Done")])
+        viewModel.select(.done)
+        spy.storedItems.append(makeTodoItem(title: "New"))
+
+        await viewModel.load()
+
+        #expect(viewModel.selectedFilter == .done)
+        #expect(viewModel.visibleSections.completed.map(\.title.value) == ["Done"])
+    }
+
+    @Test func visibleSectionsAreEmptyWhenNotLoaded() {
+        let viewModel = makeSUT().viewModel
+        #expect(viewModel.visibleSections == TodoListSections(items: []))
+    }
+
+    // MARK: - Categories panel
+
+    @Test func togglingTheCategoriesPillPreselectsWorkAndOpensThePanel() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.toggleCategories()
+        #expect(viewModel.selectedFilter == .category(.work))
+        #expect(viewModel.isCategoriesPanelOpen)
+    }
+
+    @Test func togglingTheCategoriesPillAgainReturnsToAll() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.toggleCategories()
+        viewModel.toggleCategories()
+        #expect(viewModel.selectedFilter == .all)
+        #expect(!viewModel.isCategoriesPanelOpen)
+    }
+
+    @Test func selectingAnotherCategoryKeepsThePanelOpen() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.toggleCategories()
+        viewModel.selectCategory(.shopping)
+        #expect(viewModel.selectedFilter == .category(.shopping))
+        #expect(viewModel.isCategoriesPanelOpen)
+    }
+
+    @Test func selectingTheSelectedCategoryAgainFallsBackToAll() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.selectCategory(.personal)
+        viewModel.selectCategory(.personal)
+        #expect(viewModel.selectedFilter == .all)
+        #expect(!viewModel.isCategoriesPanelOpen)
+    }
+
+    @Test func choosingAnotherPillClosesThePanel() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.toggleCategories()
+        viewModel.select(.active)
+        #expect(!viewModel.isCategoriesPanelOpen)
+    }
+
+    @Test func categoryCountsListEveryDefaultCategoryWithItsOpenTasksOnly() async {
+        let (viewModel, _) = await loadedSUT([
+            makeTodoItem(category: .work), makeTodoItem(category: .work),
+            completedItem("Done work", category: .work), makeTodoItem(category: .personal),
+        ])
+        #expect(viewModel.categoryCounts == [
+            CategoryCount(category: .work, openCount: 2),
+            CategoryCount(category: .personal, openCount: 1),
+            CategoryCount(category: .shopping, openCount: 0),
+        ])
+    }
+
+    @Test func categoryCountsAreZeroWhenNotLoaded() {
+        #expect(makeSUT().viewModel.categoryCounts.map(\.openCount) == [0, 0, 0])
+    }
+
+    // MARK: - All caught up
+
+    @Test func allCaughtUpWhenEveryTaskIsCompleted() async {
+        let (viewModel, _) = await loadedSUT([completedItem("A"), completedItem("B")])
+        #expect(viewModel.isAllCaughtUp)
+        viewModel.select(.active)
+        #expect(viewModel.isAllCaughtUp)
+    }
+
+    @Test func notAllCaughtUpWithAnOpenTask() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(), completedItem("B")])
+        #expect(!viewModel.isAllCaughtUp)
+    }
+
+    @Test func notAllCaughtUpUnderTheDoneOrCategoryFilters() async {
+        let (viewModel, _) = await loadedSUT([completedItem("A")])
+        viewModel.select(.done)
+        #expect(!viewModel.isAllCaughtUp)
+        viewModel.select(.category(.work))
+        #expect(!viewModel.isAllCaughtUp)
+    }
+
+    @Test func notAllCaughtUpWithoutTasksOrBeforeLoading() async {
+        #expect(!makeSUT().viewModel.isAllCaughtUp)
+        let (viewModel, _) = await loadedSUT([])
+        #expect(!viewModel.isAllCaughtUp)
+    }
+
+    @Test func allCaughtUpCopyUsesTheTotalTaskCount() async {
+        let (viewModel, _) = await loadedSUT([completedItem("A"), completedItem("B")])
+        #expect(viewModel.allCaughtUpMessage == "You finished 2 of 2 tasks. Enjoy the break!")
+        #expect(viewModel.viewCompletedTitle == "View completed (2)")
+    }
+
+    @Test func allCaughtUpCopyHandlesASingleTask() async {
+        let (viewModel, _) = await loadedSUT([completedItem("A")])
+        #expect(viewModel.allCaughtUpMessage == "You finished 1 of 1 task. Enjoy the break!")
+        #expect(viewModel.viewCompletedTitle == "View completed (1)")
+    }
+
+    @Test func viewCompletedSwitchesToTheDoneFilter() async {
+        let (viewModel, _) = await loadedSUT([completedItem("A")])
+        viewModel.viewCompleted()
+        #expect(viewModel.selectedFilter == .done)
+    }
+
+    @Test func completingTheLastOpenTaskLeadsToAllCaughtUp() async {
+        let item = makeTodoItem()
+        let (viewModel, _) = await loadedSUT([item])
+        await viewModel.toggle(id: item.id)
+        #expect(viewModel.isAllCaughtUp)
+    }
+
+    @Test func undoingAfterAllCaughtUpBringsTheOpenTaskBack() async {
+        let open = makeTodoItem(title: "Open")
+        let (viewModel, spy) = await loadedSUT([open, completedItem("Done")])
+        spy.storedItems = [completedItem("Done")]
+        await viewModel.didDelete(open)
+        #expect(viewModel.isAllCaughtUp)
+
+        await viewModel.undo()
+
+        #expect(!viewModel.isAllCaughtUp)
+    }
+
+    // MARK: - Empty filter messages
+
+    @Test func doneFilterWithoutCompletedTasksExplainsItself() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.select(.done)
+        #expect(viewModel.emptyFilterMessage == "Nothing completed yet")
+    }
+
+    @Test func categoryWithoutOpenTasksNamesTheCategory() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(category: .personal), completedItem("Done", category: .work)])
+        viewModel.select(.category(.work))
+        #expect(viewModel.emptyFilterMessage == "No open tasks in Work")
+    }
+
+    @Test func noMessageWhileTheFilterHasContent() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem(category: .work), completedItem("Done")])
+        for filter in [TodoListFilter.all, .active, .done, .category(.work)] {
+            viewModel.select(filter)
+            #expect(viewModel.emptyFilterMessage == nil)
+        }
+    }
+
+    @Test func noMessageWhenAllCaughtUpOrNotLoaded() async {
+        #expect(makeSUT().viewModel.emptyFilterMessage == nil)
+        let (viewModel, _) = await loadedSUT([completedItem("A")])
+        viewModel.select(.active)
+        #expect(viewModel.isAllCaughtUp)
+        #expect(viewModel.emptyFilterMessage == nil)
+    }
+
+    // MARK: - Swipe delete
+
+    @Test func deletingByIDRemovesTheTaskAndOffersUndo() async {
+        let doomed = makeTodoItem(title: "Doomed")
+        let kept = makeTodoItem(title: "Kept")
+        let (viewModel, spy) = await loadedSUT([doomed, kept])
+
+        await viewModel.delete(id: doomed.id)
+
+        #expect(spy.storedItems == [kept])
+        #expect(viewModel.undoState == UndoState(item: doomed))
+        #expect(viewModel.state == .loaded(TodoListSections(items: [kept])))
+        #expect(!viewModel.actionFailed)
+    }
+
+    @Test func deletingACompletedTaskAlsoOffersUndo() async {
+        let done = completedItem("Done")
+        let (viewModel, _) = await loadedSUT([done])
+        await viewModel.delete(id: done.id)
+        #expect(viewModel.undoState == UndoState(item: done))
+    }
+
+    @Test func undoAfterASwipeDeleteBringsTheTaskBack() async {
+        let item = makeTodoItem(title: "Back")
+        let (viewModel, spy) = await loadedSUT([item])
+        await viewModel.delete(id: item.id)
+
+        await viewModel.undo()
+
+        #expect(spy.storedItems == [item])
+        #expect(viewModel.undoState == nil)
+    }
+
+    @Test func aSecondSwipeDeleteReplacesTheToast() async {
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+        let (viewModel, _) = await loadedSUT([first, second])
+
+        await viewModel.delete(id: first.id)
+        await viewModel.delete(id: second.id)
+
+        #expect(viewModel.undoState == UndoState(item: second))
+    }
+
+    @Test func aFailedDeleteFlagsTheFailureAndKeepsTheTask() async {
+        let item = makeTodoItem()
+        let (viewModel, spy) = await loadedSUT([item])
+        spy.deleteError = StubFailure()
+
+        await viewModel.delete(id: item.id)
+
+        #expect(viewModel.actionFailed)
+        #expect(viewModel.undoState == nil)
+        #expect(spy.storedItems == [item])
+        #expect(viewModel.state == .loaded(TodoListSections(items: [item])))
+    }
+
+    @Test func deletingAnUnknownIDFlagsTheFailure() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        await viewModel.delete(id: TodoItemID())
+        #expect(viewModel.actionFailed)
+        #expect(viewModel.undoState == nil)
+    }
+
+    @Test func deletingTheLastTaskEndsInTheEmptyState() async {
+        let item = makeTodoItem()
+        let (viewModel, _) = await loadedSUT([item])
+        await viewModel.delete(id: item.id)
+        #expect(viewModel.state == .empty)
+        #expect(viewModel.undoState == UndoState(item: item))
+    }
+
+    // MARK: - Review follow-ups
+
+    @Test func aFailedDeleteLeavesThePreviousToastAlone() async {
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+        let (viewModel, spy) = await loadedSUT([first, second])
+        await viewModel.delete(id: first.id)
+        spy.deleteError = StubFailure()
+
+        await viewModel.delete(id: second.id)
+
+        #expect(viewModel.actionFailed)
+        #expect(viewModel.undoState == UndoState(item: first))
+    }
+
+    @Test func aSuccessfulDeleteClearsAnEarlierFailure() async {
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+        let (viewModel, spy) = await loadedSUT([first, second])
+        spy.deleteError = StubFailure()
+        await viewModel.delete(id: first.id)
+        spy.deleteError = nil
+
+        await viewModel.delete(id: second.id)
+
+        #expect(!viewModel.actionFailed)
+    }
+
+    @Test func togglingCategoriesFromAnotherFilterOpensThePanelOnWork() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.select(.done)
+        viewModel.toggleCategories()
+        #expect(viewModel.selectedFilter == .category(.work))
+    }
+
+    @Test func deletingTheLastOpenTaskOfTheSelectedCategoryShowsItsEmptyMessage() async {
+        let only = makeTodoItem(category: .work)
+        let (viewModel, _) = await loadedSUT([only, makeTodoItem(category: .personal)])
+        viewModel.select(.category(.work))
+        #expect(viewModel.emptyFilterMessage == nil)
+
+        await viewModel.delete(id: only.id)
+
+        #expect(viewModel.emptyFilterMessage == "No open tasks in Work")
+    }
+
+    @Test func noFilterMessagesInTheEmptyOrErrorStates() async {
+        let (empty, _) = await loadedSUT([])
+        empty.select(.done)
+        #expect(empty.emptyFilterMessage == nil)
+        #expect(!empty.isAllCaughtUp)
+
+        let failing = makeSUT(error: StubFailure()).viewModel
+        await failing.load()
+        failing.select(.category(.work))
+        #expect(failing.emptyFilterMessage == nil)
+        #expect(!failing.isAllCaughtUp)
     }
 }

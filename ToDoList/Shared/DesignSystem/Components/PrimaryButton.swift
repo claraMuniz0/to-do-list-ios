@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Visual state of a `PrimaryButton`. The design does not define a disabled state yet;
-/// opacity 0.6 without shadow is the confirmed Phase 1 choice.
+/// Visual state of a `PrimaryButton`. The design does not define a disabled state (decision E3);
+/// opacity 0.6 without shadow is the confirmed choice (0.4 was too faint to read).
 struct PrimaryButtonAppearance: Equatable {
     let isEnabled: Bool
 
@@ -15,6 +15,7 @@ struct PrimaryButton: View {
     let systemImage: String?
     let fullWidth: Bool
     let isEnabled: Bool
+    let disabledHint: String?
     let action: () -> Void
 
     init(
@@ -22,14 +23,18 @@ struct PrimaryButton: View {
         systemImage: String? = nil,
         fullWidth: Bool = false,
         isEnabled: Bool = true,
+        disabledHint: String? = nil,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.systemImage = systemImage
         self.fullWidth = fullWidth
         self.isEnabled = isEnabled
+        self.disabledHint = disabledHint
         self.action = action
     }
+
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 18
 
     private var appearance: PrimaryButtonAppearance { PrimaryButtonAppearance(isEnabled: isEnabled) }
 
@@ -38,7 +43,7 @@ struct PrimaryButton: View {
             HStack(spacing: 8) {
                 if let systemImage {
                     Image(systemName: systemImage)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: iconSize, weight: .semibold))
                         .accessibilityHidden(true)
                 }
                 Text(title).dsFont(.button)
@@ -52,6 +57,7 @@ struct PrimaryButton: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityHint(isEnabled ? "" : (disabledHint ?? ""))
     }
 }
 

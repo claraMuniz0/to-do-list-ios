@@ -3,9 +3,9 @@ import Testing
 
 struct ChipPaletteTests {
     @Test func seededCategoriesMapToBlueBrickGreen() {
-        #expect(ChipPalette(colorKey: Category.work.colorKey) == .blue)
-        #expect(ChipPalette(colorKey: Category.personal.colorKey) == .brick)
-        #expect(ChipPalette(colorKey: Category.shopping.colorKey) == .green)
+        #expect(ChipPalette(colorKey: Category.work.color.key) == .blue)
+        #expect(ChipPalette(colorKey: Category.personal.color.key) == .brick)
+        #expect(ChipPalette(colorKey: Category.shopping.color.key) == .green)
     }
 
     @Test func paletteNamesMapToThemselves() {

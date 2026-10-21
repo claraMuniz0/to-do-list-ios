@@ -68,7 +68,7 @@ The design has no bitmap or custom artwork: every "illustration" is a large icon
 
 ### Components
 - [x] `CategoryChip` (tag and option styles, selected state)
-- [x] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.6, no shadow; confirmed by the user)
+- [x] `PrimaryButton` (icon + label, full-width option, **disabled state**: opacity 0.6, no shadow (a Phase 3 trial of 0.4 was too faint, back to 0.6))
 - [x] `FilterPill` (selected state)
 - [x] `ScreenHeader` (subtitle in Caveat accent + italic Fraunces title; used by Welcome, Add Task and Task List)
 - [x] `AddTaskInput` (placeholder, options button, add button)
@@ -98,7 +98,7 @@ Visual components are mostly previews; test only logic: token lookups return the
 - Colors live in the asset catalog (`DSColor`, `ChipPalette`); added tokens beyond the design variables: `border-control` (`#8E8272`, a stronger edge for form fields because `border` is ~1.2:1), `toast-shadow`, `done-chip-bg`, `shadow-soft`, `shadow-accent`.
 - Fonts are variable files registered at runtime by `FontRegistrar` (no Info.plist or project edit). Bricolage Grotesque defaults to optical size 96 (display cut), so its tokens are built through UIKit with `opsz` matched to the point size (`DSFont.uiFont(for:)`).
 - Shadows are cast from the background shape only (`dsBackground`) so text and icons never get one.
-- Disabled `PrimaryButton`: opacity 0.6, no shadow (confirmed).
+- Disabled `PrimaryButton`: opacity 0.6, no shadow (0.4 was tried in Phase 3 and was too faint to read).
 - `FilterPill` is 44pt tall (the design is ~36pt) to meet the touch-target rule.
 - `EmptyStateIllustration` takes a `layout:` (`.welcome`, `.celebration`, `.noResults`) because the design uses three geometries.
 - Project-file edits made with permission: `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` and `INFOPLIST_KEY_CFBundleDisplayName = "Do it later"`.

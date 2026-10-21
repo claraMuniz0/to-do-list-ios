@@ -1,35 +1,36 @@
 import Testing
 @testable import MyApp
 
+@MainActor
 struct AppDependenciesTests {
-    @Test func liveWiresAnInMemoryRepositoryThatStoresItems() async throws {
-        let dependencies = AppDependencies.live()
+    @Test func inMemoryWiresARepositoryThatStoresItems() async throws {
+        let dependencies = try AppDependencies.inMemory()
         let item = makeTodoItem()
         try await dependencies.todoItemRepository.add(item)
         #expect(try await dependencies.todoItemRepository.allTasks() == [item])
     }
 
-    @Test func eachLiveCompositionStartsWithAnEmptyRepository() async throws {
-        let first = AppDependencies.live()
+    @Test func eachInMemoryCompositionStartsWithAnEmptyRepository() async throws {
+        let first = try AppDependencies.inMemory()
         try await first.todoItemRepository.add(makeTodoItem())
-        #expect(try await AppDependencies.live().todoItemRepository.allTasks().isEmpty)
+        #expect(try await AppDependencies.inMemory().todoItemRepository.allTasks().isEmpty)
     }
 }
 
 @MainActor
 struct AppDependenciesViewModelTests {
-    @Test func theTodoListViewModelStartsLoading() {
-        #expect(AppDependencies.live().makeTodoListViewModel().state == .loading)
+    @Test func theTodoListViewModelStartsLoading() throws {
+        #expect(try AppDependencies.inMemory().makeTodoListViewModel().state == .loading)
     }
 
     @Test func theTodoListViewModelReadsFromTheSharedRepository() async throws {
-        let dependencies = AppDependencies.live()
+        let dependencies = try AppDependencies.inMemory()
         let item = makeTodoItem()
         try await dependencies.todoItemRepository.add(item)
         let viewModel = dependencies.makeTodoListViewModel()
 
         await viewModel.load()
 
-        #expect(viewModel.state == .loaded([item]))
+        #expect(viewModel.state == .loaded(TodoListSections(items: [item])))
     }
 }

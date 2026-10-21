@@ -2,7 +2,7 @@ import Observation
 
 /// Destinations presented over the root screen. Phase 4 adds the edit case.
 enum AppRoute: Hashable, Identifiable {
-    case addTodoItem
+    case addTodoItem(prefill: String)
 
     var id: Self { self }
 }

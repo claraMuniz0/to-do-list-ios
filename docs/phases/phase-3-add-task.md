@@ -1,6 +1,6 @@
 # Phase 3: Add Task (manual) + minimal list
 
-**Status:** not started (all decisions confirmed, ready to start after Phases 0 to 2)
+**Status:** done (all decisions confirmed and implemented, reviews applied)
 **Design:** `to-do.pen`: "Add Task", "Select Date", "Task List" (plus "Components")
 **Depends on:** Phase 0 (domain skeleton, test target), Phase 1 (design system), Phase 2 (router, `TodoListViewModel`, composition root)
 
@@ -81,30 +81,30 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 |---|----------|---------|----------------|--------|
 | E1 | Date picker | (1) system graphical `DatePicker` in the sheet, styled with the accent tint; (2) custom month grid matching the design | **(1) System `DatePicker` for the MVP**, with the Today/Tomorrow/Next week pills and Clear above it. Custom grid is post-MVP polish | **confirmed** (recommendation accepted) |
 | E2 | Where the new form components live | text input, text area, form field (label + optional tag), date row, circular icon button, section header | **Design system folder, built with `new-ds-component` at the start of this phase** (not in Phase 1) | **confirmed** (recommendation accepted) |
-| E3 | Disabled `PrimaryButton` | undesigned | **Reduced opacity (0.4) and no shadow**; token noted for the design | **confirmed** (recommendation accepted) |
+| E3 | Disabled `PrimaryButton` | undesigned | **Reduced opacity (0.6) and no shadow**; token noted for the design. Started at 0.4, raised to 0.6 after review because 0.4 was too faint to read (same value as Phase 1) | **confirmed** (recommendation accepted) |
 | E4 | Shared `ScreenHeader` (subtitle + italic title) | add to Phase 1 vs build here | **Add to Phase 1 and use it in Phases 2 and 3** | **confirmed** (recommendation accepted) |
 | E5 | Phase size | one macro phase vs split now | **Keep one macro phase** with this internal order: persistence, domain, Add Task form, list and quick add. Split further later | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
 ### Persistence (first step)
-- [ ] `TodoItemRecord` (`@Model`) in Data, `TodoItemMapper`, with tests
-- [ ] `SwiftDataTodoItemRepository` implementing `TodoItemRepository`, tested with an in-memory `ModelContainer`
-- [ ] Composition root swaps `InMemoryTodoItemRepository` for SwiftData (in-memory kept for tests and previews)
+- [x] `TodoItemRecord` (`@Model`) in Data, `TodoItemMapper`, with tests
+- [x] `SwiftDataTodoItemRepository` implementing `TodoItemRepository`, tested with an in-memory `ModelContainer`
+- [x] Composition root swaps `InMemoryTodoItemRepository` for SwiftData (in-memory kept for tests and previews)
 
 ### Domain
-- [ ] `DateProvider`; `DueDate`; `CategoryID`, `CategoryName`, `CategoryColor` and `Category` (seeded Work/Personal/Shopping, stable ids); `TodoItemTitle` (trim, non-empty, max length); `TodoItem.createdAt`
-- [ ] `AddTodoItemUseCase`; `CompleteTodoItemUseCase` and `ReopenTodoItemUseCase` (or one toggle use case); ordering of open and completed lists (a pure function with tests)
-- [ ] Quick-add path through `AddTodoItemUseCase` with the defaults from A5
+- [x] `DateProvider`; `DueDate`; `CategoryID`, `CategoryName`, `CategoryColor` and `Category` (seeded Work/Personal/Shopping, stable ids); `TodoItemTitle` (trim, non-empty, max length); `TodoItem.createdAt`
+- [x] `AddTodoItemUseCase`; `CompleteTodoItemUseCase` and `ReopenTodoItemUseCase` (or one toggle use case); ordering of open and completed lists (a pure function with tests)
+- [x] Quick-add path through `AddTodoItemUseCase` with the defaults from A5
 
 ### Add Task form
-- [ ] `AddTodoItemViewModel` (tested first): title, description, category, due date, validity, save, failure
-- [ ] New design-system pieces from E2, `ScreenHeader` and disabled `PrimaryButton`
-- [ ] `AddTodoItemView` (full-screen cover) and the Select Date sheet with the pills, Clear, picker and confirm
+- [x] `AddTodoItemViewModel` (tested first): title, description, category, due date, validity, save, failure
+- [x] New design-system pieces from E2, `ScreenHeader` and disabled `PrimaryButton`
+- [x] `AddTodoItemView` (full-screen cover) and the Select Date sheet with the pills, Clear, picker and confirm
 
 ### Task list
-- [ ] `TodoListViewModel` `.loaded` state: TO DO and COMPLETED sections, counts, toggle completion, refresh after every use case
-- [ ] `TodoListView`, `TaskRow`/`TaskRowDone` integration, `QuickAddInput`
-- [ ] Previews per state; `accessibility-check`; `design-fidelity-checker`
+- [x] `TodoListViewModel` `.loaded` state: TO DO and COMPLETED sections, counts, toggle completion, refresh after every use case
+- [x] `TodoListView`, `TaskRow`/`TaskRowDone` integration, `QuickAddInput`
+- [x] Previews per state; `accessibility-check`; `design-fidelity-checker`
 
 ## Out of scope
 - Edit and delete (Phase 4), filters, search, sort, swipe to delete, "All caught up"
@@ -114,3 +114,21 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 - A task can be created from the form or quick add, survives an app relaunch, and appears in the list.
 - The circle completes and reopens it, moving it between TO DO and COMPLETED.
 - Domain, view model and repository tests are green; the design-fidelity check shows no High differences.
+
+## Build notes
+- Test-first throughout Domain, Data and the two view models (red `test:` commit, then green `feat:`). Exceptions: the router prefill change (`AppRoute.addTodoItem(prefill:)`) and the SwiftUI views (`AddTodoItemView`, `SelectDateView`, `TodoListView`) were not preceded by a red commit; views have previews, not unit tests.
+- Persistence: `TodoItemRecord` (`@Model`) + `TodoItemMapper` + `SwiftDataTodoItemRepository` (`@MainActor`, main context, holds its `ModelContainer`, which a `ModelContext` does not retain). `allTasks()` is sorted oldest created first. `AppDependencies.live()` is disk-backed and `inMemory()` serves tests and previews.
+- Domain: `Category` is now `CategoryID` + `CategoryName` + `CategoryColor`; `TodoItemTitle.maxLength` is 120 (`.tooLong`); `AddTodoItemUseCase` (with `quickAdd`), `ToggleTodoItemCompletionUseCase` (one toggle use case instead of complete + reopen), `TodoListSections` (ordering as a pure type).
+- Presentation: `AddTodoItemViewModel`, `DueDateLabel` ("Today, Oct 8" with a fixed order, the locale only supplies names), `DueDatePickerAdapter`, `TodoListViewModel` `.loaded(TodoListSections)` with `toggle` and `quickAdd`.
+- The test target needs the iOS 27 simulator (iPhone 18 Pro); `DSColorTests` has an intermittent crash under parallel runs (UIColor race), unrelated to this phase.
+- Bug found by running the app: a toggled row kept its old look because `LazyVStack` reused it across sections; fixed with a state-dependent `.id`.
+- `DueDate` is now a validated Gregorian day (`DueDateError.invalidDate`); a corrupt stored date makes the mapper throw. The date sheet reads the calendar and clock from `AddTodoItemViewModel` instead of `Calendar.current` and `.now`.
+- Accessibility pass applied: `TaskRow` is one element with a named action, form labels and the category group are tied together, the quick-add bar stacks at accessibility sizes, icons scale, disabled Save has a hint, section counts are spoken.
+- The "blank title" rule lives only in `TodoItemTitle.isBlank`; the initializer, `AddTodoItemViewModel.canSave` and `TodoListViewModel.quickAdd` all use it.
+- Reviews applied: save failure is announced, "Clear" has a 44pt hit area, design gradient on list and form, partial date sheet with surface fill and 28pt corners, button copy "Set date".
+
+## Follow-ups (not done in this phase)
+- Design: Close button has a soft shadow the design does not; calendar icon is an SF grid symbol, design uses an outline `calendar`; Task name input is about 50pt vs 57pt in the design, text area 111 vs 104; custom calendar grid and header (E1, post-MVP); sheet scrim is the system dim, not the designed 50% `#2B2118`.
+- Accessibility still open: selected category chip is shown only by the accent stroke (a checkmark would deviate from the design); unselected `FilterPill` outline is 1.27:1 (`border` vs `borderControl`); the keyboard still hides Category and Due date while open (tap or scroll closes it); VoiceOver and Dynamic Type were reviewed in code only, not on a device.
+- Tests (Medium): more cases for `SwiftDataTodoItemRepository` (corrupt record, `createdAt` kept on update), `TodoItemMapper` (partial due date, empty details), `AddTodoItemViewModel` (double submit, year rollover), `DueDateLabel` (other year or locale), a spy with separate per-method errors, and `TodoListViewModel` wiring for the quick-add options route.
+- Architecture (Medium/Low): unknown `categoryID` falls back to Personal silently (decision C1, keep or throw); `Category` seeds use `try!`; previews build a Data repository inside Presentation files.

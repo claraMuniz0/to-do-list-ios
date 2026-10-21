@@ -8,11 +8,18 @@ struct TodoItemFormViewModelTests {
     private var now: Date { calendar.makeDate(2026, 10, 8) }
     private let today = makeDueDate(2026, 10, 8)
 
-    private func makeSUT(initialTitle: String = "") -> (viewModel: TodoItemFormViewModel, spy: TodoItemRepositorySpy) {
+    private func makeSUT(
+        mode: TodoItemFormMode = .add,
+        initialTitle: String = ""
+    ) -> (viewModel: TodoItemFormViewModel, spy: TodoItemRepositorySpy) {
         let spy = TodoItemRepositorySpy()
         let provider = DateProviderStub(current: now)
         let viewModel = TodoItemFormViewModel(
+            mode: mode,
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: spy),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
+            getTodoItem: GetTodoItemUseCase(repository: spy),
             dateProvider: provider,
             calendar: calendar,
             locale: Locale(identifier: "en_US"),
@@ -148,5 +155,142 @@ struct TodoItemFormViewModelTests {
         let (viewModel, _) = makeSUT()
         viewModel.dueDate = makeDueDate(2026, 10, 1)
         #expect(viewModel.earliestSelectableDueDate == makeDueDate(2026, 10, 1))
+    }
+
+    // MARK: - Edit mode
+
+    private func makeEditSUT(_ item: TodoItem) -> (viewModel: TodoItemFormViewModel, spy: TodoItemRepositorySpy) {
+        let sut = makeSUT(mode: .edit(item.id))
+        sut.spy.storedItems = [item]
+        return sut
+    }
+
+    @Test func copyFollowsTheMode() {
+        let add = makeSUT().viewModel
+        #expect(add.screenSubtitle == "What's on your mind?")
+        #expect(add.screenTitle == "New task")
+        #expect(add.saveButtonTitle == "Save task")
+        #expect(!add.canDelete)
+
+        let edit = makeSUT(mode: .edit(TodoItemID())).viewModel
+        #expect(edit.screenSubtitle == "Make it just right")
+        #expect(edit.screenTitle == "Edit task")
+        #expect(edit.saveButtonTitle == "Save changes")
+        #expect(edit.canDelete)
+    }
+
+    @Test func loadPrefillsTheFormFromTheStoredItem() async {
+        let item = makeTodoItem(
+            title: "Buy groceries", description: "Milk, eggs", category: .work, dueDate: makeDueDate(2026, 10, 9)
+        )
+        let (viewModel, _) = makeEditSUT(item)
+
+        await viewModel.load()
+
+        #expect(viewModel.title == "Buy groceries")
+        #expect(viewModel.details == "Milk, eggs")
+        #expect(viewModel.category == .work)
+        #expect(viewModel.dueDate == makeDueDate(2026, 10, 9))
+        #expect(!viewModel.loadFailed)
+    }
+
+    @Test func loadKeepsAMissingDueDateAndAPastOneAsStored() async {
+        let (noDate, _) = makeEditSUT(makeTodoItem(dueDate: nil))
+        await noDate.load()
+        #expect(noDate.dueDate == nil)
+
+        let (past, _) = makeEditSUT(makeTodoItem(dueDate: makeDueDate(2026, 10, 1)))
+        await past.load()
+        #expect(past.dueDate == makeDueDate(2026, 10, 1))
+        #expect(past.earliestSelectableDueDate == makeDueDate(2026, 10, 1))
+    }
+
+    @Test func loadingAnUnknownItemFlagsTheFailure() async {
+        let (viewModel, _) = makeSUT(mode: .edit(TodoItemID()))
+        await viewModel.load()
+        #expect(viewModel.loadFailed)
+    }
+
+    @Test func addModeLoadDoesNothing() async {
+        let (viewModel, _) = makeSUT()
+        await viewModel.load()
+        #expect(!viewModel.loadFailed)
+        #expect(viewModel.dueDate == today)
+    }
+
+    @Test func savingInEditModeUpdatesTheStoredItemKeepingItsIdentity() async {
+        var item = makeTodoItem(title: "Old", description: "Old text", category: .personal)
+        item.complete(at: Date(timeIntervalSince1970: 9))
+        let (viewModel, spy) = makeEditSUT(item)
+        await viewModel.load()
+        viewModel.title = "New"
+        viewModel.details = ""
+        viewModel.category = .work
+        viewModel.selectNextWeek()
+
+        let saved = await viewModel.save()
+
+        #expect(saved)
+        #expect(spy.storedItems.count == 1)
+        let stored = spy.storedItems.first
+        #expect(stored?.id == item.id)
+        #expect(stored?.title.value == "New")
+        #expect(stored?.description == nil)
+        #expect(stored?.category == .work)
+        #expect(stored?.dueDate == makeDueDate(2026, 10, 15))
+        #expect(stored?.completedAt == item.completedAt)
+    }
+
+    @Test func savingInEditModeWithABlankTitleDoesNothing() async {
+        let item = makeTodoItem(title: "Keep")
+        let (viewModel, spy) = makeEditSUT(item)
+        await viewModel.load()
+        viewModel.title = "  "
+
+        #expect(!viewModel.canSave)
+        #expect(await viewModel.save() == false)
+        #expect(spy.storedItems == [item])
+    }
+
+    @Test func aFailedEditSaveReportsFailureAndKeepsTheFormEditable() async {
+        let item = makeTodoItem()
+        let (viewModel, spy) = makeEditSUT(item)
+        await viewModel.load()
+        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
+
+        #expect(await viewModel.save() == false)
+        #expect(viewModel.saveFailed)
+        #expect(!viewModel.isSaving)
+    }
+
+    @Test func deleteRemovesTheItemAndReturnsItForUndo() async {
+        let item = makeTodoItem(title: "Buy milk")
+        let (viewModel, spy) = makeEditSUT(item)
+        await viewModel.load()
+
+        let deleted = await viewModel.delete()
+
+        #expect(deleted == item)
+        #expect(spy.storedItems.isEmpty)
+        #expect(!viewModel.deleteFailed)
+    }
+
+    @Test func aFailedDeleteReturnsNilAndFlagsTheFailure() async {
+        let item = makeTodoItem()
+        let (viewModel, spy) = makeEditSUT(item)
+        await viewModel.load()
+        spy.errorToThrow = TodoItemRepositoryError.alreadyExists
+
+        #expect(await viewModel.delete() == nil)
+        #expect(viewModel.deleteFailed)
+        #expect(spy.storedItems == [item])
+    }
+
+    @Test func deleteInAddModeDoesNothing() async {
+        let (viewModel, spy) = makeSUT()
+        spy.storedItems = [makeTodoItem()]
+
+        #expect(await viewModel.delete() == nil)
+        #expect(spy.storedItems.count == 1)
     }
 }

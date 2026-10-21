@@ -29,17 +29,20 @@ final class TodoListViewModel {
     private let toggleCompletion: ToggleTodoItemCompletionUseCase
     private let addTodoItem: AddTodoItemUseCase
     private let restoreTodoItem: RestoreTodoItemUseCase
+    private let deleteTodoItem: DeleteTodoItemUseCase
 
     init(
         getTodoItems: GetTodoItemsUseCase,
         toggleCompletion: ToggleTodoItemCompletionUseCase,
         addTodoItem: AddTodoItemUseCase,
-        restoreTodoItem: RestoreTodoItemUseCase
+        restoreTodoItem: RestoreTodoItemUseCase,
+        deleteTodoItem: DeleteTodoItemUseCase
     ) {
         self.getTodoItems = getTodoItems
         self.toggleCompletion = toggleCompletion
         self.addTodoItem = addTodoItem
         self.restoreTodoItem = restoreTodoItem
+        self.deleteTodoItem = deleteTodoItem
     }
 
     /// Counts every open task, not only those due today, whatever filter is selected.
@@ -144,6 +147,12 @@ final class TodoListViewModel {
     func didDelete(_ item: TodoItem) async {
         undoState = UndoState(item: item)
         await load()
+    }
+
+    /// Swipe and VoiceOver delete: removes the task and offers Undo, like deleting from Edit. A failure sets `actionFailed`
+    /// and leaves the previous toast alone.
+    func delete(id: TodoItemID) async {
+        await perform { undoState = UndoState(item: try await deleteTodoItem.execute(id: id)) }
     }
 
     /// Re-adds the deleted task with its original id and dates. A failure sets `actionFailed`; the toast closes either way.

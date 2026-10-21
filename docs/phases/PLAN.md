@@ -56,6 +56,10 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - Describe screen (sentence, counter, examples) and Review screen (the Add form prefilled by Claude, banner, Save). Date only, no priority, no mic.
 - All decisions confirmed; built in parallel with Phase 8 after the foundation.
 
+## Phase 10: Splash Screen
+- Branded launch screen handing off to Welcome / the list once loading finishes, no artificial delay, Reduce Motion honored.
+- All decisions confirmed; independent of Phases 5 to 9.
+
 ## Post-MVP backlog (to be phased later)
 - See [backlog](backlog-post-mvp.md).
 
@@ -71,4 +75,5 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 - [Claude foundation](claude-foundation.md)
 - [Phase 8: Steps](phase-8-steps.md)
 - [Phase 9: Smart Add](phase-9-smart-add.md)
+- [Phase 10: Splash Screen](phase-10-splash.md)
 - [Post-MVP backlog](backlog-post-mvp.md)

@@ -5,7 +5,8 @@ import SwiftUI
 struct CategoryFilterRowStyle: Equatable {
     let isSelected: Bool
 
-    var borderColor: Color { isSelected ? DSColor.accent : DSColor.border }
+    /// Unselected uses the control border for 3:1 contrast against the surface.
+    var borderColor: Color { isSelected ? DSColor.accent : DSColor.borderControl }
     var borderWidth: CGFloat { isSelected ? 2 : 1 }
     var indicatorFill: Color { isSelected ? DSColor.accent : .clear }
     var indicatorStroke: Color { isSelected ? DSColor.accent : DSColor.textMuted }

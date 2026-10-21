@@ -15,6 +15,9 @@ struct FilterPill: View {
         self.action = action
     }
 
+    /// Unselected outlines use the control border: the soft `border` is about 1.3:1 on white, below the 3:1 non-text minimum.
+    static func borderColor(isSelected: Bool) -> Color { isSelected ? .clear : DSColor.borderControl }
+
     static func accessibilityValue(isExpanded: Bool?) -> String? {
         guard let isExpanded else { return nil }
         return isExpanded ? "Expanded" : "Collapsed"
@@ -29,7 +32,7 @@ struct FilterPill: View {
                 .padding(.horizontal, 16)
                 .background(isSelected ? DSColor.accent : DSColor.surface, in: Capsule())
                 .overlay {
-                    Capsule().strokeBorder(isSelected ? Color.clear : DSColor.border, lineWidth: 1)
+                    Capsule().strokeBorder(Self.borderColor(isSelected: isSelected), lineWidth: 1)
                 }
                 .frame(minHeight: DSTouchTarget.minimum)
                 .contentShape(Rectangle())

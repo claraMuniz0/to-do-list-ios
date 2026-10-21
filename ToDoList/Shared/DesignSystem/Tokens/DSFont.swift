@@ -6,7 +6,7 @@ import UIKit
 enum DSFont: CaseIterable {
     case screenTitle, emptyTitle, greeting
     case rowTitle, rowDescription, inputText
-    case chipTag, chipOption, pill, button, toast, stepCount, count
+    case chipTag, chipOption, pill, button, toast, stepCount, count, sectionLabel
 
     struct Spec: Equatable {
         let family: String
@@ -26,6 +26,7 @@ enum DSFont: CaseIterable {
         case .rowDescription: Spec(family: "Bricolage Grotesque", size: 14, weight: .regular, isItalic: false, textStyle: .subheadline)
         case .inputText: Spec(family: "Bricolage Grotesque", size: 16, weight: .regular, isItalic: false, textStyle: .body)
         case .chipTag, .stepCount: Spec(family: "Outfit", size: 12, weight: .semibold, isItalic: false, textStyle: .caption)
+        case .sectionLabel: Spec(family: "DM Mono", size: 12, weight: .medium, isItalic: false, textStyle: .caption)
         case .count: Spec(family: "DM Mono", size: 12, weight: .regular, isItalic: false, textStyle: .caption)
         case .chipOption, .pill: Spec(family: "Outfit", size: 14, weight: .semibold, isItalic: false, textStyle: .subheadline)
         case .button: Spec(family: "Outfit", size: 17, weight: .semibold, isItalic: false, textStyle: .headline)

@@ -10,6 +10,10 @@ struct SectionHeader: View {
         self.count = count
     }
 
+    static let font = DSFont.sectionLabel
+    static let tracking: CGFloat = 1.4
+    static let labelColor = DSColor.textMuted
+
     static func label(title: String, count: Int?) -> String {
         guard let count else { return title.uppercased() }
         return "\(title.uppercased()) · \(count)"
@@ -25,9 +29,9 @@ struct SectionHeader: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(Self.label(title: title, count: count))
-                .dsFont(.chipTag)
-                .tracking(1)
-                .foregroundStyle(DSColor.textSecondary)
+                .dsFont(Self.font)
+                .tracking(Self.tracking)
+                .foregroundStyle(Self.labelColor)
                 .fixedSize(horizontal: false, vertical: true)
             Rectangle().fill(DSColor.border).frame(height: 1)
                 .accessibilityHidden(true)

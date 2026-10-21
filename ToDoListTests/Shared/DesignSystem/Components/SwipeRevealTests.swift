@@ -38,4 +38,24 @@ struct SwipeRevealTests {
         #expect(!SwipeReveal.isHorizontal(CGSize(width: -10, height: 30)))
         #expect(!SwipeReveal.isHorizontal(CGSize(width: 20, height: 20)))
     }
+
+    @Test func settlesOpenExactlyAtTheHalfwayPoint() {
+        #expect(SwipeReveal.settlesOpen(startsOpen: false, translation: -44))
+    }
+
+    @Test func aDiagonalDragAtTheExactRatioIsNotHorizontal() {
+        #expect(!SwipeReveal.isHorizontal(CGSize(width: 30, height: 20)))
+        #expect(SwipeReveal.isHorizontal(CGSize(width: 31, height: 20)))
+    }
+
+    @Test func noMovementKeepsTheCurrentState() {
+        #expect(SwipeReveal.offset(startsOpen: false, translation: 0) == 0)
+        #expect(SwipeReveal.offset(startsOpen: true, translation: 0) == -88)
+        #expect(!SwipeReveal.settlesOpen(startsOpen: false, translation: 0))
+        #expect(SwipeReveal.settlesOpen(startsOpen: true, translation: 0))
+    }
+
+    @Test func draggingBackByTheFullRevealWidthClosesIt() {
+        #expect(SwipeReveal.offset(startsOpen: true, translation: 88) == 0)
+    }
 }

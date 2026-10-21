@@ -556,4 +556,63 @@ struct TodoListViewModelTests {
         #expect(viewModel.state == .empty)
         #expect(viewModel.undoState == UndoState(item: item))
     }
+
+    // MARK: - Review follow-ups
+
+    @Test func aFailedDeleteLeavesThePreviousToastAlone() async {
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+        let (viewModel, spy) = await loadedSUT([first, second])
+        await viewModel.delete(id: first.id)
+        spy.deleteError = StubFailure()
+
+        await viewModel.delete(id: second.id)
+
+        #expect(viewModel.actionFailed)
+        #expect(viewModel.undoState == UndoState(item: first))
+    }
+
+    @Test func aSuccessfulDeleteClearsAnEarlierFailure() async {
+        let first = makeTodoItem(title: "First")
+        let second = makeTodoItem(title: "Second")
+        let (viewModel, spy) = await loadedSUT([first, second])
+        spy.deleteError = StubFailure()
+        await viewModel.delete(id: first.id)
+        spy.deleteError = nil
+
+        await viewModel.delete(id: second.id)
+
+        #expect(!viewModel.actionFailed)
+    }
+
+    @Test func togglingCategoriesFromAnotherFilterOpensThePanelOnWork() async {
+        let (viewModel, _) = await loadedSUT([makeTodoItem()])
+        viewModel.select(.done)
+        viewModel.toggleCategories()
+        #expect(viewModel.selectedFilter == .category(.work))
+    }
+
+    @Test func deletingTheLastOpenTaskOfTheSelectedCategoryShowsItsEmptyMessage() async {
+        let only = makeTodoItem(category: .work)
+        let (viewModel, _) = await loadedSUT([only, makeTodoItem(category: .personal)])
+        viewModel.select(.category(.work))
+        #expect(viewModel.emptyFilterMessage == nil)
+
+        await viewModel.delete(id: only.id)
+
+        #expect(viewModel.emptyFilterMessage == "No open tasks in Work")
+    }
+
+    @Test func noFilterMessagesInTheEmptyOrErrorStates() async {
+        let (empty, _) = await loadedSUT([])
+        empty.select(.done)
+        #expect(empty.emptyFilterMessage == nil)
+        #expect(!empty.isAllCaughtUp)
+
+        let failing = makeSUT(error: StubFailure()).viewModel
+        await failing.load()
+        failing.select(.category(.work))
+        #expect(failing.emptyFilterMessage == nil)
+        #expect(!failing.isAllCaughtUp)
+    }
 }

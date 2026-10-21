@@ -23,6 +23,12 @@ struct EmptyStateIllustrationLayoutTests {
         #expect(layout.dots.filter { $0.barSize != nil }.count == 3)
     }
 
+    @Test func celebrationBarsAreThinAndRotatedLikeTheDesign() {
+        let bars = EmptyStateIllustrationLayout.celebration.dots.filter { $0.barSize != nil }
+        #expect(bars.map(\.barSize) == [CGSize(width: 16, height: 6), CGSize(width: 16, height: 6), CGSize(width: 14, height: 6)])
+        #expect(bars.map(\.rotation) == [30, -35, 20])
+    }
+
     @Test func celebrationConfettiStaysInsideTheCanvas() {
         let layout = EmptyStateIllustrationLayout.celebration
         for piece in layout.dots {

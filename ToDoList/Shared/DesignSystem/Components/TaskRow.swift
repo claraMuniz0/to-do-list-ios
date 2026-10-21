@@ -13,6 +13,7 @@ struct TaskRowStyle: Equatable {
 
     var accessibilityValue: String { isDone ? "Completed" : "Not completed" }
     var toggleActionName: String { isDone ? "Mark as not completed" : "Mark as completed" }
+    var openHint: String { "Opens the task for editing" }
 
     /// One spoken label for the whole row. The description is skipped when done because it is not shown.
     func accessibilityLabel(title: String, description: String?, categoryName: String) -> String {
@@ -116,6 +117,7 @@ struct TaskRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(style.accessibilityLabel(title: title, description: description, categoryName: categoryName))
         .accessibilityValue(style.accessibilityValue)
+        .accessibilityHint(style.openHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(.default, onOpen)
         .accessibilityAction(named: style.toggleActionName, onToggle)

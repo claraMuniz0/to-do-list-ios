@@ -7,6 +7,9 @@ struct TodoListView: View {
     let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverIsOn
+    @Environment(\.accessibilitySwitchControlEnabled) private var switchControlIsOn
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -28,7 +31,7 @@ struct TodoListView: View {
         .overlay(alignment: .bottom) {
             if !isListLoaded { undoToast.padding(.bottom, 24) }
         }
-        .animation(.default, value: viewModel.undoState)
+        .animation(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .default : nil, value: viewModel.undoState)
     }
 
     private var isListLoaded: Bool {
@@ -45,15 +48,21 @@ struct TodoListView: View {
         }
     }
 
-    /// Visible for 5 seconds; `.task(id:)` restarts the timer when a second delete replaces the toast.
+    /// Visible for 5 seconds (until used when VoiceOver or Switch Control is on); `.task(id:)` restarts the timer
+    /// when a second delete replaces the toast.
     @ViewBuilder private var undoToast: some View {
         if let undo = viewModel.undoState {
             UndoToast(message: "Task deleted") { Task { await viewModel.undo() } }
                 .padding(.horizontal, 20)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(UndoToastPolicy.slides(reduceMotion: reduceMotion) ? .move(edge: .bottom).combined(with: .opacity) : .opacity)
                 .task(id: undo) {
-                    AccessibilityNotification.Announcement("Task deleted. Undo available.").post()
-                    try? await Task.sleep(for: .seconds(5))
+                    // A cancelled sleep means a newer toast or a dismissal took over, so ending the timer is correct.
+                    try? await Task.sleep(for: UndoToastPolicy.announcementDelay)
+                    guard !Task.isCancelled else { return }
+                    AccessibilityNotification.Announcement("Deleted \(undo.item.title.value). Undo available.").post()
+                    let assistiveTechnologyIsOn = voiceOverIsOn || switchControlIsOn
+                    guard let delay = UndoToastPolicy.autoDismissDelay(assistiveTechnologyIsOn: assistiveTechnologyIsOn) else { return }
+                    try? await Task.sleep(for: delay)
                     if !Task.isCancelled { viewModel.dismissUndo() }
                 }
         }

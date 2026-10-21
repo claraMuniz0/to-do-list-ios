@@ -30,7 +30,7 @@ struct CategoryFilterRow: View {
 
     private let indicatorSize: CGFloat = 24
     private let dotSize: CGFloat = 14
-    private let checkmarkSize: CGFloat = 12
+    private let checkmarkSize: CGFloat = 14
 
     var body: some View {
         let style = CategoryFilterRowStyle(isSelected: isSelected)
@@ -39,7 +39,7 @@ struct CategoryFilterRow: View {
                 Circle().fill(palette.foreground).frame(width: dotSize, height: dotSize)
                     .accessibilityHidden(true)
                 Text(name)
-                    .dsFont(.inputText)
+                    .dsFont(.rowTitle)
                     .foregroundStyle(DSColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(CategoryFilterRowStyle.countLabel(openCount))

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Bottom sheet to pick the due date: quick pills, the system graphical picker and a confirm button.
 struct SelectDateView: View {
-    @Bindable var viewModel: AddTodoItemViewModel
+    @Bindable var viewModel: TodoItemFormViewModel
 
     @Environment(\.dismiss) private var dismiss
 

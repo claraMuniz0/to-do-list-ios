@@ -9,7 +9,7 @@ enum QuickDate: Equatable {
 /// State and intent of the Add Task form. Save is disabled (`canSave`) until the title has content,
 /// so no validation error UI exists.
 @MainActor @Observable
-final class AddTodoItemViewModel {
+final class TodoItemFormViewModel {
     let categories = Category.defaults
     var details = ""
     var category: Category = .personal

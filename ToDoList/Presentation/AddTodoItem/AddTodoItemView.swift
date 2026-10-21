@@ -2,14 +2,14 @@ import SwiftUI
 
 /// Full-screen Add Task form. Renders the view model and forwards intent; holds no business logic.
 struct AddTodoItemView: View {
-    @Bindable var viewModel: AddTodoItemViewModel
+    @Bindable var viewModel: TodoItemFormViewModel
     let onClose: () -> Void
     let onSaved: () -> Void
 
     @FocusState private var isTitleFocused: Bool
     @State private var isDateSheetPresented = false
 
-    init(viewModel: AddTodoItemViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
+    init(viewModel: TodoItemFormViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
         self.viewModel = viewModel
         self.onClose = onClose
         self.onSaved = onSaved
@@ -117,18 +117,18 @@ private struct FixedDateProvider: DateProvider {
     func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) } // 2026-10-08 12:00 UTC
 }
 
-extension AddTodoItemViewModel {
+extension TodoItemFormViewModel {
     /// Deterministic, in-memory view model for previews.
     static func preview(
         title: String = "",
         details: String = "",
         failingSave: Bool = false
-    ) -> AddTodoItemViewModel {
+    ) -> TodoItemFormViewModel {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
         let provider = FixedDateProvider()
         let repository: TodoItemRepository = failingSave ? FailingRepository() : InMemoryTodoItemRepository()
-        let viewModel = AddTodoItemViewModel(
+        let viewModel = TodoItemFormViewModel(
             addTodoItem: AddTodoItemUseCase(repository: repository, dateProvider: provider, calendar: calendar),
             dateProvider: provider,
             calendar: calendar,
@@ -153,7 +153,7 @@ extension AddTodoItemViewModel {
     AddTodoItemView(viewModel: .preview(title: "   "), onClose: {}, onSaved: {})
 }
 #Preview("Save failed") {
-    let viewModel = AddTodoItemViewModel.preview(title: "Call the dentist", failingSave: true)
+    let viewModel = TodoItemFormViewModel.preview(title: "Call the dentist", failingSave: true)
     return AddTodoItemView(viewModel: viewModel, onClose: {}, onSaved: {})
         .task { _ = await viewModel.save() }
 }

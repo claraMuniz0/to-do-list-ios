@@ -4,7 +4,7 @@ import SwiftUI
 @main struct ToDoListApp: App {
     @State private var viewModel: TodoListViewModel
     @State private var router = AppRouter()
-    private let makeAddViewModel: (String) -> AddTodoItemViewModel
+    private let makeAddViewModel: (String) -> TodoItemFormViewModel
 
     init() {
         FontRegistrar.registerAll()
@@ -12,7 +12,7 @@ import SwiftUI
         let dependencies: AppDependencies
         do { dependencies = try AppDependencies.live() } catch { fatalError("Could not open the task store: \(error)") }
         _viewModel = State(initialValue: dependencies.makeTodoListViewModel())
-        makeAddViewModel = { dependencies.makeAddTodoItemViewModel(initialTitle: $0) }
+        makeAddViewModel = { dependencies.makeTodoItemFormViewModel(initialTitle: $0) }
     }
 
     var body: some Scene {

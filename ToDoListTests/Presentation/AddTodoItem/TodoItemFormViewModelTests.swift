@@ -3,15 +3,15 @@ import Testing
 @testable import MyApp
 
 @MainActor
-struct AddTodoItemViewModelTests {
+struct TodoItemFormViewModelTests {
     private let calendar = Calendar.utcGregorian
     private var now: Date { calendar.makeDate(2026, 10, 8) }
     private let today = makeDueDate(2026, 10, 8)
 
-    private func makeSUT(initialTitle: String = "") -> (viewModel: AddTodoItemViewModel, spy: TodoItemRepositorySpy) {
+    private func makeSUT(initialTitle: String = "") -> (viewModel: TodoItemFormViewModel, spy: TodoItemRepositorySpy) {
         let spy = TodoItemRepositorySpy()
         let provider = DateProviderStub(current: now)
-        let viewModel = AddTodoItemViewModel(
+        let viewModel = TodoItemFormViewModel(
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
             dateProvider: provider,
             calendar: calendar,

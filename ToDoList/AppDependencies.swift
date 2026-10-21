@@ -15,8 +15,8 @@ struct AppDependencies {
     }
 
     @MainActor
-    func makeAddTodoItemViewModel(initialTitle: String = "") -> AddTodoItemViewModel {
-        AddTodoItemViewModel(
+    func makeTodoItemFormViewModel(initialTitle: String = "") -> TodoItemFormViewModel {
+        TodoItemFormViewModel(
             addTodoItem: makeAddTodoItemUseCase(),
             dateProvider: dateProvider,
             calendar: calendar,

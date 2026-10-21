@@ -4,7 +4,7 @@ import SwiftUI
 struct TodoListView: View {
     let viewModel: TodoListViewModel
     let router: AppRouter
-    let makeAddViewModel: (String) -> AddTodoItemViewModel
+    let makeAddViewModel: (String) -> TodoItemFormViewModel
 
     @State private var quickAddText = ""
 
@@ -119,11 +119,11 @@ struct TodoListView: View {
 
 /// Holds the form's view model in `@State` so it is created once per presentation, not on every list re-render.
 private struct AddTodoItemCover: View {
-    @State private var viewModel: AddTodoItemViewModel
+    @State private var viewModel: TodoItemFormViewModel
     let onClose: () -> Void
     let onSaved: () -> Void
 
-    init(makeViewModel: () -> AddTodoItemViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
+    init(makeViewModel: () -> TodoItemFormViewModel, onClose: @escaping () -> Void, onSaved: @escaping () -> Void) {
         _viewModel = State(initialValue: makeViewModel())
         self.onClose = onClose
         self.onSaved = onSaved

@@ -82,6 +82,18 @@ final class TodoListViewModel {
 
     var viewCompletedTitle: String { "View completed (\(completedTaskCount))" }
 
+    /// Text for a filter that has nothing to show; nil while it has content, when All caught up applies, or before loading.
+    var emptyFilterMessage: String? {
+        guard case .loaded = state, !isAllCaughtUp else { return nil }
+        let visible = visibleSections
+        guard visible.todo.isEmpty && visible.completed.isEmpty else { return nil }
+        switch selectedFilter {
+        case .done: return "Nothing completed yet"
+        case .category(let category): return "No open tasks in \(category.name.value)"
+        case .all, .active: return nil
+        }
+    }
+
     func select(_ filter: TodoListFilter) {
         selectedFilter = filter
     }

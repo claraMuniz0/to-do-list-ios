@@ -21,8 +21,9 @@ struct ClaudeTaskDraftParser: TaskDraftParsing {
         from today and answer with a date only, formatted YYYY-MM-DD, never a time. "Next week" means today plus 7 days. \
         Ignore priority and urgency. Pick category_id from exactly these ids: \(categories). \
         Write title, description and steps in the language of the sentence. \
-        Do not invent: leave description, due_date and steps out unless the sentence says them, \
-        and give steps only if the user listed them.
+        Always give 3 to 6 short, concrete, imperative steps that break the task down, \
+        using the steps the user listed when there are any. \
+        Do not invent a description or a due_date: leave them out unless the sentence says them.
         """
     }
 

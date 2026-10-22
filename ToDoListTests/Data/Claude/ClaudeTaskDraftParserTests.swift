@@ -98,6 +98,14 @@ struct ClaudeTaskDraftParserTests {
         #expect(request.systemPrompt.contains("shopping"))
     }
 
+    @Test func asksForStepsEvenWhenTheSentenceListsNone() async throws {
+        let fake = client(#"{"title":"Plan trip"}"#)
+        _ = try await parse(fake)
+        let prompt = try #require(fake.receivedRequests.first).systemPrompt
+        #expect(prompt.contains("Always give 3 to 6 short"))
+        #expect(!prompt.contains("give steps only if the user listed them"))
+    }
+
     @Test func offlineMapsToOffline() async {
         let fake = FakeClaudeClient(outcomes: [.failure(.offline)])
         await #expect(throws: SmartAddError.offline) { try await parse(fake) }

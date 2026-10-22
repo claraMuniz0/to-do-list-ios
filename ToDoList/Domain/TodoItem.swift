@@ -15,7 +15,7 @@ struct TodoItem: Equatable {
     private(set) var steps: [Step]
 
     /// Keeps a task usable and stops Claude from flooding it.
-    static let maxSteps = 20
+    static var maxSteps: Int { StepList.maxSteps }
 
     init(
         id: TodoItemID = TodoItemID(),
@@ -35,7 +35,7 @@ struct TodoItem: Equatable {
         self.createdAt = createdAt
         self.completedAt = completedAt
         // Steps past the limit are dropped so the invariant holds even for stored data.
-        self.steps = Array(steps.prefix(Self.maxSteps))
+        self.steps = StepList(steps).steps
     }
 
     var isCompleted: Bool { completedAt != nil }
@@ -68,46 +68,42 @@ struct TodoItem: Equatable {
     }
 
     /// `nil` when the task has no steps, so views never show an empty "0 of 0" bar.
-    var stepsProgress: StepsProgress? {
-        steps.isEmpty ? nil : StepsProgress(done: steps.filter(\.isDone).count, total: steps.count)
-    }
+    var stepsProgress: StepsProgress? { StepList(steps).progress }
 
     /// - Throws: `TodoItemError.tooManySteps` once the task already has `maxSteps`.
     @discardableResult
     mutating func addStep(_ title: StepTitle) throws -> StepID {
-        guard steps.count < Self.maxSteps else { throw TodoItemError.tooManySteps }
-        let step = Step(title: title)
-        steps.append(step)
-        return step.id
+        try changeSteps { try $0.add(title) }
     }
 
     mutating func toggleStep(_ id: StepID) throws {
-        try updateStep(id) { $0.toggle() }
+        try changeSteps { try $0.toggle(id) }
     }
 
     mutating func renameStep(_ id: StepID, to newTitle: StepTitle) throws {
-        try updateStep(id) { $0.rename(newTitle) }
+        try changeSteps { try $0.rename(id, to: newTitle) }
     }
 
     mutating func removeStep(_ id: StepID) throws {
-        steps.remove(at: try indexOfStep(id))
+        try changeSteps { try $0.remove(id) }
     }
 
     /// `to` is the index the step ends up at, so moving the first of three steps to `2` puts it last.
     mutating func moveStep(from source: Int, to destination: Int) throws {
-        guard steps.indices.contains(source), steps.indices.contains(destination) else {
-            throw TodoItemError.invalidStepPosition
-        }
-        steps.insert(steps.remove(at: source), at: destination)
+        try changeSteps { try $0.move(from: source, to: destination) }
     }
 
-    private mutating func updateStep(_ id: StepID, _ change: (inout Step) -> Void) throws {
-        change(&steps[try indexOfStep(id)])
+    /// Replaces every step at once, for a form that edited a `StepList` and saves it in one go.
+    mutating func replaceSteps(_ newSteps: StepList) {
+        steps = newSteps.steps
     }
 
-    private func indexOfStep(_ id: StepID) throws -> Int {
-        guard let index = steps.firstIndex(where: { $0.id == id }) else { throw TodoItemError.stepNotFound }
-        return index
+    /// Applies a change to a copy and keeps it only if it succeeds, so a failed change never leaves a half-edited list.
+    private mutating func changeSteps<Result>(_ change: (inout StepList) throws -> Result) throws -> Result {
+        var list = StepList(steps)
+        let result = try change(&list)
+        steps = list.steps
+        return result
     }
 
     private static func normalized(_ text: String?) -> String? {

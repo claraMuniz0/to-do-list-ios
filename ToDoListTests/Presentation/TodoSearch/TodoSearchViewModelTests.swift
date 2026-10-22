@@ -270,6 +270,108 @@ struct TodoSearchViewModelTests {
         #expect(viewModel.announcement?.text == "1 result")
     }
 
+    // MARK: Toggle completion
+
+    @Test func togglingAResultRefreshesTheResults() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.toggle(id: item.id)
+        guard case .results(let items) = sut.viewModel.state else {
+            Issue.record("expected results")
+            return
+        }
+        #expect(items.map(\.id) == [item.id])
+        #expect(items.first?.isCompleted == true)
+    }
+
+    @Test func aToggleFailureFlagsTheActionAndKeepsTheResultsVisible() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        sut.tasks.updateError = StubFailure()
+        await sut.viewModel.toggle(id: item.id)
+        #expect(sut.viewModel.actionFailed)
+        #expect(sut.viewModel.state == .results([item]))
+    }
+
+    // MARK: Add as task
+
+    @Test func addAsTaskExposesTheTrimmedQueryInNoResults() async {
+        let viewModel = makeSUT().viewModel
+        await viewModel.setQuery("  gym ")
+        #expect(viewModel.addAsTaskTitle == "gym")
+    }
+
+    @Test func addAsTaskCarriesTheScopeCategory() async {
+        let viewModel = makeSUT().viewModel
+        await viewModel.toggleScope(.work)
+        await viewModel.setQuery("gym")
+        #expect(viewModel.addAsTaskCategory == .work)
+        #expect(viewModel.addAsTaskTitle == "gym")
+    }
+
+    @Test func addAsTaskIsUnavailableOutsideNoResultsWithAQuery() async {
+        let viewModel = makeSUT(items: [makeTodoItem(title: "Buy groceries")]).viewModel
+        #expect(viewModel.addAsTaskTitle == nil)
+        await viewModel.setQuery("gro")
+        #expect(viewModel.addAsTaskTitle == nil)
+        await viewModel.setQuery("")
+        await viewModel.toggleScope(.work)
+        #expect(viewModel.state == .noResults(nil))
+        #expect(viewModel.addAsTaskTitle == nil)
+    }
+
+    // MARK: Form outcomes
+
+    @Test func aSavedOutcomeRerunsTheQuerySoTheNewTaskAppears() async {
+        let sut = makeSUT()
+        await sut.viewModel.setQuery("gym")
+        #expect(sut.viewModel.addAsTaskTitle == "gym")
+        let added = makeTodoItem(title: "gym")
+        sut.tasks.storedItems = [added]
+        await sut.viewModel.didFinishForm(.saved)
+        #expect(sut.viewModel.state == .results([added]))
+        #expect(sut.viewModel.addAsTaskTitle == nil)
+    }
+
+    @Test func aSavedOutcomeThatChangesTheCountAnnouncesIt() async {
+        let sut = makeSUT()
+        await sut.viewModel.setQuery("gym")
+        sut.tasks.storedItems = [makeTodoItem(title: "gym")]
+        await sut.viewModel.didFinishForm(.saved)
+        #expect(sut.viewModel.announcement?.text == "1 result")
+    }
+
+    @Test func aSavedOutcomeWithTheSameCountDoesNotAnnounce() async {
+        let sut = makeSUT(items: [makeTodoItem(title: "Buy groceries")])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.didFinishForm(.saved)
+        #expect(sut.viewModel.announcement == nil)
+    }
+
+    @Test func aDeletedOutcomeForwardsTheItemAndRefreshes() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        var forwarded: [TodoItem] = []
+        sut.viewModel.onDeleted = { forwarded.append($0) }
+        await sut.viewModel.setQuery("gro")
+        sut.tasks.storedItems = []
+        await sut.viewModel.didFinishForm(.deleted(item))
+        #expect(forwarded == [item])
+        #expect(sut.viewModel.state == .noResults(try? SearchQuery("gro")))
+    }
+
+    @Test func aCancelledOutcomeChangesNothing() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        let callsBefore = sut.tasks.allTasksCallCount
+        await sut.viewModel.didFinishForm(.cancelled)
+        #expect(sut.tasks.allTasksCallCount == callsBefore)
+        #expect(sut.viewModel.state == .results([item]))
+    }
+
     // MARK: Errors
 
     @Test func aRecordFailureFlagsTheActionButKeepsTheResults() async {

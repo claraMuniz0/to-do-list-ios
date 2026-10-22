@@ -136,4 +136,19 @@ struct AppRouterTests {
         router.present(.editTodoItem(id: id))
         #expect(router.presentedRoute == .editTodoItem(id: id))
     }
+
+    @Test func smartAddOverSearchNestsLikeAddAndEdit() {
+        let router = AppRouter()
+        router.present(.search)
+        router.present(.smartAdd)
+        #expect(router.presentedRoute == .search)
+        #expect(router.nestedRoute == .smartAdd)
+    }
+
+    @Test func manualFromSmartAddReplacesItInPlace() {
+        let router = AppRouter()
+        router.present(.smartAdd)
+        router.present(.addTodoItem(prefill: ""))
+        #expect(router.presentedRoute == .addTodoItem(prefill: ""))
+    }
 }

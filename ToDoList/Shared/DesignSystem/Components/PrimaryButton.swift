@@ -10,11 +10,13 @@ struct PrimaryButtonAppearance: Equatable {
 }
 
 /// When `isEnabled` is false the button is dimmed, loses its shadow and ignores taps (it stays visible rather than hidden).
+/// While `isLoading` a spinner replaces the icon and taps are ignored, without dimming.
 struct PrimaryButton: View {
     let title: String
     let systemImage: String?
     let fullWidth: Bool
     let isEnabled: Bool
+    let isLoading: Bool
     let disabledHint: String?
     let action: () -> Void
 
@@ -23,6 +25,7 @@ struct PrimaryButton: View {
         systemImage: String? = nil,
         fullWidth: Bool = false,
         isEnabled: Bool = true,
+        isLoading: Bool = false,
         disabledHint: String? = nil,
         action: @escaping () -> Void
     ) {
@@ -30,6 +33,7 @@ struct PrimaryButton: View {
         self.systemImage = systemImage
         self.fullWidth = fullWidth
         self.isEnabled = isEnabled
+        self.isLoading = isLoading
         self.disabledHint = disabledHint
         self.action = action
     }
@@ -41,7 +45,9 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                if let systemImage {
+                if isLoading {
+                    ProgressView().tint(DSColor.onAccent).frame(width: iconSize, height: iconSize)
+                } else if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: iconSize, weight: .semibold))
                         .accessibilityHidden(true)
@@ -56,7 +62,8 @@ struct PrimaryButton: View {
             .opacity(appearance.opacity)
         }
         .buttonStyle(.plain)
-        .disabled(!isEnabled)
+        .disabled(!isEnabled || isLoading)
+        .accessibilityValue(isLoading ? "Working" : "")
         .accessibilityHint(isEnabled ? "" : (disabledHint ?? ""))
     }
 }

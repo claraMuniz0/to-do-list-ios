@@ -55,6 +55,14 @@ struct AppDependencies {
         )
     }
 
+    @MainActor
+    func makeSmartAddViewModel() -> SmartAddViewModel {
+        let useCase = ParseTaskDraftUseCase(
+            parser: ClaudeTaskDraftParser(client: claudeClient), dateProvider: dateProvider, calendar: calendar
+        )
+        return SmartAddViewModel(parseTaskDraft: useCase)
+    }
+
     private func makeSuggestStepsUseCase() -> SuggestStepsUseCase {
         SuggestStepsUseCase(suggester: ClaudeStepSuggester(client: claudeClient))
     }

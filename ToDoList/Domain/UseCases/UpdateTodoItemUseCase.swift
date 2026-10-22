@@ -6,7 +6,7 @@ struct UpdateTodoItemUseCase {
         self.repository = repository
     }
 
-    /// A blank description clears it; a nil `dueDate` removes the due date.
+    /// A blank description clears it; a nil `dueDate` removes the due date; nil `steps` leaves the steps as stored.
     /// - Throws: `TodoItemTitleError` before the repository is touched; `TodoItemRepositoryError.notFound` for an unknown id.
     @discardableResult
     func execute(
@@ -14,7 +14,8 @@ struct UpdateTodoItemUseCase {
         title: String,
         description: String?,
         category: Category,
-        dueDate: DueDate?
+        dueDate: DueDate?,
+        steps: StepList? = nil
     ) async throws -> TodoItem {
         let newTitle = try TodoItemTitle(title)
         guard var item = try await repository.task(id: id) else { throw TodoItemRepositoryError.notFound }
@@ -22,6 +23,7 @@ struct UpdateTodoItemUseCase {
         item.changeDescription(description)
         item.changeCategory(category)
         item.reschedule(dueDate)
+        if let steps { item.replaceSteps(steps) }
         try await repository.update(item)
         return item
     }

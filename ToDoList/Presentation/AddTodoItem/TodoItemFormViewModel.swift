@@ -15,6 +15,8 @@ final class TodoItemFormViewModel {
     var category: Category = .personal
     /// `nil` means no due date. Add mode starts as today; edit mode starts empty until `load()` fills it. The date sheet's Clear removes it.
     var dueDate: DueDate?
+    /// The steps being edited; they reach the store only when `save()` succeeds.
+    private(set) var stepList = StepList()
     private(set) var isSaving = false
     private(set) var saveFailed = false
     /// Set when `delete()` failed; the task is still stored and the form stays open so the user can retry.
@@ -75,6 +77,7 @@ final class TodoItemFormViewModel {
             details = item.description ?? ""
             category = item.category
             dueDate = item.dueDate
+            stepList = StepList(item.steps)
             loadFailed = false
         } catch {
             loadFailed = true
@@ -116,6 +119,33 @@ final class TodoItemFormViewModel {
     func selectNextWeek() { dueDate = .nextWeek(using: dateProvider, calendar: calendar) }
     func clearDueDate() { dueDate = nil }
 
+    // MARK: - Steps
+
+    var steps: [Step] { stepList.steps }
+    var stepsProgress: StepsProgress? { stepList.progress }
+    var canAddStep: Bool { stepList.steps.count < StepList.maxSteps }
+
+    /// Replaces the whole draft, for a Claude suggestion the user accepted.
+    func setSteps(_ newList: StepList) { stepList = newList }
+
+    /// Returns whether a step was added: blank or overlong text and a full list are rejected, not reported as errors.
+    @discardableResult
+    func addStep(_ text: String) -> Bool {
+        guard let title = try? StepTitle(text) else { return false }
+        return (try? stepList.add(title)) != nil
+    }
+
+    func toggleStep(_ id: StepID) { try? stepList.toggle(id) }
+    func removeStep(_ id: StepID) { try? stepList.remove(id) }
+    func moveStep(from source: Int, to destination: Int) { try? stepList.move(from: source, to: destination) }
+
+    /// Returns whether the title changed; blank or overlong text keeps the old title.
+    @discardableResult
+    func renameStep(_ id: StepID, to text: String) -> Bool {
+        guard let title = try? StepTitle(text) else { return false }
+        return (try? stepList.rename(id, to: title)) != nil
+    }
+
     /// Returns whether the task was stored; a failure sets `saveFailed` and keeps the form editable.
     /// In edit mode a task deleted elsewhere since `load()` also lands here (`notFound`), not as a separate error.
     func save() async -> Bool {
@@ -125,7 +155,7 @@ final class TodoItemFormViewModel {
         do {
             if let id = editingID {
                 try await updateTodoItem.execute(
-                    id: id, title: title, description: details, category: category, dueDate: dueDate
+                    id: id, title: title, description: details, category: category, dueDate: dueDate, steps: stepList
                 )
             } else {
                 try await addTodoItem.execute(title: title, description: details, category: category, dueDate: dueDate)

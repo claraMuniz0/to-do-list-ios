@@ -5,11 +5,14 @@ struct SectionHeader: View {
     let title: String
     let count: Int?
     let trailingAction: (title: String, action: () -> Void)?
+    /// Spoken name of the trailing link when its visible text ("Clear all") is ambiguous out of context.
+    let trailingAccessibilityLabel: String?
 
     /// With a `trailingAction` (e.g. "Clear all") the header shows the link instead of the rule, as the design's RECENT header does.
     /// Result counts ("2 results") go in `title`, so they get the rule and no dot.
-    init(title: String, count: Int? = nil, trailingAction: (title: String, action: () -> Void)? = nil) {
+    init(title: String, count: Int? = nil, trailingAction: (title: String, action: () -> Void)? = nil, trailingAccessibilityLabel: String? = nil) {
         self.title = title
+        self.trailingAccessibilityLabel = trailingAccessibilityLabel
         self.count = count
         self.trailingAction = trailingAction
     }
@@ -48,6 +51,7 @@ struct SectionHeader: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(trailingAccessibilityLabel ?? trailingAction.title)
             }
         } else {
             HStack(spacing: 12) {

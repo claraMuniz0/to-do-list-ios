@@ -47,6 +47,7 @@ struct SearchField: View {
             .submitLabel(.search)
             .onSubmit(onSubmit)
             .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
             .accessibilityLabel(SearchFieldRules.accessibilityLabel)
             if SearchFieldRules.showsClear(for: text) {
                 clearButton

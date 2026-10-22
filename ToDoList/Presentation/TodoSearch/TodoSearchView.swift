@@ -21,6 +21,7 @@ struct TodoSearchView: View {
     let sortOrder: TodoItemSortOrder
 
     @FocusState private var isFieldFocused: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,10 +33,11 @@ struct TodoSearchView: View {
             )
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .padding(.bottom, 12)
+            .padding(.bottom, 20)
             content
         }
-        .background(DSColor.bg.ignoresSafeArea())
+        .background(DSGradient.welcome.linearGradient.ignoresSafeArea())
+        .accessibilityAction(.escape) { router.dismiss() }
         .task {
             viewModel.setSortOrder(sortOrder)
             await viewModel.load()
@@ -54,20 +56,20 @@ struct TodoSearchView: View {
     @ViewBuilder private var content: some View {
         switch viewModel.state {
         case .recent:
-            scrolling { recent }
+            scrolling(spacing: 28) { recent }
         case .results(let items):
-            scrolling { results(items) }
+            scrolling(spacing: 10) { results(items) }
         case .noResults:
-            scrolling { noResults }
+            scrolling(spacing: 12) { noResults }
         case .error:
             TodoListErrorView(onRetry: { Task { await viewModel.setQuery(viewModel.query) } })
         }
     }
 
     /// The scroll view shrinks with the keyboard, so content (and the no-results button) stays visible.
-    private func scrolling<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+    private func scrolling<Content: View>(spacing: CGFloat, @ViewBuilder _ content: () -> Content) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) { content() }
+            VStack(alignment: .leading, spacing: spacing) { content() }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
         }
@@ -78,38 +80,53 @@ struct TodoSearchView: View {
 
     @ViewBuilder private var recent: some View {
         if !viewModel.recentSearches.isEmpty {
-            SectionHeader(
-                title: TodoSearchCopy.recentTitle,
-                trailingAction: (TodoSearchCopy.clearAll, { Task { await viewModel.clearAllRecentSearches() } })
-            )
-            VStack(spacing: 0) {
-                let terms = viewModel.recentSearches
-                ForEach(Array(terms.enumerated()), id: \.offset) { index, term in
-                    RecentSearchRow(
-                        term: term.value,
-                        showsDivider: index < terms.count - 1,
-                        onSelect: { Task { await viewModel.selectRecent(term) } },
-                        onFill: { Task { await viewModel.fill(term) } }
-                    )
+            VStack(alignment: .leading, spacing: 4) {
+                SectionHeader(
+                    title: TodoSearchCopy.recentTitle,
+                    trailingAction: (TodoSearchCopy.clearAll, { Task { await viewModel.clearAllRecentSearches() } }),
+                    trailingAccessibilityLabel: "Clear all recent searches"
+                )
+                VStack(spacing: 0) {
+                    let terms = viewModel.recentSearches
+                    ForEach(Array(terms.enumerated()), id: \.offset) { index, term in
+                        RecentSearchRow(
+                            term: term.value,
+                            showsDivider: index < terms.count - 1,
+                            onSelect: { Task { await viewModel.selectRecent(term) } },
+                            onFill: { Task { await viewModel.fill(term) } }
+                        )
+                    }
                 }
             }
         }
-        SectionHeader(title: TodoSearchCopy.byCategoryTitle).padding(.top, 8)
-        // At accessibility sizes the chips would run off the edge, so they stack instead.
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 10) { categoryChips }
-            VStack(alignment: .leading, spacing: 10) { categoryChips }
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: TodoSearchCopy.byCategoryTitle)
+            // At accessibility sizes the chips would run off the edge, so they stack instead.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { categoryChips }
+                VStack(alignment: .leading, spacing: 10) { categoryChips }
+            }
         }
     }
 
     @ViewBuilder private var categoryChips: some View {
         ForEach(Category.defaults, id: \.self) { category in
-            Button { Task { await viewModel.toggleScope(category) } } label: {
-                chip(for: category)
-            }
-            .buttonStyle(.plain)
-            .frame(minHeight: DSTouchTarget.minimum)
+            scopeButton(for: category, hint: viewModel.scope == category ? "Removes the category filter" : "Shows only this category")
         }
+    }
+
+    /// The tap area and the VoiceOver semantics live on the button, so they do not depend on how the chip's own
+    /// accessibility element merges into it.
+    private func scopeButton(for category: Category, hint: String) -> some View {
+        Button { Task { await viewModel.toggleScope(category) } } label: {
+            chip(for: category)
+                .frame(minHeight: DSTouchTarget.minimum)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(category.name.value)
+        .accessibilityAddTraits(viewModel.scope == category ? .isSelected : [])
+        .accessibilityHint(hint)
     }
 
     private func chip(for category: Category) -> some View {
@@ -138,8 +155,6 @@ struct TodoSearchView: View {
                 onOpen: { open(item) },
                 onToggle: { Task { await viewModel.toggle(id: item.id) } }
             )
-            // A toggled row keeps its place but changes look; a state-dependent identity stops LazyVStack reuse.
-            .id("\(item.id.uuid)-\(item.isCompleted)")
         }
     }
 
@@ -153,12 +168,7 @@ struct TodoSearchView: View {
     /// The selected category above the header; tapping it removes the scope.
     @ViewBuilder private var scopeChip: some View {
         if let scope = viewModel.scope {
-            Button { Task { await viewModel.toggleScope(scope) } } label: {
-                chip(for: scope)
-            }
-            .buttonStyle(.plain)
-            .frame(minHeight: DSTouchTarget.minimum)
-            .accessibilityHint("Removes the category filter")
+            scopeButton(for: scope, hint: "Removes the category filter")
         }
     }
 
@@ -178,15 +188,17 @@ struct TodoSearchView: View {
                 .foregroundStyle(DSColor.textSecondary)
                 .multilineTextAlignment(.center)
             if let title = viewModel.addAsTaskTitle {
-                PrimaryButton(title: TodoSearchCopy.addAsTaskTitle(title), systemImage: "plus", fullWidth: true) {
+                PrimaryButton(title: TodoSearchCopy.addAsTaskTitle(title), systemImage: "plus") {
                     router.present(.addTodoItem(prefill: title))
                 }
-                .lineLimit(1)
+                // One line with a middle truncation as designed, but the query must stay readable at large sizes.
+                .lineLimit(typeSize.isAccessibilitySize ? 4 : 1)
                 .truncationMode(.middle)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 24)
+        // Centered in the space below the field, as designed.
+        .containerRelativeFrame(.vertical, alignment: .center)
     }
 }
 

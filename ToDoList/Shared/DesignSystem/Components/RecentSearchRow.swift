@@ -55,6 +55,7 @@ struct RecentSearchRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(RecentSearchRowRules.fillAccessibilityLabel(term: term))
+            .accessibilityHint("Puts it in the search field without searching")
         }
         .overlay(alignment: .bottom) {
             if showsDivider {

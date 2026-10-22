@@ -107,13 +107,20 @@ final class TodoSearchViewModel {
 
     /// Toggles a result's completion and refreshes. A failure sets `actionFailed`; the results are refreshed either way.
     func toggle(id: TodoItemID) async {
+        let wasCompleted = shownItem(id: id)?.isCompleted
         do {
             _ = try await toggleCompletion.execute(id: id)
             actionFailed = false
+            if let wasCompleted { announce(wasCompleted ? "Marked not done" : "Marked done") }
         } catch {
             actionFailed = true
         }
         await refresh()
+    }
+
+    private func shownItem(id: TodoItemID) -> TodoItem? {
+        guard case .results(let items) = state else { return nil }
+        return items.first { $0.id == id }
     }
 
     /// Call when the Add or Edit form closes over search. `.saved` re-runs the query; `.deleted` hands the item to
@@ -143,6 +150,7 @@ final class TodoSearchViewModel {
         do {
             try await clearRecentSearches.execute()
             actionFailed = false
+            announce("Recent searches cleared")
         } catch {
             actionFailed = true
         }
@@ -198,6 +206,10 @@ final class TodoSearchViewModel {
         case .noResults: text = "No tasks found"
         case .recent, .error: return
         }
+        announce(text)
+    }
+
+    private func announce(_ text: String) {
         announcement = SearchAnnouncement(text: text, sequence: (announcement?.sequence ?? 0) + 1)
     }
 

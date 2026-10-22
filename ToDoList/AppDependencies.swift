@@ -14,6 +14,17 @@ struct AppDependencies {
     func makeClearRecentSearchesUseCase() -> ClearRecentSearchesUseCase { ClearRecentSearchesUseCase(repository: recentSearchRepository) }
 
     @MainActor
+    func makeTodoSearchViewModel() -> TodoSearchViewModel {
+        TodoSearchViewModel(
+            searchTodoItems: makeSearchTodoItemsUseCase(),
+            getRecentSearches: makeGetRecentSearchesUseCase(),
+            recordRecentSearch: makeRecordRecentSearchUseCase(),
+            clearRecentSearches: makeClearRecentSearchesUseCase(),
+            toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider)
+        )
+    }
+
+    @MainActor
     func makeTodoListViewModel() -> TodoListViewModel {
         TodoListViewModel(
             getTodoItems: GetTodoItemsUseCase(repository: todoItemRepository),

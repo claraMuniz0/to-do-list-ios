@@ -13,6 +13,17 @@ struct AppDependenciesSearchTests {
         #expect(results == [item])
     }
 
+    @Test func theSearchViewModelSearchesTheSharedRepository() async throws {
+        let dependencies = try AppDependencies.inMemory()
+        let item = makeTodoItem(title: "Buy groceries")
+        try await dependencies.todoItemRepository.add(item)
+        let viewModel = dependencies.makeTodoSearchViewModel()
+
+        await viewModel.setQuery("gro")
+
+        #expect(viewModel.state == .results([item]))
+    }
+
     @Test func theRecentSearchUseCasesShareTheInjectedRepository() async throws {
         var dependencies = try AppDependencies.inMemory()
         let spy = RecentSearchRepositorySpy()

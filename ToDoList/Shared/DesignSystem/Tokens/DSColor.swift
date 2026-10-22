@@ -28,6 +28,16 @@ enum DSColor {
     /// Shadow tint for the illustration disc; kept separate from `shadowSoft` because it is blurred, not hard-edged.
     static let illustrationShadow = Color("illustration-shadow")
 
+    static let splashGradientTop = Color("splash-gradient-top")
+    static let splashGradientBottom = Color("splash-gradient-bottom")
+    static let splashGlow = Color("splash-glow")
+    static let splashRing = Color("splash-ring")
+    static let splashCream = Color("splash-cream")
+    static let splashSoft = Color("splash-soft")
+    static let splashDark = Color("splash-dark")
+    /// Shadow tint for the splash disc; darker and more opaque than `illustrationShadow` because it sits on saturated coral.
+    static let splashShadow = Color("splash-shadow")
+
     static let shadowSoft = Color("shadow-soft")
     static let shadowAccent = Color("shadow-accent")
     static let toastShadow = Color("toast-shadow")

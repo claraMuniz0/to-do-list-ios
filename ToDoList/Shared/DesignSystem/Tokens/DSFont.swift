@@ -4,7 +4,7 @@ import UIKit
 /// Typography tokens. Every token scales with Dynamic Type through its `textStyle`.
 /// Families are bundled and registered by `FontRegistrar`.
 enum DSFont: CaseIterable {
-    case screenTitle, emptyTitle, greeting
+    case screenTitle, emptyTitle, greeting, tagline
     case rowTitle, rowDescription, inputText
     case chipTag, chipOption, pill, button, toast, stepCount, count, sectionLabel, softButton, swipeAction
 
@@ -22,6 +22,7 @@ enum DSFont: CaseIterable {
         case .screenTitle: Spec(family: "Fraunces", size: 36, weight: .semibold, isItalic: true, textStyle: .largeTitle)
         case .emptyTitle: Spec(family: "Fraunces", size: 26, weight: .bold, isItalic: false, textStyle: .title)
         case .greeting: Spec(family: "Caveat", size: 24, weight: .semibold, isItalic: false, textStyle: .title2)
+        case .tagline: Spec(family: "Caveat", size: 24, weight: .regular, isItalic: false, textStyle: .title2)
         case .rowTitle: Spec(family: "Bricolage Grotesque", size: 16, weight: .semibold, isItalic: false, textStyle: .body)
         case .rowDescription: Spec(family: "Bricolage Grotesque", size: 14, weight: .regular, isItalic: false, textStyle: .subheadline)
         case .inputText: Spec(family: "Bricolage Grotesque", size: 16, weight: .regular, isItalic: false, textStyle: .body)

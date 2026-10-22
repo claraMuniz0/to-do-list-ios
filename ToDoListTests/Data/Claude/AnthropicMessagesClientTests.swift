@@ -62,7 +62,8 @@ struct AnthropicMessagesClientTests {
         }
         _ = try await makeClient().send(request)
 
-        let json = try #require(JSONSerialization.jsonObject(with: try #require(body)) as? [String: Any])
+        let bodyData = try #require(body)
+        let json = try #require(JSONSerialization.jsonObject(with: bodyData) as? [String: Any])
         #expect(json["model"] as? String == "claude-haiku-5-5")
         #expect(json["max_tokens"] as? Int == 256)
         #expect(json["system"] as? String == "You turn text into tasks.")

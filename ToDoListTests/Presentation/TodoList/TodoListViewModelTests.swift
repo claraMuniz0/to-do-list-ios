@@ -29,6 +29,32 @@ struct TodoListViewModelTests {
         #expect(makeSUT().viewModel.state == .loading)
     }
 
+    @Test func isLaunchingBeforeTheFirstLoad() {
+        #expect(makeSUT().viewModel.isLaunching)
+    }
+
+    @Test func stopsLaunchingOnceTheFirstLoadSucceeds() async {
+        let (viewModel, _) = makeSUT(items: [makeTodoItem(title: "A")])
+        await viewModel.load()
+        #expect(!viewModel.isLaunching)
+    }
+
+    @Test func stopsLaunchingWhenTheFirstLoadFails() async {
+        let (viewModel, _) = makeSUT(error: TodoItemRepositoryError.notFound)
+        await viewModel.load()
+        #expect(!viewModel.isLaunching)
+    }
+
+    @Test func retryDoesNotBringTheSplashBack() async {
+        let (viewModel, spy) = makeSUT(error: TodoItemRepositoryError.notFound)
+        await viewModel.load()
+        spy.errorToThrow = nil
+
+        await viewModel.retry()
+
+        #expect(!viewModel.isLaunching)
+    }
+
     @Test func loadingWithNoTasksEndsEmpty() async {
         let (viewModel, _) = makeSUT()
         await viewModel.load()

@@ -87,4 +87,39 @@ struct SwiftDataTodoItemRepositoryTests {
         try await makeRepository(container: container).add(item)
         #expect(try await makeRepository(container: container).allTasks() == [item])
     }
+
+    // MARK: - steps
+
+    private func steps(_ titles: String...) -> [Step] {
+        titles.map { Step(title: try! StepTitle($0)) }
+    }
+
+    @Test func addThenFindKeepsSteps() async throws {
+        let repository = try makeRepository()
+        let item = makeTodoItem(steps: steps("A", "B"))
+        try await repository.add(item)
+        #expect(try await repository.task(id: item.id) == item)
+    }
+
+    @Test func updatePersistsStepChanges() async throws {
+        let repository = try makeRepository()
+        var item = makeTodoItem(steps: steps("A", "B", "C"))
+        try await repository.add(item)
+
+        try item.toggleStep(item.steps[0].id)
+        try item.moveStep(from: 2, to: 0)
+        try item.addStep(StepTitle("D"))
+        try await repository.update(item)
+
+        #expect(try await repository.task(id: item.id) == item)
+    }
+
+    @Test func updateCanRemoveEveryStep() async throws {
+        let repository = try makeRepository()
+        var item = makeTodoItem(steps: steps("A"))
+        try await repository.add(item)
+        try item.removeStep(item.steps[0].id)
+        try await repository.update(item)
+        #expect(try await repository.task(id: item.id)?.steps.isEmpty == true)
+    }
 }

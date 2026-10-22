@@ -83,6 +83,34 @@ struct TodoSearchViewModelTests {
         #expect(viewModel.state == .noResults(try SearchQuery(String(repeating: "a", count: SearchQuery.maxLength))))
     }
 
+    @Test func aQueryOfExactlyTheLimitIsKeptWhole() async throws {
+        let text = String(repeating: "a", count: SearchQuery.maxLength)
+        let viewModel = makeSUT().viewModel
+        await viewModel.setQuery(text)
+        #expect(viewModel.query == text)
+        #expect(viewModel.state == .noResults(try SearchQuery(text)))
+    }
+
+    @Test func aQueryOfTheLimitIncludingSurroundingWhitespaceIsKeptRawAndSearchedTrimmed() async throws {
+        let core = String(repeating: "a", count: SearchQuery.maxLength - 2)
+        let text = " " + core + " "
+        let viewModel = makeSUT().viewModel
+        await viewModel.setQuery(text)
+        #expect(viewModel.query == text)
+        #expect(viewModel.state == .noResults(try SearchQuery(core)))
+    }
+
+    @Test func aRawValueBeyondTheLimitNeverReachesATooLongState() async throws {
+        let item = makeTodoItem(title: String(repeating: "a", count: SearchQuery.maxLength))
+        let viewModel = makeSUT(items: [item]).viewModel
+        await viewModel.setQuery(String(repeating: "a", count: SearchQuery.maxLength + 50))
+        #expect(viewModel.state == .results([item]))
+
+        await viewModel.setQuery("   " + String(repeating: "a", count: SearchQuery.maxLength + 50))
+        #expect(viewModel.state != .recent)
+        #expect(viewModel.state != .error)
+    }
+
     @Test func resultsListOpenTasksBeforeCompletedOnesInTheSortOrder() async {
         let late = makeTodoItem(title: "Zed", createdAt: Date(timeIntervalSince1970: 10))
         let early = makeTodoItem(title: "Alpha", createdAt: Date(timeIntervalSince1970: 20))
@@ -350,7 +378,7 @@ struct TodoSearchViewModelTests {
         #expect(sut.viewModel.announcement == nil)
     }
 
-    @Test func aDeletedOutcomeForwardsTheItemAndRefreshes() async {
+    @Test func aDeletedOutcomeForwardsTheItemAndRefreshes() async throws {
         let item = makeTodoItem(title: "Buy groceries")
         let sut = makeSUT(items: [item])
         var forwarded: [TodoItem] = []
@@ -359,7 +387,30 @@ struct TodoSearchViewModelTests {
         sut.tasks.storedItems = []
         await sut.viewModel.didFinishForm(.deleted(item))
         #expect(forwarded == [item])
-        #expect(sut.viewModel.state == .noResults(try? SearchQuery("gro")))
+        #expect(sut.viewModel.state == .noResults(try SearchQuery("gro")))
+    }
+
+    @Test func aSavedOutcomeWhoseReloadFailsEndsInTheErrorStateWithNoStaleResults() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        #expect(sut.viewModel.state == .results([item]))
+        sut.tasks.errorToThrow = StubFailure()
+        await sut.viewModel.didFinishForm(.saved)
+        #expect(sut.viewModel.state == .error)
+        #expect(sut.viewModel.resultCountText == nil)
+    }
+
+    @Test func aDeletedOutcomeWhoseReloadFailsStillForwardsTheItemAndEndsInTheErrorState() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        var forwarded: [TodoItem] = []
+        sut.viewModel.onDeleted = { forwarded.append($0) }
+        await sut.viewModel.setQuery("gro")
+        sut.tasks.errorToThrow = StubFailure()
+        await sut.viewModel.didFinishForm(.deleted(item))
+        #expect(forwarded == [item])
+        #expect(sut.viewModel.state == .error)
     }
 
     @Test func aCancelledOutcomeChangesNothing() async {
@@ -382,6 +433,15 @@ struct TodoSearchViewModelTests {
         await sut.viewModel.submit()
         #expect(sut.viewModel.actionFailed)
         #expect(sut.viewModel.state == .results([item]))
+    }
+
+    @Test func aFailureLoadingRecentSearchesFlagsTheActionAndStaysOnTheRecentState() async {
+        let sut = makeSUT()
+        sut.recents.errorToThrow = StubFailure()
+        await sut.viewModel.load()
+        #expect(sut.viewModel.actionFailed)
+        #expect(sut.viewModel.recentSearches.isEmpty)
+        #expect(sut.viewModel.state == .recent)
     }
 
     @Test func aClearFailureFlagsTheAction() async throws {

@@ -63,9 +63,31 @@ struct DesignSystemGallery: View {
                     CircleIconButton(accessibilityLabel: "Close") {}
                 }
 
+                section("Circular icon button") {
+                    HStack(spacing: 8) {
+                        CircularIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Search") {}
+                        CircularIconButtonLabel(systemImage: "arrow.up.arrow.down")
+                    }
+                }
+
                 section("Section header") {
                     SectionHeader(title: "To do", count: 3)
                     SectionHeader(title: "Completed", count: 1)
+                    SectionHeader(title: "2 results")
+                    SectionHeader(title: "Recent", trailingAction: (title: "Clear all", action: {}))
+                }
+
+                section("Search bar") {
+                    SearchBar.PreviewHost(text: "", focused: false)
+                    SearchBar.PreviewHost(text: "gro", focused: true)
+                }
+
+                section("Recent search row") {
+                    VStack(spacing: 0) {
+                        RecentSearchRow(term: "groceries", onSelect: {}, onFill: {})
+                        RecentSearchRow(term: "dentist", onSelect: {}, onFill: {})
+                        RecentSearchRow(term: "report", showsDivider: false, onSelect: {}, onFill: {})
+                    }
                 }
 
                 section("Destructive text button") {

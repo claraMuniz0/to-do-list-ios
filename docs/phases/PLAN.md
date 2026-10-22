@@ -38,7 +38,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 6: Search & Sort
 - Search (recent searches, category scope, results, no results with "Add as task") and a Sort menu with three options (the sort menu is undesigned, flagged for the designer).
-- All decisions confirmed; built after Phase 5.
+- Done.
 
 ## Phase 7: Custom Categories
 - "New category" sheet (name, one of 6 colors, live preview), "+ New" in the forms, the "New category" row in the Categories filter. Built-in categories keep stable ids; Phase 3 stores the category as a plain id so no migration is needed.

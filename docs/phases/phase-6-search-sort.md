@@ -1,6 +1,6 @@
 # Phase 6: Search & Sort
 
-**Status:** not started (all decisions confirmed, ready to start after Phase 5)
+**Status:** done (all decisions confirmed and implemented, reviews applied; open follow-ups below)
 **Design:** `to-do.pen`: "Search – Recent", "Search" (the results frame, query "gro"), "Search – No Results", plus the Search and Sort buttons in the "Task List" header. **There is no frame for the Sort menu.**
 **Depends on:** Phase 3 (list, `TodoListViewModel`, router, `AddTodoItemUseCase`, ordering function, form with a prefilled title), Phase 4 (Edit, Delete, Undo toast), Phase 1 (design system). Built after Phase 5 so the list header is final (no code dependency on its filters, see H1).
 
@@ -107,15 +107,15 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 | H3 | Project-file edits | | **None expected.** New files land in the synced `ToDoList/` folders, UserDefaults and Foundation are system frameworks, no new target or Info.plist change. If a decision above changes this, ask first | assumed |
 
 ## Scope (after decisions are confirmed)
-- [ ] `TodoItemSortOrder` and the ordering function extended with it (tests first); `SortOrderRepository` and its UserDefaults implementation
-- [ ] Sort menu on the list header; remembered choice
-- [ ] `SearchQuery` value object; `SearchTodoItemsUseCase` (title and description, case and diacritic insensitive, substring, optional category scope, completed included)
-- [ ] `RecentSearchRepository` with `UserDefaultsRecentSearchRepository`; use cases to list, record and clear
-- [ ] `TodoSearchViewModel` (recent, results, no results, scope, add-as-task prefill) tested first, no sleeps
-- [ ] Search entry button in the list header; `TodoSearchView` full-screen cover via the router (cover over cover for Add and Edit)
-- [ ] `SearchField`, `RecentSearchRow`, large `CategoryChip`, `EmptyStateIllustration`; previews for Recent, Results, No Results
-- [ ] Result row actions (toggle, open Edit, delete forwarded to the list's Undo toast)
-- [ ] `accessibility-check`; `design-fidelity-checker`; list the Sort menu as a designer follow-up
+- [x] `TodoItemSortOrder` and the ordering function extended with it (tests first); `SortOrderRepository` and its UserDefaults implementation
+- [x] Sort menu on the list header; remembered choice
+- [x] `SearchQuery` value object; `SearchTodoItemsUseCase` (title and description, case and diacritic insensitive, substring, optional category scope, completed included)
+- [x] `RecentSearchRepository` with `UserDefaultsRecentSearchRepository`; use cases to list, record and clear
+- [x] `TodoSearchViewModel` (recent, results, no results, scope, add-as-task prefill) tested first, no sleeps
+- [x] Search entry button in the list header; `TodoSearchView` full-screen cover via the router (cover over cover for Add and Edit)
+- [x] `SearchField`, `RecentSearchRow`, large `CategoryChip`, `EmptyStateIllustration`; previews for Recent, Results, No Results
+- [x] Result row actions (toggle, open Edit, delete forwarded to the list's Undo toast)
+- [x] `accessibility-check`; `design-fidelity-checker`; list the Sort menu as a designer follow-up
 
 ## Out of scope
 - The "New category" sheet and custom categories (Phase 7); chips stay the three static categories
@@ -129,3 +129,18 @@ Recommendation in **bold**. Status `open` until confirmed. Rows marked `assumed`
 - A query with no matches shows "No tasks found" and "Add “query” as a task" opens the Add form prefilled.
 - The Sort menu orders the list and the choice survives a relaunch.
 - Domain, repository and view model tests are green; the design-fidelity check shows no High differences for the three search frames.
+
+## Build notes
+- **Reused instead of new:** `CategoryChip(style: .option)` already was the larger chip (10x16, 14pt), `EmptyStateIllustration` already had a `.noResults` layout and `PrimaryButton` fit the "Add ... as a task" button, so F5's "size variant" and "illustration block" were not needed. New design-system pieces: `SearchField` and `SearchBar`, `RecentSearchRow`, `CircularIconButton` (Search and Sort header buttons), and a trailing link on `SectionHeader`.
+- **Icons (SF Symbols):** `search` is `magnifyingglass`, `circle-x` is `xmark.circle`, `clock-3` is `clock`, `arrow-up-left` is `arrow.up.left`, `arrow-up-down` is `arrow.up.arrow.down`. `search-x` has no SF Symbol, so the No Results illustration uses `magnifyingglass`.
+- **Added beyond the plan:** `GetSortOrderUseCase` and `SaveSortOrderUseCase` (a review found the list view model touching the repository directly), `PreviewDependencies` (preview wiring out of the views), and VoiceOver announcements for clearing recents and for toggling a result.
+- **Composition root:** `AppDependencies` no longer defaults any repository; `ToDoListApp.make` builds the UserDefaults ones. `inMemory()` uses a throwaway suite.
+- **Fidelity fixes after the check:** peach gradient background, a content-width "Add as task" button, vertically centered No Results content, lowercase query (auto-capitalization off), per-state spacing.
+- **Process:** five agents built it in parallel worktrees (sort, search domain, components, view model, router and header button), then the screen. Cold builds in each worktree made every stream slow; one fix agent was stopped after 8 minutes and its pass was redone by hand.
+
+## Follow-ups (not done in this phase)
+- **Designer:** the Sort menu and an active-sort indicator, the selected category chip and the scope chip above results, the section rule color (`#E3CDB8` in the design, `border` token in the app), `search-x` icon, the 17pt field text and 16pt Cancel (app uses 16 and 15), the Recent header's 24pt height (app's "Clear all" keeps a 44pt hit area so the header is taller).
+- **Accessibility, deferred:** the circular button outline (about 1.2:1) is decorative; a checkmark glyph on the selected chip; a multiline field for long queries at accessibility sizes; recent rows cost two VoiceOver stops each (one element plus a custom action would halve that); `CircularIconButton` icon does not scale with Dynamic Type; the escape gesture and the new announcements are untested with VoiceOver.
+- **Untested view logic:** `TodoSearchView` and the nested-cover wiring in `TodoListView` have no unit tests (SwiftUI views; the logic is in the tested view model and router).
+- **Manual check done on the simulator:** Recent, Results (live typing), No Results, Add as task opening prefilled over Search and returning with the new result. Not checked: Edit from a result, delete from a result (list Undo toast), keyboard return key behavior beyond focus, VoiceOver.
+- **Process:** the new-announcement fix was one `feat:` commit with its `test:` commit before it; some reviewer-driven tests characterize existing behavior and passed on first run (no red step).

@@ -53,4 +53,20 @@ struct TodoListSectionsTests {
         let sections = TodoListSections(items: [completed("Old", at: 1), completed("New", at: 9)])
         #expect(titles(sections.completed) == ["New", "Old"])
     }
+
+    @Test func sortOrderAppliesToTheOpenSection() {
+        let old = open("B", created: 1), new = open("A", created: 2)
+        let sections = TodoListSections(items: [old, new], sortOrder: .newestFirst)
+        #expect(titles(sections.todo) == ["A", "B"])
+        #expect(TodoListSections(items: [old, new], sortOrder: .titleAZ).sortOrder == .titleAZ)
+    }
+
+    @Test func sortOrderLeavesCompletedMostRecentlyCompletedFirst() {
+        let sections = TodoListSections(items: [completed("A", at: 1), completed("B", at: 9)], sortOrder: .titleAZ)
+        #expect(titles(sections.completed) == ["B", "A"])
+    }
+
+    @Test func defaultSortOrderIsDueDate() {
+        #expect(TodoListSections(items: []).sortOrder == .dueDate)
+    }
 }

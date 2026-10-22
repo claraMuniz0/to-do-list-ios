@@ -11,9 +11,9 @@ enum TodoListFilter: Equatable {
     func apply(to sections: TodoListSections) -> TodoListSections {
         switch self {
         case .all: sections
-        case .active: TodoListSections(items: sections.todo)
-        case .done: TodoListSections(items: sections.completed)
-        case .category(let category): TodoListSections(items: sections.todo.filter { $0.category == category })
+        case .active: TodoListSections(items: sections.todo, sortOrder: sections.sortOrder)
+        case .done: TodoListSections(items: sections.completed, sortOrder: sections.sortOrder)
+        case .category(let category): TodoListSections(items: sections.todo.filter { $0.category == category }, sortOrder: sections.sortOrder)
         }
     }
 }

@@ -24,25 +24,32 @@ final class TodoListViewModel {
     private(set) var undoState: UndoState?
     /// Kept in memory only, so a relaunch starts on `.all`; survives reloads.
     private(set) var selectedFilter: TodoListFilter = .all
+    /// Orders the TO DO section; remembered between launches. Completed tasks ignore it.
+    private(set) var sortOrder: TodoItemSortOrder
 
     private let getTodoItems: GetTodoItemsUseCase
     private let toggleCompletion: ToggleTodoItemCompletionUseCase
     private let addTodoItem: AddTodoItemUseCase
     private let restoreTodoItem: RestoreTodoItemUseCase
     private let deleteTodoItem: DeleteTodoItemUseCase
+    private let saveSortOrder: SaveSortOrderUseCase
 
     init(
         getTodoItems: GetTodoItemsUseCase,
         toggleCompletion: ToggleTodoItemCompletionUseCase,
         addTodoItem: AddTodoItemUseCase,
         restoreTodoItem: RestoreTodoItemUseCase,
-        deleteTodoItem: DeleteTodoItemUseCase
+        deleteTodoItem: DeleteTodoItemUseCase,
+        getSortOrder: GetSortOrderUseCase,
+        saveSortOrder: SaveSortOrderUseCase
     ) {
         self.getTodoItems = getTodoItems
         self.toggleCompletion = toggleCompletion
         self.addTodoItem = addTodoItem
         self.restoreTodoItem = restoreTodoItem
         self.deleteTodoItem = deleteTodoItem
+        self.saveSortOrder = saveSortOrder
+        sortOrder = getSortOrder.execute()
     }
 
     /// Counts every open task, not only those due today, whatever filter is selected.
@@ -104,6 +111,16 @@ final class TodoListViewModel {
         selectedFilter = filter
     }
 
+    /// Re-sorts the loaded list in place and remembers the choice; choosing the active order again does nothing.
+    func selectSortOrder(_ newOrder: TodoItemSortOrder) {
+        guard newOrder != sortOrder else { return }
+        sortOrder = newOrder
+        saveSortOrder.execute(newOrder)
+        if case .loaded(let sections) = state {
+            state = .loaded(TodoListSections(items: sections.todo + sections.completed, sortOrder: newOrder))
+        }
+    }
+
     /// Opens the panel with Work preselected, or closes it back to All.
     func toggleCategories() {
         selectedFilter = isCategoriesPanelOpen ? .all : .category(.work)
@@ -122,7 +139,7 @@ final class TodoListViewModel {
     func load() async {
         do {
             let items = try await getTodoItems.execute()
-            state = items.isEmpty ? .empty : .loaded(TodoListSections(items: items))
+            state = items.isEmpty ? .empty : .loaded(TodoListSections(items: items, sortOrder: sortOrder))
         } catch {
             state = .error
         }

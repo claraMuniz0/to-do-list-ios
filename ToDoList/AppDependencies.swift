@@ -4,6 +4,26 @@ struct AppDependencies {
     let todoItemRepository: TodoItemRepository
     let dateProvider: DateProvider
     var calendar: Calendar = .current
+    let sortOrderRepository: SortOrderRepository
+    let recentSearchRepository: RecentSearchRepository
+
+    func makeGetSortOrderUseCase() -> GetSortOrderUseCase { GetSortOrderUseCase(repository: sortOrderRepository) }
+    func makeSaveSortOrderUseCase() -> SaveSortOrderUseCase { SaveSortOrderUseCase(repository: sortOrderRepository) }
+    func makeSearchTodoItemsUseCase() -> SearchTodoItemsUseCase { SearchTodoItemsUseCase(repository: todoItemRepository) }
+    func makeGetRecentSearchesUseCase() -> GetRecentSearchesUseCase { GetRecentSearchesUseCase(repository: recentSearchRepository) }
+    func makeRecordRecentSearchUseCase() -> RecordRecentSearchUseCase { RecordRecentSearchUseCase(repository: recentSearchRepository) }
+    func makeClearRecentSearchesUseCase() -> ClearRecentSearchesUseCase { ClearRecentSearchesUseCase(repository: recentSearchRepository) }
+
+    @MainActor
+    func makeTodoSearchViewModel() -> TodoSearchViewModel {
+        TodoSearchViewModel(
+            searchTodoItems: makeSearchTodoItemsUseCase(),
+            getRecentSearches: makeGetRecentSearchesUseCase(),
+            recordRecentSearch: makeRecordRecentSearchUseCase(),
+            clearRecentSearches: makeClearRecentSearchesUseCase(),
+            toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider)
+        )
+    }
 
     @MainActor
     func makeTodoListViewModel() -> TodoListViewModel {
@@ -12,7 +32,9 @@ struct AppDependencies {
             toggleCompletion: ToggleTodoItemCompletionUseCase(repository: todoItemRepository, dateProvider: dateProvider),
             addTodoItem: makeAddTodoItemUseCase(),
             restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository),
-            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository)
+            deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
+            getSortOrder: makeGetSortOrderUseCase(),
+            saveSortOrder: makeSaveSortOrderUseCase()
         )
     }
 

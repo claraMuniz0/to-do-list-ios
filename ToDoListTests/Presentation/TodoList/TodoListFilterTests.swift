@@ -54,4 +54,13 @@ struct TodoListFilterTests {
             #expect(result.todo.isEmpty && result.completed.isEmpty)
         }
     }
+
+    @Test func filtersKeepTheSectionsSortOrder() {
+        let old = makeTodoItem(title: "Old", createdAt: Date(timeIntervalSince1970: 1))
+        let new = makeTodoItem(title: "New", createdAt: Date(timeIntervalSince1970: 2))
+        let source = TodoListSections(items: [old, new], sortOrder: .newestFirst)
+        for filter in [TodoListFilter.all, .active, .category(.personal)] {
+            #expect(titles(filter.apply(to: source).todo) == ["New", "Old"])
+        }
+    }
 }

@@ -47,6 +47,10 @@ Several things in the design look like separate components but are one component
 | party-popper (proposal, unconfirmed) | `party.popper` |
 | search-x (proposal, unconfirmed) | `magnifyingglass` |
 | list-checks (proposal, unconfirmed) | `checklist` |
+| search (Phase 6, proposal) | `magnifyingglass` |
+| circle-x (Phase 6, proposal) | `xmark.circle` |
+| clock-3 (Phase 6, proposal) | `clock` |
+| arrow-up-left (Phase 6, proposal) | `arrow.up.left` |
 
 The design uses about 25 Lucide icons in total (status-bar signal/wifi/battery are system UI and are not drawn). Only the five above are mapped now. Each later phase adds the icons it needs to this table, including the three illustration icons (`clipboard-check`, `party-popper`, `search-x`).
 

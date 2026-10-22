@@ -1,5 +1,9 @@
 import Foundation
 
+/// Stores the sort order's raw value in UserDefaults.
+///
+/// Deliberate decision: a missing or unrecognised stored value (for example a case removed in a later version) silently
+/// falls back to `TodoItemSortOrder.default`; it is never reported as an error.
 struct UserDefaultsSortOrderRepository: SortOrderRepository {
     static let key = "todoList.sortOrder"
 

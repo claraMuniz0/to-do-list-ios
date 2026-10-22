@@ -2,8 +2,8 @@ import Foundation
 
 /// Keeps recent searches as a plain array of strings in UserDefaults (not relational data, so no SwiftData model).
 ///
-/// Stored values that are no longer valid queries (blank or overlong, e.g. after the limit changed) are skipped
-/// on read rather than failing the whole list.
+/// Deliberate decision: stored values that are no longer valid queries (blank or overlong, e.g. after the limit
+/// changed) are silently dropped on read rather than failing the whole list or reporting an error.
 struct UserDefaultsRecentSearchRepository: RecentSearchRepository {
     static let key = "recentSearches"
 

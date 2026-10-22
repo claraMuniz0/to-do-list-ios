@@ -155,6 +155,8 @@ final class TodoSearchViewModel {
         if case .results(let items) = state { state = .results(order.arranged(items)) }
     }
 
+    /// `nil` for blank text. `try?` also swallows `.tooLong`, but that cannot happen: `query` is already cut to
+    /// `SearchQuery.maxLength` characters, so the trimmed text never exceeds the limit.
     private var parsedQuery: SearchQuery? { try? SearchQuery(query) }
 
     private func refreshRecentSearches() async {

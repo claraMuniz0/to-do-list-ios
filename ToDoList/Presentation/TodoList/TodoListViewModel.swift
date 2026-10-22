@@ -32,7 +32,7 @@ final class TodoListViewModel {
     private let addTodoItem: AddTodoItemUseCase
     private let restoreTodoItem: RestoreTodoItemUseCase
     private let deleteTodoItem: DeleteTodoItemUseCase
-    private let sortOrderRepository: SortOrderRepository
+    private let saveSortOrder: SaveSortOrderUseCase
 
     init(
         getTodoItems: GetTodoItemsUseCase,
@@ -40,15 +40,16 @@ final class TodoListViewModel {
         addTodoItem: AddTodoItemUseCase,
         restoreTodoItem: RestoreTodoItemUseCase,
         deleteTodoItem: DeleteTodoItemUseCase,
-        sortOrderRepository: SortOrderRepository
+        getSortOrder: GetSortOrderUseCase,
+        saveSortOrder: SaveSortOrderUseCase
     ) {
         self.getTodoItems = getTodoItems
         self.toggleCompletion = toggleCompletion
         self.addTodoItem = addTodoItem
         self.restoreTodoItem = restoreTodoItem
         self.deleteTodoItem = deleteTodoItem
-        self.sortOrderRepository = sortOrderRepository
-        sortOrder = sortOrderRepository.sortOrder()
+        self.saveSortOrder = saveSortOrder
+        sortOrder = getSortOrder.execute()
     }
 
     /// Counts every open task, not only those due today, whatever filter is selected.
@@ -114,7 +115,7 @@ final class TodoListViewModel {
     func selectSortOrder(_ newOrder: TodoItemSortOrder) {
         guard newOrder != sortOrder else { return }
         sortOrder = newOrder
-        sortOrderRepository.save(newOrder)
+        saveSortOrder.execute(newOrder)
         if case .loaded(let sections) = state {
             state = .loaded(TodoListSections(items: sections.todo + sections.completed, sortOrder: newOrder))
         }

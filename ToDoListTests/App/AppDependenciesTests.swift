@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import MyApp
 
@@ -32,5 +33,24 @@ struct AppDependenciesViewModelTests {
         await viewModel.load()
 
         #expect(viewModel.state == .loaded(TodoListSections(items: [item])))
+    }
+}
+
+@MainActor
+struct AppDependenciesSortOrderTests {
+    @Test func theTodoListViewModelUsesTheInjectedSortOrderRepository() {
+        let spy = SortOrderRepositorySpy(stored: .titleAZ)
+        let dependencies = AppDependencies(
+            todoItemRepository: InMemoryTodoItemRepository(),
+            dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
+            sortOrderRepository: spy,
+            recentSearchRepository: RecentSearchRepositorySpy()
+        )
+        let viewModel = dependencies.makeTodoListViewModel()
+        #expect(viewModel.sortOrder == .titleAZ)
+
+        viewModel.selectSortOrder(.newestFirst)
+
+        #expect(spy.stored == .newestFirst)
     }
 }

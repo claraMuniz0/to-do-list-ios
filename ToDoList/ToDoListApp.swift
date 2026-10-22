@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 import SwiftUI
 
@@ -32,17 +33,22 @@ extension AppDependencies {
         try make(container: .todoItems())
     }
 
-    /// SwiftData in memory, for tests and previews.
+    /// SwiftData in memory and a throwaway UserDefaults suite, so tests never touch the app's real settings.
     @MainActor
     static func inMemory() throws -> AppDependencies {
-        try make(container: .inMemoryTodoItems())
+        let suite = "AppDependencies.inMemory.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite) ?? .standard
+        defaults.removePersistentDomain(forName: suite)
+        return try make(container: .inMemoryTodoItems(), defaults: defaults)
     }
 
     @MainActor
-    private static func make(container: ModelContainer) -> AppDependencies {
+    private static func make(container: ModelContainer, defaults: UserDefaults = .standard) -> AppDependencies {
         AppDependencies(
             todoItemRepository: SwiftDataTodoItemRepository(container: container),
-            dateProvider: SystemDateProvider()
+            dateProvider: SystemDateProvider(),
+            sortOrderRepository: UserDefaultsSortOrderRepository(defaults: defaults),
+            recentSearchRepository: UserDefaultsRecentSearchRepository(defaults: defaults)
         )
     }
 }

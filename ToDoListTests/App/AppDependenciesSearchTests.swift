@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import MyApp
 
@@ -25,9 +26,13 @@ struct AppDependenciesSearchTests {
     }
 
     @Test func theRecentSearchUseCasesShareTheInjectedRepository() async throws {
-        var dependencies = try AppDependencies.inMemory()
         let spy = RecentSearchRepositorySpy()
-        dependencies.recentSearchRepository = spy
+        let dependencies = AppDependencies(
+            todoItemRepository: InMemoryTodoItemRepository(),
+            dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
+            sortOrderRepository: SortOrderRepositorySpy(),
+            recentSearchRepository: spy
+        )
 
         try await dependencies.makeRecordRecentSearchUseCase().execute(SearchQuery("groceries"))
         #expect(try await dependencies.makeGetRecentSearchesUseCase().execute() == [SearchQuery("groceries")])

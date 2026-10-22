@@ -19,7 +19,8 @@ struct TodoListViewModelTests {
             addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: .utcGregorian),
             restoreTodoItem: RestoreTodoItemUseCase(repository: spy),
             deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
-            sortOrderRepository: sortOrders
+            getSortOrder: GetSortOrderUseCase(repository: sortOrders),
+            saveSortOrder: SaveSortOrderUseCase(repository: sortOrders)
         )
         return (viewModel, spy)
     }

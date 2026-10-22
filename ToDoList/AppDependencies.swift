@@ -4,10 +4,11 @@ struct AppDependencies {
     let todoItemRepository: TodoItemRepository
     let dateProvider: DateProvider
     var calendar: Calendar = .current
-    var sortOrderRepository: SortOrderRepository = UserDefaultsSortOrderRepository()
+    let sortOrderRepository: SortOrderRepository
+    let recentSearchRepository: RecentSearchRepository
 
-    var recentSearchRepository: RecentSearchRepository = UserDefaultsRecentSearchRepository()
-
+    func makeGetSortOrderUseCase() -> GetSortOrderUseCase { GetSortOrderUseCase(repository: sortOrderRepository) }
+    func makeSaveSortOrderUseCase() -> SaveSortOrderUseCase { SaveSortOrderUseCase(repository: sortOrderRepository) }
     func makeSearchTodoItemsUseCase() -> SearchTodoItemsUseCase { SearchTodoItemsUseCase(repository: todoItemRepository) }
     func makeGetRecentSearchesUseCase() -> GetRecentSearchesUseCase { GetRecentSearchesUseCase(repository: recentSearchRepository) }
     func makeRecordRecentSearchUseCase() -> RecordRecentSearchUseCase { RecordRecentSearchUseCase(repository: recentSearchRepository) }
@@ -32,7 +33,8 @@ struct AppDependencies {
             addTodoItem: makeAddTodoItemUseCase(),
             restoreTodoItem: RestoreTodoItemUseCase(repository: todoItemRepository),
             deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
-            sortOrderRepository: sortOrderRepository
+            getSortOrder: makeGetSortOrderUseCase(),
+            saveSortOrder: makeSaveSortOrderUseCase()
         )
     }
 

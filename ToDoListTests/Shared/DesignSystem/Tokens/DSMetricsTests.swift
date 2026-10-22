@@ -26,6 +26,11 @@ struct DSMetricsTests {
         #expect(DSShadow.accentSmall.y == 3)
     }
 
+    @Test func splashShadowIsAWideSoftDropBelowTheDisc() {
+        #expect(DSShadow.splash.y == 14)
+        #expect(DSShadow.splash.radius == 36)
+    }
+
     @Test func illustrationShadowHasBlur() {
         #expect(DSShadow.illustration.y == 8)
         #expect(DSShadow.illustration.radius == 24)

@@ -26,6 +26,14 @@ struct DSFontTests {
         #expect(spec.weight == .semibold)
     }
 
+    @Test func taglineIsCaveat24Regular() {
+        let spec = DSFont.tagline.spec
+        #expect(spec.family == "Caveat")
+        #expect(spec.size == 24)
+        #expect(spec.weight == .regular)
+        #expect(!spec.isItalic)
+    }
+
     @Test func rowTitleAndDescriptionUseBricolage() {
         #expect(DSFont.rowTitle.spec.family == "Bricolage Grotesque")
         #expect(DSFont.rowTitle.spec.size == 16)

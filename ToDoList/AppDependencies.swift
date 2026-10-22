@@ -50,8 +50,13 @@ struct AppDependencies {
             getTodoItem: GetTodoItemUseCase(repository: todoItemRepository),
             dateProvider: dateProvider,
             calendar: calendar,
-            initialTitle: initialTitle
+            initialTitle: initialTitle,
+            suggestSteps: claudeAvailability.isAvailable ? makeSuggestStepsUseCase() : nil
         )
+    }
+
+    private func makeSuggestStepsUseCase() -> SuggestStepsUseCase {
+        SuggestStepsUseCase(suggester: ClaudeStepSuggester(client: claudeClient))
     }
 
     private func makeAddTodoItemUseCase() -> AddTodoItemUseCase {

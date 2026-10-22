@@ -7,6 +7,7 @@ struct TodoItemFormView: View {
 
     @FocusState private var isTitleFocused: Bool
     @State private var isDateSheetPresented = false
+    @State private var isSuggestionSheetPresented = false
     @State private var isEditFlow: Bool
 
     init(viewModel: TodoItemFormViewModel,
@@ -69,19 +70,64 @@ struct TodoItemFormView: View {
         .sheet(isPresented: $isDateSheetPresented) {
             SelectDateView(viewModel: viewModel)
         }
+        .sheet(isPresented: $isSuggestionSheetPresented) {
+            SuggestedStepsSheet(viewModel: viewModel)
+        }
+        // A retry passes through `.loading`; the sheet stays up with its old rows instead of flickering.
+        .onChange(of: viewModel.suggestionState) { _, state in
+            switch state {
+            case .suggestions: isSuggestionSheetPresented = true
+            case .loading: break
+            case .idle, .empty, .failed: isSuggestionSheetPresented = false
+            }
+        }
     }
 
     private var stepsField: some View {
-        StepsField(
-            steps: viewModel.steps,
-            progress: viewModel.stepsProgress,
-            canAdd: viewModel.canAddStep,
-            onToggle: viewModel.toggleStep,
-            onRename: viewModel.renameStep,
-            onRemove: viewModel.removeStep,
-            onMove: viewModel.moveStep,
-            onAdd: viewModel.addStep
-        )
+        VStack(alignment: .leading, spacing: 8) {
+            StepsField(
+                steps: viewModel.steps,
+                progress: viewModel.stepsProgress,
+                canAdd: viewModel.canAddStep,
+                suggestion: suggestionPill,
+                onToggle: viewModel.toggleStep,
+                onRename: viewModel.renameStep,
+                onRemove: viewModel.removeStep,
+                onMove: viewModel.moveStep,
+                onAdd: viewModel.addStep
+            )
+            suggestionStatus
+        }
+    }
+
+    /// Hidden when Claude is unavailable, the title is blank or the list is full.
+    private var suggestionPill: StepsFieldSuggestion? {
+        guard viewModel.canSuggestSteps else { return nil }
+        return StepsFieldSuggestion(
+            title: viewModel.suggestionPillTitle, isLoading: viewModel.suggestionState == .loading
+        ) { Task { await viewModel.requestSuggestions() } }
+    }
+
+    @ViewBuilder private var suggestionStatus: some View {
+        switch viewModel.suggestionState {
+        case .failed(let error):
+            let message = error == .offline
+                ? "You're offline. Check your connection and try again."
+                : "Couldn't get suggestions. Try again."
+            HStack(spacing: 8) {
+                Text(message).dsFont(.rowDescription).foregroundStyle(DSColor.danger)
+                Button("Try again") { Task { await viewModel.requestSuggestions() } }
+                    .dsFont(.pill)
+                    .foregroundStyle(DSColor.accent)
+                    .frame(minHeight: DSTouchTarget.minimum)
+            }
+            .onAppear { AccessibilityNotification.Announcement(message).post() }
+        case .empty:
+            Text("No new steps to suggest.").dsFont(.rowDescription).foregroundStyle(DSColor.textSecondary)
+                .onAppear { AccessibilityNotification.Announcement("No new steps to suggest.").post() }
+        case .idle, .loading, .suggestions:
+            EmptyView()
+        }
     }
 
     private var categoryChips: some View {
@@ -155,6 +201,13 @@ private struct FailingRepository: TodoItemRepository {
     func allTasks() async throws -> [TodoItem] { [] }
 }
 
+private struct PreviewStepSuggester: StepSuggesting {
+    let titles: [String]
+    func suggest(title: String, description: String?, existingSteps: [StepTitle]) async throws -> [StepTitle] {
+        titles.compactMap { try? StepTitle($0) }
+    }
+}
+
 private struct FixedDateProvider: DateProvider {
     func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) } // 2026-10-08 12:00 UTC
 }
@@ -176,7 +229,8 @@ extension TodoItemFormViewModel {
         title: String = "",
         details: String = "",
         failingSave: Bool = false,
-        editing item: TodoItem? = nil
+        editing item: TodoItem? = nil,
+        suggested: [String]? = nil
     ) -> TodoItemFormViewModel {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
@@ -191,7 +245,8 @@ extension TodoItemFormViewModel {
             dateProvider: provider,
             calendar: calendar,
             locale: Locale(identifier: "en_US"),
-            initialTitle: title
+            initialTitle: title,
+            suggestSteps: suggested.map { SuggestStepsUseCase(suggester: PreviewStepSuggester(titles: $0)) }
         )
         viewModel.details = details
         if let item {
@@ -224,6 +279,12 @@ extension TodoItemFormViewModel {
 #Preview("Edit") {
     TodoItemFormView(
         viewModel: .preview(editing: .previewGroceries),
+        onFinish: { _ in }
+    )
+}
+#Preview("Edit - with Claude") {
+    TodoItemFormView(
+        viewModel: .preview(editing: .previewGroceries, suggested: ["Check the pantry", "Write the list", "Buy milk and eggs"]),
         onFinish: { _ in }
     )
 }

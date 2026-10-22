@@ -363,6 +363,30 @@ struct TodoSearchViewModelTests {
         #expect(sut.viewModel.addAsTaskTitle == nil)
     }
 
+    @Test func clearingRecentSearchesAnnouncesIt() async throws {
+        let sut = makeSUT(recent: [try SearchQuery("groceries")])
+        await sut.viewModel.load()
+        await sut.viewModel.clearAllRecentSearches()
+        #expect(sut.viewModel.announcement?.text == "Recent searches cleared")
+    }
+
+    @Test func togglingAnOpenResultAnnouncesMarkedDone() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.toggle(id: item.id)
+        #expect(sut.viewModel.announcement?.text == "Marked done")
+    }
+
+    @Test func togglingADoneResultAnnouncesMarkedNotDone() async {
+        var item = makeTodoItem(title: "Buy groceries")
+        item.complete(at: Date(timeIntervalSince1970: 30))
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.toggle(id: item.id)
+        #expect(sut.viewModel.announcement?.text == "Marked not done")
+    }
+
     @Test func aSavedOutcomeThatChangesTheCountAnnouncesIt() async {
         let sut = makeSUT()
         await sut.viewModel.setQuery("gym")

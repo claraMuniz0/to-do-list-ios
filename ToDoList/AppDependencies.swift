@@ -6,6 +6,13 @@ struct AppDependencies {
     var calendar: Calendar = .current
     var sortOrderRepository: SortOrderRepository = UserDefaultsSortOrderRepository()
 
+    var recentSearchRepository: RecentSearchRepository = UserDefaultsRecentSearchRepository()
+
+    func makeSearchTodoItemsUseCase() -> SearchTodoItemsUseCase { SearchTodoItemsUseCase(repository: todoItemRepository) }
+    func makeGetRecentSearchesUseCase() -> GetRecentSearchesUseCase { GetRecentSearchesUseCase(repository: recentSearchRepository) }
+    func makeRecordRecentSearchUseCase() -> RecordRecentSearchUseCase { RecordRecentSearchUseCase(repository: recentSearchRepository) }
+    func makeClearRecentSearchesUseCase() -> ClearRecentSearchesUseCase { ClearRecentSearchesUseCase(repository: recentSearchRepository) }
+
     @MainActor
     func makeTodoListViewModel() -> TodoListViewModel {
         TodoListViewModel(

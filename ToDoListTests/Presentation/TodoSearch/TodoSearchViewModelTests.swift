@@ -152,7 +152,144 @@ struct TodoSearchViewModelTests {
         #expect(viewModel.state == .noResults(nil))
     }
 
+    // MARK: Recent searches
+
+    @Test func submittingAQueryWithResultsRecordsIt() async throws {
+        let sut = makeSUT(items: [makeTodoItem(title: "Buy groceries")])
+        await sut.viewModel.setQuery(" gro ")
+        #expect(sut.recents.saveCallCount == 0)
+        await sut.viewModel.submit()
+        #expect(sut.recents.storedSearches == [try SearchQuery("gro")])
+        #expect(sut.viewModel.recentSearches == [try SearchQuery("gro")])
+    }
+
+    @Test func submittingAQueryWithoutResultsRecordsNothing() async {
+        let sut = makeSUT(items: [makeTodoItem(title: "Buy groceries")])
+        await sut.viewModel.setQuery("gym")
+        await sut.viewModel.submit()
+        #expect(sut.recents.saveCallCount == 0)
+    }
+
+    @Test func submittingWithOnlyAScopeRecordsNothing() async {
+        let sut = makeSUT(items: [makeTodoItem(category: .work)])
+        await sut.viewModel.toggleScope(.work)
+        await sut.viewModel.submit()
+        #expect(sut.recents.saveCallCount == 0)
+    }
+
+    @Test func typingAndScopingNeverRecord() async {
+        let sut = makeSUT(items: [makeTodoItem(title: "Buy groceries")])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.toggleScope(.personal)
+        #expect(sut.recents.saveCallCount == 0)
+    }
+
+    @Test func tappingAResultRecordsTheQuery() async throws {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        await sut.viewModel.didSelectResult()
+        #expect(sut.recents.storedSearches == [try SearchQuery("gro")])
+    }
+
+    @Test func tappingAResultFoundByScopeAloneRecordsNothing() async {
+        let sut = makeSUT(items: [makeTodoItem(category: .work)])
+        await sut.viewModel.toggleScope(.work)
+        await sut.viewModel.didSelectResult()
+        #expect(sut.recents.saveCallCount == 0)
+    }
+
+    @Test func tappingARecentRowFillsTheQueryRunsAndRecordsIt() async throws {
+        let item = makeTodoItem(title: "Buy groceries")
+        let older = try SearchQuery("dentist")
+        let term = try SearchQuery("groceries")
+        let sut = makeSUT(items: [item], recent: [older, term])
+        await sut.viewModel.load()
+        await sut.viewModel.selectRecent(term)
+        #expect(sut.viewModel.query == "groceries")
+        #expect(sut.viewModel.state == .results([item]))
+        #expect(sut.viewModel.recentSearches == [term, older])
+    }
+
+    @Test func fillingATermOnlyFillsTheQuery() async throws {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.fill(try SearchQuery("groceries"))
+        #expect(sut.viewModel.query == "groceries")
+        #expect(sut.viewModel.state == .results([item]))
+        #expect(sut.recents.saveCallCount == 0)
+    }
+
+    @Test func clearAllEmptiesTheStoreAndTheList() async throws {
+        let sut = makeSUT(recent: [try SearchQuery("groceries")])
+        await sut.viewModel.load()
+        await sut.viewModel.clearAllRecentSearches()
+        #expect(sut.recents.storedSearches.isEmpty)
+        #expect(sut.viewModel.recentSearches.isEmpty)
+    }
+
+    // MARK: VoiceOver announcement
+
+    @Test func noAnnouncementWhileTyping() async {
+        let viewModel = makeSUT(items: [makeTodoItem(title: "Buy groceries")]).viewModel
+        await viewModel.setQuery("g")
+        await viewModel.setQuery("gro")
+        #expect(viewModel.announcement == nil)
+    }
+
+    @Test func submitAnnouncesTheResultCount() async {
+        let viewModel = makeSUT(items: [makeTodoItem(title: "Gro one"), makeTodoItem(title: "Gro two")]).viewModel
+        await viewModel.setQuery("gro")
+        await viewModel.submit()
+        #expect(viewModel.announcement?.text == "2 results")
+    }
+
+    @Test func submitAnnouncesSingularAndNoResults() async {
+        let viewModel = makeSUT(items: [makeTodoItem(title: "Gro one")]).viewModel
+        await viewModel.setQuery("gro")
+        await viewModel.submit()
+        #expect(viewModel.announcement?.text == "1 result")
+        await viewModel.setQuery("gym")
+        await viewModel.submit()
+        #expect(viewModel.announcement?.text == "No tasks found")
+    }
+
+    @Test func submittingTheSameResultTwiceProducesANewAnnouncement() async {
+        let viewModel = makeSUT(items: [makeTodoItem(title: "Gro one")]).viewModel
+        await viewModel.setQuery("gro")
+        await viewModel.submit()
+        let first = viewModel.announcement
+        await viewModel.submit()
+        #expect(viewModel.announcement != first)
+        #expect(viewModel.announcement?.text == first?.text)
+    }
+
+    @Test func changingTheScopeAnnouncesTheCount() async {
+        let viewModel = makeSUT(items: [makeTodoItem(category: .work)]).viewModel
+        await viewModel.toggleScope(.work)
+        #expect(viewModel.announcement?.text == "1 result")
+    }
+
     // MARK: Errors
+
+    @Test func aRecordFailureFlagsTheActionButKeepsTheResults() async {
+        let item = makeTodoItem(title: "Buy groceries")
+        let sut = makeSUT(items: [item])
+        await sut.viewModel.setQuery("gro")
+        sut.recents.errorToThrow = StubFailure()
+        await sut.viewModel.submit()
+        #expect(sut.viewModel.actionFailed)
+        #expect(sut.viewModel.state == .results([item]))
+    }
+
+    @Test func aClearFailureFlagsTheAction() async throws {
+        let sut = makeSUT(recent: [try SearchQuery("groceries")])
+        await sut.viewModel.load()
+        sut.recents.errorToThrow = StubFailure()
+        await sut.viewModel.clearAllRecentSearches()
+        #expect(sut.viewModel.actionFailed)
+        #expect(sut.viewModel.recentSearches == [try SearchQuery("groceries")])
+    }
 
     @Test func aSearchFailureEndsInTheErrorState() async {
         let sut = makeSUT()

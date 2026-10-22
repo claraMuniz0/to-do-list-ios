@@ -24,11 +24,9 @@ struct StepRowStyleTests {
         #expect(StepRowStyle(isDone: false).strikesThroughText == false)
     }
 
-    @Test func valueAndActionNameFollowState() {
+    @Test func valueFollowsState() {
         #expect(StepRowStyle(isDone: false).accessibilityValue == "Not done")
         #expect(StepRowStyle(isDone: true).accessibilityValue == "Done")
-        #expect(StepRowStyle(isDone: false).toggleActionName == "Mark as done")
-        #expect(StepRowStyle(isDone: true).toggleActionName == "Mark as not done")
     }
 
     @Test func reorderActionNamesAreFixed() {

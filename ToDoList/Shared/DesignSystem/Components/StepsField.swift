@@ -86,8 +86,23 @@ struct StepsField: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// One line at normal sizes; at large accessibility sizes the pill drops below the title and count.
     private var header: some View {
-        HStack(spacing: 8) {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                headerTexts
+                Spacer(minLength: 8)
+                suggestionPill
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) { headerTexts }
+                suggestionPill
+            }
+        }
+    }
+
+    private var headerTexts: some View {
+        Group {
             Text(StepsFieldStyle.title)
                 .dsFont(.chipOption)
                 .foregroundStyle(DSColor.textPrimary)
@@ -99,10 +114,13 @@ struct StepsField: View {
                     .foregroundStyle(DSColor.textMuted)
                     .accessibilityHidden(style.showsProgressBar)
             }
-            Spacer(minLength: 8)
-            if let suggestion {
-                SuggestPill(title: suggestion.title, isLoading: suggestion.isLoading, action: suggestion.action)
-            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder private var suggestionPill: some View {
+        if let suggestion {
+            SuggestPill(title: suggestion.title, isLoading: suggestion.isLoading, action: suggestion.action)
         }
     }
 
@@ -122,7 +140,8 @@ struct StepsField: View {
                         onToggle: { onToggle(step.id) },
                         onRename: { onRename(step.id, $0) },
                         onMoveUp: style.canMoveUp(at: index) ? { onMove(index, index - 1) } : nil,
-                        onMoveDown: style.canMoveDown(at: index) ? { onMove(index, index + 1) } : nil
+                        onMoveDown: style.canMoveDown(at: index) ? { onMove(index, index + 1) } : nil,
+                        onDelete: { openSwipeID = nil; onRemove(step.id) }
                     )
                     .background(DSColor.surface)
                 }
@@ -144,6 +163,7 @@ private struct EditableStepRow: View {
     let onRename: (String) -> Bool
     let onMoveUp: (() -> Void)?
     let onMoveDown: (() -> Void)?
+    let onDelete: () -> Void
 
     @State private var draft: String
 
@@ -153,7 +173,8 @@ private struct EditableStepRow: View {
         onToggle: @escaping () -> Void,
         onRename: @escaping (String) -> Bool,
         onMoveUp: (() -> Void)?,
-        onMoveDown: (() -> Void)?
+        onMoveDown: (() -> Void)?,
+        onDelete: @escaping () -> Void
     ) {
         self.step = step
         self.showsDivider = showsDivider
@@ -161,6 +182,7 @@ private struct EditableStepRow: View {
         self.onRename = onRename
         self.onMoveUp = onMoveUp
         self.onMoveDown = onMoveDown
+        self.onDelete = onDelete
         _draft = State(initialValue: step.title.value)
     }
 
@@ -172,7 +194,8 @@ private struct EditableStepRow: View {
             onToggle: onToggle,
             onSubmit: { if !onRename($0) { draft = step.title.value } },
             onMoveUp: onMoveUp,
-            onMoveDown: onMoveDown
+            onMoveDown: onMoveDown,
+            onDelete: onDelete
         )
         .onChange(of: step.title.value) { _, stored in draft = stored }
     }
@@ -194,7 +217,12 @@ private struct AddStepRow: View {
                 .frame(width: StepRowStyle.hitArea, height: StepRowStyle.hitArea)
                 .padding(.leading, -(StepRowStyle.hitArea - 24) / 2)
                 .accessibilityHidden(true)
-            TextField(StepsFieldStyle.addPlaceholder, text: $text)
+            TextField(
+                StepsFieldStyle.addPlaceholder,
+                text: $text,
+                prompt: Text(StepsFieldStyle.addPlaceholder).foregroundStyle(DSColor.textMuted),
+                axis: .vertical
+            )
                 .dsFont(.inputText)
                 .foregroundStyle(DSColor.textPrimary)
                 .focused($isFocused)

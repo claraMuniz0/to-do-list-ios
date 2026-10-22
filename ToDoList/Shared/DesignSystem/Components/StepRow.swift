@@ -8,6 +8,14 @@ struct StepRowStyle: Equatable {
     static let hitArea: CGFloat = DSTouchTarget.minimum
     static let moveUpActionName = "Move up"
     static let moveDownActionName = "Move down"
+    static let deleteActionName = "Delete step"
+    static let textFieldLabel = "Edit step"
+
+    /// A checkbox is named after its step; while the text is being retyped it falls back to a generic name
+    /// so the button never has an empty label.
+    static func checkboxLabel(for text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Step" : text
+    }
 
     let isDone: Bool
 
@@ -19,7 +27,6 @@ struct StepRowStyle: Equatable {
     var showsCheckmark: Bool { isDone }
 
     var accessibilityValue: String { isDone ? "Done" : "Not done" }
-    var toggleActionName: String { isDone ? "Mark as not done" : "Mark as done" }
 }
 
 /// One editable step: leading checkbox, inline text field and a trailing grip. Reordering is exposed to
@@ -33,6 +40,7 @@ struct StepRow: View {
     let onSubmit: (String) -> Void
     let onMoveUp: (() -> Void)?
     let onMoveDown: (() -> Void)?
+    let onDelete: (() -> Void)?
 
     init(
         text: Binding<String>,
@@ -41,7 +49,8 @@ struct StepRow: View {
         onToggle: @escaping () -> Void,
         onSubmit: @escaping (String) -> Void = { _ in },
         onMoveUp: (() -> Void)? = nil,
-        onMoveDown: (() -> Void)? = nil
+        onMoveDown: (() -> Void)? = nil,
+        onDelete: (() -> Void)? = nil
     ) {
         self._text = text
         self.isDone = isDone
@@ -50,6 +59,7 @@ struct StepRow: View {
         self.onSubmit = onSubmit
         self.onMoveUp = onMoveUp
         self.onMoveDown = onMoveDown
+        self.onDelete = onDelete
     }
 
     private var style: StepRowStyle { StepRowStyle(isDone: isDone) }
@@ -62,7 +72,7 @@ struct StepRow: View {
     var body: some View {
         HStack(spacing: 4) {
             checkbox
-            TextField("Step", text: $text, axis: .vertical)
+            TextField(StepRowStyle.textFieldLabel, text: $text, axis: .vertical)
                 .dsFont(.inputText)
                 .foregroundStyle(style.textColor)
                 .strikethrough(style.strikesThroughText)
@@ -98,10 +108,15 @@ struct StepRow: View {
         .buttonStyle(.plain)
         // The 44pt tap area is wider than the 24pt drawing; pull it back so the circle sits on the card padding.
         .padding(.leading, -(hitSize - checkboxSize) / 2)
-        .accessibilityLabel(text)
+        .accessibilityLabel(StepRowStyle.checkboxLabel(for: text))
         .accessibilityValue(style.accessibilityValue)
-        .accessibilityAction(named: style.toggleActionName, onToggle)
-        .accessibilityMoveActions(up: onMoveUp, down: onMoveDown)
+        // The row is a container, so its actions live on the checkbox, the one element VoiceOver focuses first.
+        // Only the moves that are possible are offered.
+        .accessibilityActions {
+            if let onMoveUp { Button(StepRowStyle.moveUpActionName, action: onMoveUp) }
+            if let onMoveDown { Button(StepRowStyle.moveDownActionName, action: onMoveDown) }
+            if let onDelete { Button(StepRowStyle.deleteActionName, action: onDelete) }
+        }
     }
 
     private var grip: some View {
@@ -111,15 +126,6 @@ struct StepRow: View {
             .frame(width: StepRowStyle.hitArea, height: StepRowStyle.hitArea)
             .padding(.trailing, -(StepRowStyle.hitArea - gripSize) / 2)
             .accessibilityHidden(true)
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func accessibilityMoveActions(up: (() -> Void)?, down: (() -> Void)?) -> some View {
-        self
-            .accessibilityAction(named: StepRowStyle.moveUpActionName) { up?() }
-            .accessibilityAction(named: StepRowStyle.moveDownActionName) { down?() }
     }
 }
 

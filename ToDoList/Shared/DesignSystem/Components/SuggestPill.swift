@@ -52,6 +52,11 @@ struct SuggestPill: View {
         .disabled(style.isDisabled)
         .accessibilityLabel(title)
         .accessibilityValue(style.accessibilityValue ?? "")
+        .onChange(of: isLoading) { _, loading in
+            if let message = SuggestPillStyle(isLoading: loading).accessibilityValue {
+                AccessibilityNotification.Announcement(message).post()
+            }
+        }
     }
 }
 

@@ -191,23 +191,6 @@ struct TodoSearchView: View {
 }
 
 #if DEBUG
-/// Keeps previews off UserDefaults.standard.
-private final class PreviewRecentSearchRepository: RecentSearchRepository {
-    var searches: [SearchQuery]
-    init(_ terms: [String]) { searches = terms.compactMap { try? SearchQuery($0) } }
-    func recentSearches() async throws -> [SearchQuery] { searches }
-    func save(_ searches: [SearchQuery]) async throws { self.searches = searches }
-}
-
-private struct PreviewSortOrderRepository: SortOrderRepository {
-    func sortOrder() -> TodoItemSortOrder { .default }
-    func save(_ order: TodoItemSortOrder) {}
-}
-
-private struct PreviewDateProvider: DateProvider {
-    func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) }
-}
-
 /// Builds the view model from in-memory collaborators and types the query, so each state is deterministic.
 private struct TodoSearchPreviewHost: View {
     let query: String
@@ -220,24 +203,15 @@ private struct TodoSearchPreviewHost: View {
             if let viewModel { TodoSearchView(viewModel: viewModel, router: router, sortOrder: .default) }
         }
         .task {
-            let repository = InMemoryTodoItemRepository()
-            let base = Date(timeIntervalSince1970: 1_791_000_000)
-            let samples: [(String, String?, Category, Bool)] = [
-                ("Buy groceries for the week", "Milk, eggs and bread", .shopping, false),
-                ("Plan grocery budget", nil, .personal, false),
-                ("Grocery list sent to Sam", nil, .personal, true),
-                ("Prepare quarterly report", nil, .work, false),
-            ]
-            for (index, sample) in samples.enumerated() {
-                try? await repository.add(TodoItem(
-                    title: try! TodoItemTitle(sample.0), description: sample.1, category: sample.2,
-                    createdAt: base.addingTimeInterval(Double(index)),
-                    completedAt: sample.3 ? base.addingTimeInterval(100) : nil
-                ))
-            }
-            var dependencies = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
-            dependencies.recentSearchRepository = PreviewRecentSearchRepository(recent)
-            dependencies.sortOrderRepository = PreviewSortOrderRepository()
+            let dependencies = await PreviewDependencies.make(
+                tasks: [
+                    .init(title: "Buy groceries for the week", details: "Milk, eggs and bread", category: .shopping),
+                    .init(title: "Plan grocery budget", category: .personal),
+                    .init(title: "Grocery list sent to Sam", category: .personal, isCompleted: true),
+                    .init(title: "Prepare quarterly report", category: .work),
+                ],
+                recentSearches: recent
+            )
             let model = dependencies.makeTodoSearchViewModel()
             await model.load()
             await model.setQuery(query)

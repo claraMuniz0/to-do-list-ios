@@ -377,10 +377,6 @@ private struct TodoItemFormCover: View {
 }
 
 #if DEBUG
-private struct PreviewDateProvider: DateProvider {
-    func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) } // 2026-10-08 12:00 UTC
-}
-
 /// Seeds an in-memory repository before showing the list, so the loaded state is deterministic.
 private struct TodoListPreviewHost: View {
     let openCount: Int
@@ -393,32 +389,20 @@ private struct TodoListPreviewHost: View {
     var body: some View {
         Group {
             if let viewModel {
-                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) }, makeSearchViewModel: { searchViewModel ?? AppDependencies(todoItemRepository: InMemoryTodoItemRepository(), dateProvider: PreviewDateProvider()).makeTodoSearchViewModel() })
+                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) }, makeSearchViewModel: { searchViewModel ?? PreviewDependencies.empty().makeTodoSearchViewModel() })
             }
         }
         .task {
-            let repository = InMemoryTodoItemRepository()
-            let base = Date(timeIntervalSince1970: 1_791_000_000)
             let open = [
-                ("Buy groceries", Category.shopping, "Milk, eggs and bread"),
-                ("Prepare quarterly slides", Category.work, nil),
-                ("Call the landlord about the broken heating system in the second bedroom", Category.personal, nil),
+                PreviewDependencies.Task(title: "Buy groceries", details: "Milk, eggs and bread", category: .shopping),
+                PreviewDependencies.Task(title: "Prepare quarterly slides", category: .work),
+                PreviewDependencies.Task(title: "Call the landlord about the broken heating system in the second bedroom", category: .personal),
             ]
-            let done = [("Send the invoice", Category.work), ("Book the dentist", Category.personal)]
-            for (index, entry) in open.prefix(openCount).enumerated() {
-                try? await repository.add(TodoItem(
-                    title: try! TodoItemTitle(entry.0), description: entry.2, category: entry.1,
-                    createdAt: base.addingTimeInterval(Double(index))
-                ))
-            }
-            for (index, entry) in done.prefix(completedCount).enumerated() {
-                try? await repository.add(TodoItem(
-                    title: try! TodoItemTitle(entry.0), category: entry.1,
-                    createdAt: base.addingTimeInterval(Double(index)),
-                    completedAt: base.addingTimeInterval(Double(100 + index))
-                ))
-            }
-            let dependencies = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
+            let done = [
+                PreviewDependencies.Task(title: "Send the invoice", category: .work, isCompleted: true),
+                PreviewDependencies.Task(title: "Book the dentist", category: .personal, isCompleted: true),
+            ]
+            let dependencies = await PreviewDependencies.make(tasks: Array(open.prefix(openCount)) + Array(done.prefix(completedCount)))
             searchViewModel = dependencies.makeTodoSearchViewModel()
             viewModel = dependencies.makeTodoListViewModel()
             await viewModel?.load()

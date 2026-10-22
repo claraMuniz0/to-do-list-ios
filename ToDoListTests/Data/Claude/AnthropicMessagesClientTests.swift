@@ -116,6 +116,56 @@ struct AnthropicMessagesClientTests {
         #expect(!called)
     }
 
+    @Test(arguments: [
+        #"{"content":[]}"#,
+        #"{"content":[{"type":"tool_use","input":{}}]}"#,
+        #"{"content":[{"type":"tool_use","name":"create_task"}]}"#,
+        ""
+    ])
+    func throwsInvalidResponseForIncompleteBodies(body: String) async {
+        respond(body: body)
+        await #expect(throws: ClaudeError.invalidResponse) { try await makeClient().send(request) }
+    }
+
+    @Test func usesTheFirstToolUseBlockWhenSeveralComeBack() async throws {
+        respond(body: """
+        {"content":[{"type":"tool_use","name":"first","input":{}},{"type":"tool_use","name":"second","input":{}}]}
+        """)
+        #expect(try await makeClient().send(request).toolName == "first")
+    }
+
+    @Test(arguments: [200, 201, 299])
+    func acceptsAnyTwoHundredStatus(status: Int) async throws {
+        respond(status: status, body: toolUseBody)
+        #expect(try await makeClient().send(request).toolName == "create_task")
+    }
+
+    @Test(arguments: [
+        (300, ClaudeError.serverError(300)),
+        (404, ClaudeError.serverError(404)),
+        (503, ClaudeError.serverError(503))
+    ])
+    func mapsEveryOtherNonSuccessStatusToServerError(status: Int, expected: ClaudeError) async {
+        respond(status: status)
+        await #expect(throws: expected) { try await makeClient().send(request) }
+    }
+
+    @Test(arguments: [URLError.Code.cannotFindHost, .dataNotAllowed, .internationalRoamingOff])
+    func mapsOtherUnreachableCodesToOffline(code: URLError.Code) async {
+        StubURLProtocol.handler = { _ in throw URLError(code) }
+        await #expect(throws: ClaudeError.offline) { try await makeClient().send(request) }
+    }
+
+    @Test func mapsUnexpectedTransportFailureToInvalidResponse() async {
+        StubURLProtocol.handler = { _ in throw URLError(.badServerResponse) }
+        await #expect(throws: ClaudeError.invalidResponse) { try await makeClient().send(request) }
+    }
+
+    @Test func letsCancellationThroughUnmapped() async {
+        StubURLProtocol.handler = { _ in throw URLError(.cancelled) }
+        await #expect(throws: URLError.self) { try await makeClient().send(request) }
+    }
+
     @Test func throwsInvalidResponseWhenNoToolUseBlockComesBack() async {
         respond(body: #"{"content":[{"type":"text","text":"hello"}]}"#)
         await #expect(throws: ClaudeError.invalidResponse) { try await makeClient().send(request) }

@@ -126,8 +126,8 @@ final class TodoItemFormViewModel {
 
     // MARK: - Steps
 
-    /// Add has no Steps field in the design; steps are added once the task exists.
-    var showsSteps: Bool { editingID != nil }
+    /// Add and Edit both show the Steps field; Add keeps the draft until the task is first saved.
+    var showsSteps: Bool { true }
     var steps: [Step] { stepList.steps }
     var stepsProgress: StepsProgress? { stepList.progress }
     var canAddStep: Bool { stepList.steps.count < StepList.maxSteps }
@@ -155,7 +155,7 @@ final class TodoItemFormViewModel {
 
     // MARK: - Step suggestions
 
-    /// Only in Edit, with Claude available, a titled task and room for more steps.
+    /// Needs Claude available, a titled task and room for more steps.
     var canSuggestSteps: Bool {
         suggestSteps != nil && showsSteps && canAddStep && !TodoItemTitle.isBlank(title)
     }
@@ -213,7 +213,9 @@ final class TodoItemFormViewModel {
                     id: id, title: title, description: details, category: category, dueDate: dueDate, steps: stepList
                 )
             } else {
-                try await addTodoItem.execute(title: title, description: details, category: category, dueDate: dueDate)
+                try await addTodoItem.execute(
+                    title: title, description: details, category: category, dueDate: dueDate, steps: stepList
+                )
             }
             saveFailed = false
             return true

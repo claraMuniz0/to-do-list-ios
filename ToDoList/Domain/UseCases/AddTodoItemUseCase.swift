@@ -12,16 +12,23 @@ struct AddTodoItemUseCase {
         self.calendar = calendar
     }
 
-    /// A blank description is stored as `nil`; a nil `dueDate` means the task has no due date.
+    /// A blank description is stored as `nil`; a nil `dueDate` means the task has no due date; `steps` defaults to none.
     /// - Throws: `TodoItemTitleError` before the repository is touched, so an invalid title never leaves a partial write.
     @discardableResult
-    func execute(title: String, description: String?, category: Category, dueDate: DueDate?) async throws -> TodoItem {
+    func execute(
+        title: String,
+        description: String?,
+        category: Category,
+        dueDate: DueDate?,
+        steps: StepList = StepList()
+    ) async throws -> TodoItem {
         let item = TodoItem(
             title: try TodoItemTitle(title),
             description: description,
             category: category,
             dueDate: dueDate,
-            createdAt: dateProvider.now()
+            createdAt: dateProvider.now(),
+            steps: steps.steps
         )
         try await repository.add(item)
         return item

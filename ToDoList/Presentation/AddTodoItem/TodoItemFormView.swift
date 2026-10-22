@@ -36,7 +36,7 @@ struct TodoItemFormView: View {
                     TextAreaField(text: $viewModel.details, accessibilityLabel: "Description, optional")
                 }
                 
-                // Steps are added after creation (Add has none in the design); Smart Add Review reuses the field later.
+                // Shown in Add and Edit; Smart Add Review reuses the same field later.
                 if viewModel.showsSteps { stepsField }
 
                 FormField(label: "Category") { categoryChips }

@@ -166,4 +166,49 @@ struct TodoItemFormViewModelSuggestionTests {
         #expect(viewModel.suggestionState == .idle)
         #expect(suggester.calls.isEmpty)
     }
+
+    @Test func aFailedRetryKeepsTheSuggestionsAndTheEditsAndReportsTheProblem() async {
+        let (viewModel, suggester) = await makeSUT()
+        await viewModel.requestSuggestions()
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
+        viewModel.toggleSuggestion(items[0].id)
+        suggester.outcome = .failure(.offline)
+        await viewModel.requestSuggestions()
+        #expect(viewModel.retryProblem == .failed(.offline))
+        #expect(viewModel.selectedSuggestionCount == 2)
+        guard case .suggestions(let kept) = viewModel.suggestionState else { Issue.record("lost suggestions"); return }
+        #expect(kept.map(\.title) == ["A", "B", "C"])
+        #expect(!viewModel.isSuggesting)
+    }
+
+    @Test func anEmptyRetryKeepsTheSuggestionsAndReportsEmpty() async {
+        let (viewModel, suggester) = await makeSUT()
+        await viewModel.requestSuggestions()
+        suggester.outcome = .success([])
+        await viewModel.requestSuggestions()
+        #expect(viewModel.retryProblem == .empty)
+        #expect(viewModel.selectedSuggestionCount == 3)
+    }
+
+    @Test func aSuccessfulRetryReplacesTheSuggestionsAndClearsTheProblem() async {
+        let (viewModel, suggester) = await makeSUT()
+        await viewModel.requestSuggestions()
+        suggester.outcome = .failure(.failed)
+        await viewModel.requestSuggestions()
+        suggester.outcome = .success([try! StepTitle("Z")])
+        await viewModel.requestSuggestions()
+        #expect(viewModel.retryProblem == nil)
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
+        #expect(items.map(\.title) == ["Z"])
+    }
+
+    @Test func dismissingClearsTheRetryProblem() async {
+        let (viewModel, suggester) = await makeSUT()
+        await viewModel.requestSuggestions()
+        suggester.outcome = .failure(.failed)
+        await viewModel.requestSuggestions()
+        viewModel.dismissSuggestions()
+        #expect(viewModel.retryProblem == nil)
+        #expect(viewModel.suggestionState == .idle)
+    }
 }

@@ -70,7 +70,7 @@ struct TodoItemFormView: View {
         .sheet(isPresented: $isDateSheetPresented) {
             SelectDateView(viewModel: viewModel)
         }
-        .sheet(isPresented: $isSuggestionSheetPresented) {
+        .sheet(isPresented: $isSuggestionSheetPresented, onDismiss: viewModel.dismissSuggestions) {
             SuggestedStepsSheet(viewModel: viewModel)
         }
         // A retry passes through `.loading`; the sheet stays up with its old rows instead of flickering.
@@ -104,7 +104,7 @@ struct TodoItemFormView: View {
     private var suggestionPill: StepsFieldSuggestion? {
         guard viewModel.canSuggestSteps else { return nil }
         return StepsFieldSuggestion(
-            title: viewModel.suggestionPillTitle, isLoading: viewModel.suggestionState == .loading
+            title: viewModel.suggestionPillTitle, isLoading: viewModel.isSuggesting
         ) { Task { await viewModel.requestSuggestions() } }
     }
 

@@ -4,7 +4,7 @@ import SwiftUI
 struct SuggestPillStyle: Equatable {
     static let fill = DSColor.accentSoft
     static let stroke = DSColor.accent
-    static let foreground = DSColor.accent
+    static let foreground = DSColor.accentText
     /// The pill is drawn 28pt tall; the tap area is padded up to this.
     static let minHitHeight: CGFloat = DSTouchTarget.minimum
 

@@ -18,6 +18,10 @@ final class TodoItemFormViewModel {
     /// The steps being edited; they reach the store only when `save()` succeeds.
     private(set) var stepList = StepList()
     private(set) var suggestionState = StepSuggestionState.idle
+    /// True while a request runs, including a retry from the open sheet (which keeps `suggestionState` as `.suggestions`).
+    private(set) var isSuggesting = false
+    /// Why a retry from the open sheet gave nothing new (`.failed` or `.empty`); the earlier suggestions stay on screen.
+    private(set) var retryProblem: StepSuggestionState?
     private(set) var isSaving = false
     private(set) var saveFailed = false
     /// Set when `delete()` failed; the task is still stored and the form stays open so the user can retry.
@@ -169,30 +173,45 @@ final class TodoItemFormViewModel {
     }
 
     /// Asks Claude for steps; ignored while a request is already running. The result lands in `suggestionState`.
+    /// A retry from the open sheet keeps the current suggestions on a failure or an empty answer and reports it in `retryProblem`,
+    /// so the user's ticks and edits are not thrown away.
     func requestSuggestions() async {
-        guard let suggestSteps, suggestionState != .loading else { return }
-        suggestionState = .loading
+        guard let suggestSteps, !isSuggesting else { return }
+        var isRetry = false
+        if case .suggestions = suggestionState { isRetry = true }
+        isSuggesting = true
+        retryProblem = nil
+        if !isRetry { suggestionState = .loading }
+        defer { isSuggesting = false }
         do {
             let titles = try await suggestSteps.execute(
                 title: title, description: details.isEmpty ? nil : details, existing: stepList
             )
-            suggestionState = titles.isEmpty ? .empty : .suggestions(titles.map { SuggestedStep(title: $0.value) })
-        } catch let error as StepSuggestionError {
-            suggestionState = .failed(error)
+            if !titles.isEmpty {
+                suggestionState = .suggestions(titles.map { SuggestedStep(title: $0.value) })
+            } else if isRetry {
+                retryProblem = .empty
+            } else {
+                suggestionState = .empty
+            }
         } catch {
-            suggestionState = .failed(.failed)
+            let problem = StepSuggestionState.failed((error as? StepSuggestionError) ?? .failed)
+            if isRetry { retryProblem = problem } else { suggestionState = problem }
         }
     }
 
     func toggleSuggestion(_ id: UUID) { updateSuggestion(id) { $0.isSelected.toggle() } }
     func editSuggestion(_ id: UUID, to text: String) { updateSuggestion(id) { $0.title = text } }
-    func dismissSuggestions() { suggestionState = .idle }
+    func dismissSuggestions() {
+        suggestionState = .idle
+        retryProblem = nil
+    }
 
     /// Adds the ticked suggestions in order; one whose edited text is blank or overlong is skipped, and the list limit holds.
     func addSelectedSuggestions() {
         guard case .suggestions(let items) = suggestionState else { return }
         for item in items where item.isSelected { addStep(item.title) }
-        suggestionState = .idle
+        dismissSuggestions()
     }
 
     private func updateSuggestion(_ id: UUID, _ change: (inout SuggestedStep) -> Void) {

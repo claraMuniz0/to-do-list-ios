@@ -19,7 +19,7 @@ struct SuggestPillStyleTests {
     @Test func colorsFollowTheDesign() {
         #expect(SuggestPillStyle.fill.lightHex == DSColor.accentSoft.lightHex)
         #expect(SuggestPillStyle.stroke.lightHex == DSColor.accent.lightHex)
-        #expect(SuggestPillStyle.foreground.lightHex == DSColor.accent.lightHex)
+        #expect(SuggestPillStyle.foreground.lightHex == DSColor.accentText.lightHex)
     }
 
     @Test func hitAreaIsAtLeast44Points() {

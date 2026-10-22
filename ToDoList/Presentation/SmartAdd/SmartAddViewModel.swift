@@ -37,6 +37,7 @@ final class SmartAddViewModel {
     /// "/" is read badly by VoiceOver, so the count gets its own spoken form.
     var spokenCounterText: String { "\(storedInput.count) of \(SmartAddText.maxLength) characters" }
 
+    /// False while a request runs, which blocks a double submit.
     var canFill: Bool { !SmartAddText.isBlank(storedInput) && state != .loading }
 
     var isLoading: Bool { state == .loading }

@@ -3,5 +3,6 @@
 enum TodoItemFormMode: Equatable {
     case add
     case edit(TodoItemID)
+    /// Creates a task like `.add`, but starts from the draft and keeps a missing date empty instead of defaulting to today.
     case reviewingDraft(TaskDraft)
 }

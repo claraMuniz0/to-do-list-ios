@@ -7,5 +7,7 @@ enum SmartAddError: Error, Equatable {
 
 /// Port for anything that can turn a sentence into a task draft.
 protocol TaskDraftParsing {
+    /// - Throws: `SmartAddError.couldNotUnderstand` when no usable title came back, `.offline` without a connection,
+    ///   and `.failed` for anything else, so callers never see a transport or Claude type.
     func parse(_ text: SmartAddText, context: SmartAddContext) async throws -> TaskDraft
 }

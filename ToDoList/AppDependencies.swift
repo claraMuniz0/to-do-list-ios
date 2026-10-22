@@ -45,7 +45,7 @@ struct AppDependencies {
         TodoItemFormViewModel(
             mode: mode,
             addTodoItem: makeAddTodoItemUseCase(),
-            updateTodoItem: UpdateTodoItemUseCase(repository: todoItemRepository),
+            updateTodoItem: UpdateTodoItemUseCase(repository: todoItemRepository, dateProvider: dateProvider),
             deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
             getTodoItem: GetTodoItemUseCase(repository: todoItemRepository),
             dateProvider: dateProvider,

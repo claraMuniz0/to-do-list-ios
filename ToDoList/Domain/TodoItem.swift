@@ -98,6 +98,13 @@ struct TodoItem: Equatable {
         steps = newSteps.steps
     }
 
+    /// Completes the task when it has steps and every one is done; otherwise changes nothing.
+    /// A task already completed keeps its first completion time, and un-ticking a step later does not reopen it.
+    mutating func completeIfAllStepsDone(at date: Date) {
+        guard stepsProgress?.isComplete == true else { return }
+        complete(at: date)
+    }
+
     /// Applies a change to a copy and keeps it only if it succeeds, so a failed change never leaves a half-edited list.
     private mutating func changeSteps<Result>(_ change: (inout StepList) throws -> Result) throws -> Result {
         var list = StepList(steps)

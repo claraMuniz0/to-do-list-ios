@@ -239,7 +239,7 @@ extension TodoItemFormViewModel {
         let viewModel = TodoItemFormViewModel(
             mode: item.map { .edit($0.id) } ?? .add,
             addTodoItem: AddTodoItemUseCase(repository: repository, dateProvider: provider, calendar: calendar),
-            updateTodoItem: UpdateTodoItemUseCase(repository: repository),
+            updateTodoItem: UpdateTodoItemUseCase(repository: repository, dateProvider: provider),
             deleteTodoItem: DeleteTodoItemUseCase(repository: repository),
             getTodoItem: GetTodoItemUseCase(repository: repository),
             dateProvider: provider,

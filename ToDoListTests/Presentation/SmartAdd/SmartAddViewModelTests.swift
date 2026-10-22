@@ -26,6 +26,12 @@ struct SmartAddViewModelTests {
         #expect(viewModel.counterText == "7 / 280")
     }
 
+    @Test func spokenCounterReadsCountOfMaximumCharacters() {
+        let viewModel = makeViewModel()
+        viewModel.input = "Dentist"
+        #expect(viewModel.spokenCounterText == "7 of 280 characters")
+    }
+
     @Test func inputPastTheMaximumIsCutOff() {
         let viewModel = makeViewModel()
         viewModel.input = String(repeating: "a", count: 300)

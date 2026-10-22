@@ -4,20 +4,20 @@ import SwiftUI
 struct AIBanner: View {
     let message: String
 
-    @ScaledMetric(relativeTo: .subheadline) private var iconSize: CGFloat = 16
+    @ScaledMetric(relativeTo: .subheadline) private var iconSize: CGFloat = 18
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             Image(systemName: "sparkles")
                 .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(DSColor.accent)
                 .accessibilityHidden(true)
-            Text(message).dsFont(.rowDescription)
+            Text(message).dsFont(.chipOption).foregroundStyle(DSColor.textSecondary)
         }
-        .foregroundStyle(DSColor.accentText)
         .padding(.vertical, 12)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DSColor.accentSoft, in: RoundedRectangle(cornerRadius: DSRadius.md, style: .continuous))
+        .background(DSColor.accentSoft, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }

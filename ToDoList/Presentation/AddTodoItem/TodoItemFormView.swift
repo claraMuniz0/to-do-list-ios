@@ -68,6 +68,9 @@ struct TodoItemFormView: View {
             }
             
             AccessibilityNotification.ScreenChanged().post()
+            if viewModel.showsAIBanner {
+                AccessibilityNotification.Announcement("Claude filled in the form. Review it before saving.").post()
+            }
         }
         .onChange(of: viewModel.loadFailed) { _, failed in
             guard failed else { return }
@@ -91,24 +94,23 @@ struct TodoItemFormView: View {
     }
 
     private var nav: some View {
-        HStack {
-            CircleIconButton(accessibilityLabel: "Close", action: close)
-                .accessibilityHint(viewModel.canDelete ? "Discards your changes" : "Discards the task")
-            Spacer(minLength: 12)
-            if let onSmartAdd, viewModel.mode == .add {
-                Button(action: onSmartAdd) {
-                    Label("Smart add", systemImage: "sparkles")
-                        .dsFont(.softButton)
-                        .foregroundStyle(DSColor.accent)
-                        .padding(.horizontal, 16)
-                        .frame(minHeight: DSTouchTarget.minimum)
-                        .background(DSColor.accentSoft, in: Capsule())
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Smart add")
-                .accessibilityHint("Describe the task in a sentence and let Claude fill the form")
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack { closeButton; Spacer(minLength: 12); smartAddButton }
+            VStack(alignment: .leading, spacing: 12) { closeButton; smartAddButton }
+        }
+    }
+
+    private var closeButton: some View {
+        CircleIconButton(accessibilityLabel: "Close", action: close)
+            .accessibilityHint(viewModel.canDelete ? "Discards your changes" : "Discards the task")
+    }
+
+    @ViewBuilder private var smartAddButton: some View {
+        if let onSmartAdd, viewModel.mode == .add {
+            NavPillButton(
+                title: "Smart add", systemImage: "sparkles", style: .accent,
+                accessibilityHint: "Describe the task in a sentence and let Claude fill the form", action: onSmartAdd
+            )
         }
     }
 

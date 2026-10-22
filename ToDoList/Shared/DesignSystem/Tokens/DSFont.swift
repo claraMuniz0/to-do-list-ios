@@ -5,7 +5,7 @@ import UIKit
 /// Families are bundled and registered by `FontRegistrar`.
 enum DSFont: CaseIterable {
     case screenTitle, emptyTitle, greeting, tagline
-    case rowTitle, rowDescription, inputText
+    case rowTitle, rowDescription, inputText, smartInput, smartExample
     case chipTag, chipOption, pill, button, toast, stepCount, count, sectionLabel, softButton, swipeAction, suggestPill
 
     struct Spec: Equatable {
@@ -26,6 +26,8 @@ enum DSFont: CaseIterable {
         case .rowTitle: Spec(family: "Bricolage Grotesque", size: 16, weight: .semibold, isItalic: false, textStyle: .body)
         case .rowDescription: Spec(family: "Bricolage Grotesque", size: 14, weight: .regular, isItalic: false, textStyle: .subheadline)
         case .inputText: Spec(family: "Bricolage Grotesque", size: 16, weight: .regular, isItalic: false, textStyle: .body)
+        case .smartInput: Spec(family: "Bricolage Grotesque", size: 20, weight: .regular, isItalic: false, textStyle: .title3)
+        case .smartExample: Spec(family: "Bricolage Grotesque", size: 15, weight: .regular, isItalic: false, textStyle: .callout)
         case .chipTag, .stepCount: Spec(family: "Outfit", size: 12, weight: .semibold, isItalic: false, textStyle: .caption)
         case .sectionLabel: Spec(family: "DM Mono", size: 12, weight: .medium, isItalic: false, textStyle: .caption)
         case .softButton: Spec(family: "Outfit", size: 15, weight: .semibold, isItalic: false, textStyle: .callout)

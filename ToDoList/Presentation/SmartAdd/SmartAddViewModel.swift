@@ -34,6 +34,9 @@ final class SmartAddViewModel {
 
     var counterText: String { "\(storedInput.count) / \(SmartAddText.maxLength)" }
 
+    /// "/" is read badly by VoiceOver, so the count gets its own spoken form.
+    var spokenCounterText: String { "\(storedInput.count) of \(SmartAddText.maxLength) characters" }
+
     var canFill: Bool { !SmartAddText.isBlank(storedInput) && state != .loading }
 
     var isLoading: Bool { state == .loading }

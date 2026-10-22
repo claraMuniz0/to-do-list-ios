@@ -46,7 +46,7 @@ struct PrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if isLoading {
-                    ProgressView().tint(DSColor.onAccent).frame(width: iconSize, height: iconSize)
+                    ProgressView().tint(DSColor.onAccent).frame(width: iconSize, height: iconSize).accessibilityHidden(true)
                 } else if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: iconSize, weight: .semibold))

@@ -20,6 +20,7 @@ struct SmartAddView: View {
                     label: "Describe your task",
                     placeholder: "e.g. Dentist next Tuesday at 3pm",
                     counterText: viewModel.counterText,
+                    spokenCounterText: viewModel.spokenCounterText,
                     isFocused: $isInputFocused
                 )
                 .disabled(viewModel.isLoading)
@@ -40,6 +41,17 @@ struct SmartAddView: View {
             AccessibilityNotification.ScreenChanged().post()
         }
         .onDisappear { fillTask?.cancel() }
+        .onChange(of: viewModel.isLoading) { _, loading in
+            if loading { AccessibilityNotification.Announcement("Filling in your task").post() }
+        }
+        .onChange(of: viewModel.errorMessage) { _, message in
+            guard let message else { return }
+            // Back to the field so the user can edit the sentence and try again; high priority so it is not cut off.
+            isInputFocused = true
+            var announcement = AttributedString(message)
+            announcement.accessibilitySpeechAnnouncementPriority = .high
+            AccessibilityNotification.Announcement(announcement).post()
+        }
     }
 
     private func close() {
@@ -57,24 +69,24 @@ struct SmartAddView: View {
         }
     }
 
+    /// Stacks at accessibility text sizes, where Close and the pill no longer fit on one row.
     private var nav: some View {
-        HStack {
-            CircleIconButton(accessibilityLabel: "Close", action: close)
-                .accessibilityHint("Discards what you typed")
-            Spacer(minLength: 12)
-            Button(action: onManual) {
-                Label("Manual", systemImage: "pencil")
-                    .dsFont(.softButton)
-                    .foregroundStyle(DSColor.accent)
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: DSTouchTarget.minimum)
-                    .background(DSColor.accentSoft, in: Capsule())
-                    .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Manual")
-            .accessibilityHint("Fills the task form yourself")
+        ViewThatFits(in: .horizontal) {
+            HStack { closeButton; Spacer(minLength: 12); manualButton }
+            VStack(alignment: .leading, spacing: 12) { closeButton; manualButton }
         }
+    }
+
+    private var closeButton: some View {
+        CircleIconButton(accessibilityLabel: "Close", action: close)
+            .accessibilityHint("Discards what you typed")
+    }
+
+    private var manualButton: some View {
+        NavPillButton(
+            title: "Manual", systemImage: "pencil.line", style: .outlined,
+            accessibilityHint: "Fills the task form yourself", action: onManual
+        )
     }
 
     @ViewBuilder private var errorText: some View {
@@ -88,25 +100,27 @@ struct SmartAddView: View {
     }
 
     private var examples: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Or try something like")
-                .dsFont(.sectionLabel)
+                .dsFont(.chipOption)
                 .foregroundStyle(DSColor.textSecondary)
                 .accessibilityAddTraits(.isHeader)
             ForEach(SmartAddViewModel.examples, id: \.self) { example in
                 Button { viewModel.selectExample(example) } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "arrow.up.left").accessibilityHidden(true)
+                        Image(systemName: "arrow.turn.down.right")
+                            .foregroundStyle(DSColor.accent)
+                            .accessibilityHidden(true)
                         Text(example).multilineTextAlignment(.leading)
                     }
-                    .dsFont(.pill)
-                    .foregroundStyle(DSColor.textPrimary)
+                    .dsFont(.smartExample)
+                    .foregroundStyle(DSColor.textSecondary)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 14)
                     .frame(minHeight: DSTouchTarget.minimum)
-                    .background(DSColor.surface, in: Capsule())
-                    .overlay { Capsule().strokeBorder(DSColor.border, lineWidth: 1) }
-                    .contentShape(Capsule())
+                    .background(DSColor.surface, in: chipShape)
+                    .overlay { chipShape.strokeBorder(DSColor.borderControl, lineWidth: 1) }
+                    .contentShape(chipShape)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.isLoading)
@@ -116,9 +130,12 @@ struct SmartAddView: View {
         }
     }
 
+    /// A rounded rectangle, not a capsule, so an example that wraps at large text sizes keeps its padding.
+    private var chipShape: RoundedRectangle { RoundedRectangle(cornerRadius: 22, style: .continuous) }
+
     private var privacyNote: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "lock.shield").accessibilityHidden(true)
+            Image(systemName: "checkmark.shield").accessibilityHidden(true)
             Text("Claude fills the form. Your text is sent to Claude. You review before saving.")
         }
         .dsFont(.rowDescription)

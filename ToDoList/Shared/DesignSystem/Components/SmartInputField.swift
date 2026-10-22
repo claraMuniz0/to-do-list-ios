@@ -6,6 +6,7 @@ struct SmartInputField: View {
     let label: String
     let placeholder: String
     let counterText: String
+    let spokenCounterText: String
     let isFocused: FocusState<Bool>.Binding
 
     @ScaledMetric(relativeTo: .subheadline) private var iconSize: CGFloat = 16
@@ -13,29 +14,28 @@ struct SmartInputField: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: DSRadius.md, style: .continuous)
         let border = FormControlBorder(isFocused: isFocused.wrappedValue)
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .font(.system(size: iconSize, weight: .semibold))
                     .foregroundStyle(DSColor.accent)
                     .accessibilityHidden(true)
-                Text(label).dsFont(.chipOption).foregroundStyle(DSColor.textPrimary)
+                Text(label).dsFont(.chipOption).foregroundStyle(DSColor.textSecondary)
             }
             .accessibilityHidden(true)
             TextField(label, text: $text, prompt: Text(placeholder).foregroundStyle(DSColor.textMuted), axis: .vertical)
                 .lineLimit(3...8)
-                .dsFont(.inputText)
+                .dsFont(.smartInput)
                 .foregroundStyle(DSColor.textPrimary)
                 .focused(isFocused)
-                .accessibilityValue(counterText)
             Text(counterText)
                 .dsFont(.count)
                 .foregroundStyle(DSColor.textMuted)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityHidden(true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel(spokenCounterText)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)
         .background(DSColor.surface, in: shape)
         .overlay { shape.strokeBorder(border.color, lineWidth: border.lineWidth) }
         .contentShape(shape)
@@ -50,7 +50,7 @@ private struct SmartInputPreviewHost: View {
     var body: some View {
         SmartInputField(
             text: $text, label: "Describe your task", placeholder: "e.g. Dentist next Tuesday at 3pm",
-            counterText: "\(text.count) / 280", isFocused: $focused
+            counterText: "\(text.count) / 280", spokenCounterText: "\(text.count) of 280 characters", isFocused: $focused
         )
         .padding()
     }

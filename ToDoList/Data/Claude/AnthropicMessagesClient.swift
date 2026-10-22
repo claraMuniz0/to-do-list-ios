@@ -4,7 +4,6 @@ import Foundation
 struct AnthropicMessagesClient: ClaudeClient {
     static let model = "claude-haiku-5-5"
     static let timeout: TimeInterval = 20
-    private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     private static let apiVersion = "2023-06-01"
 
     let apiKeyProvider: APIKeyProvider
@@ -20,9 +19,9 @@ struct AnthropicMessagesClient: ClaudeClient {
     }
 
     private func urlRequest(for request: ClaudeRequest, key: String) throws -> URLRequest {
-        var urlRequest = URLRequest(url: Self.endpoint, timeoutInterval: Self.timeout)
+        var urlRequest = URLRequest(url: apiKeyProvider.baseURL.appending(path: "v1/messages"), timeoutInterval: Self.timeout)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue(key, forHTTPHeaderField: "x-api-key")
+        urlRequest.setValue("Bearer \(key)", forHTTPHeaderField: "authorization")
         urlRequest.setValue(Self.apiVersion, forHTTPHeaderField: "anthropic-version")
         urlRequest.setValue("application/json", forHTTPHeaderField: "content-type")
         urlRequest.httpBody = try JSONEncoder().encode(MessagesBody(request))

@@ -1,6 +1,7 @@
 import Foundation
 
-/// Talks to the Anthropic Messages API over plain `URLSession`; no SDK, no retries.
+/// Sends the key as `Authorization: Bearer` (not `x-api-key`) because the configured token may belong to a gateway
+/// at `baseURL`. Talks to the Anthropic Messages API over plain `URLSession`; no SDK, no retries.
 struct AnthropicMessagesClient: ClaudeClient {
     static let model = "claude-haiku-5-5"
     static let timeout: TimeInterval = 20

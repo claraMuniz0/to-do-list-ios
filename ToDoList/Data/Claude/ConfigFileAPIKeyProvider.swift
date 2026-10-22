@@ -15,6 +15,7 @@ struct ConfigFileAPIKeyProvider: APIKeyProvider {
         return key
     }
 
+    /// Falls back to the Anthropic host when the value is blank, an unexpanded `$(...)` placeholder, or not an http(s) URL.
     var baseURL: URL {
         guard let raw = (infoDictionary[Self.baseURLInfoDictionaryKey] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !raw.hasPrefix("$("),

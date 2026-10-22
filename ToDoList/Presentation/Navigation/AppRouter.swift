@@ -4,20 +4,51 @@ import Observation
 enum AppRoute: Hashable, Identifiable {
     case addTodoItem(prefill: String)
     case editTodoItem(id: TodoItemID)
+    case search
 
     var id: Self { self }
+
+    /// Forms that open as a second cover when search is already showing.
+    fileprivate var coversSearch: Bool {
+        switch self {
+        case .addTodoItem, .editTodoItem: true
+        case .search: false
+        }
+    }
 }
 
-/// Owns what is presented over the root screen; one route at a time.
+/// Owns what is presented over the root screen: one cover, plus a second cover over Search for Add and Edit.
 @MainActor @Observable
 final class AppRouter {
     private(set) var presentedRoute: AppRoute?
+    /// Add or Edit presented over the Search cover; always nil unless `presentedRoute == .search`.
+    private(set) var nestedRoute: AppRoute?
 
     func present(_ route: AppRoute) {
-        presentedRoute = route
+        if route.coversSearch, presentedRoute == .search {
+            nestedRoute = route
+        } else {
+            presentedRoute = route
+            nestedRoute = nil
+        }
     }
 
+    /// Closes the topmost cover: the nested one when there is one, otherwise the base cover.
     func dismiss() {
+        if nestedRoute != nil {
+            nestedRoute = nil
+        } else {
+            presentedRoute = nil
+        }
+    }
+
+    /// Closes only the cover over Search, leaving Search open.
+    func dismissNested() {
+        nestedRoute = nil
+    }
+
+    func dismissAll() {
+        nestedRoute = nil
         presentedRoute = nil
     }
 }

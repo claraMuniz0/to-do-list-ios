@@ -22,7 +22,7 @@ struct TodoListView: View {
         .onChange(of: router.presentedRoute) { _, route in
             if route != nil { UIApplication.shared.dismissKeyboard() }
         }
-        .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismiss() } })) { route in
+        .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismissAll() } })) { route in
             switch route {
             case .addTodoItem(let prefill):
                 TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm)
@@ -33,6 +33,14 @@ struct TodoListView: View {
                     onFinish: finishForm,
                     isEditFlow: true
                 )
+
+            case .search:
+                // TODO: wave-2 stream C replaces this placeholder with TodoSearchView.
+                SearchPlaceholderView(onCancel: { router.dismiss() })
+                    // Cover over cover: Add and Edit open above Search and close back to it.
+                    .fullScreenCover(item: Binding(get: { router.nestedRoute }, set: { if $0 == nil { router.dismissNested() } })) { nested in
+                        nestedCover(nested)
+                    }
             }
         }
         .overlay(alignment: .bottom) {
@@ -45,6 +53,31 @@ struct TodoListView: View {
         }
         .onChange(of: viewModel.emptyFilterMessage) { _, message in
             if let message { AccessibilityNotification.Announcement(message).post() }
+        }
+    }
+
+    @ViewBuilder private func nestedCover(_ route: AppRoute) -> some View {
+        switch route {
+        case .addTodoItem(let prefill):
+            TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishNestedForm)
+        case .editTodoItem(let id):
+            TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: finishNestedForm, isEditFlow: true)
+        case .search:
+            EmptyView()
+        }
+    }
+
+    /// Closes the form back to Search and refreshes the list behind it; a delete also closes Search so the list shows Undo.
+    private func finishNestedForm(_ outcome: TodoItemFormOutcome) {
+        switch outcome {
+        case .saved:
+            router.dismissNested()
+            Task { await viewModel.load() }
+        case .deleted(let item):
+            router.dismissAll()
+            Task { await viewModel.didDelete(item) }
+        case .cancelled:
+            router.dismissNested()
         }
     }
 
@@ -106,16 +139,18 @@ struct TodoListView: View {
                 }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundStyle(DSColor.textPrimary)
-                .frame(width: DSTouchTarget.minimum, height: DSTouchTarget.minimum)
-                .background(DSColor.surface, in: Circle())
-                .overlay(Circle().stroke(DSColor.border, lineWidth: 1))
+            CircularIconButtonLabel(systemImage: "arrow.up.arrow.down")
         }
         .accessibilityLabel("Sort")
         .accessibilityValue(viewModel.sortOrder.title)
         .accessibilityHint("Choose how tasks are ordered")
+    }
+
+    /// Opens Search over the list. Search is independent of the list filters, so this reads and changes none of them.
+    private var searchButton: some View {
+        CircularIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Search", accessibilityHint: "Find a task") {
+            router.present(.search)
+        }
     }
 
     private func list(_ sections: TodoListSections) -> some View {
@@ -124,7 +159,10 @@ struct TodoListView: View {
             LazyVStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 8) {
                     ScreenHeader(subtitle: viewModel.subtitle, title: "My Tasks")
-                    sortMenu
+                    HStack(spacing: 8) {
+                        searchButton
+                        sortMenu
+                    }
                 }
                 .padding(.bottom, 8)
                 filterPills
@@ -274,6 +312,20 @@ struct TodoListView: View {
         Task {
             if await viewModel.quickAdd(title: title) { quickAddText = "" }
         }
+    }
+}
+
+/// Temporary stand-in for the search screen so the Search entry point and cover-over-cover routing can be exercised.
+private struct SearchPlaceholderView: View {
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Search").dsFont(.screenTitle).foregroundStyle(DSColor.accent)
+            Button("Cancel", action: onCancel).frame(minHeight: DSTouchTarget.minimum)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DSColor.bg.ignoresSafeArea())
     }
 }
 

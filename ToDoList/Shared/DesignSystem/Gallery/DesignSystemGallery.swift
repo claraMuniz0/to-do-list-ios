@@ -63,6 +63,13 @@ struct DesignSystemGallery: View {
                     CircleIconButton(accessibilityLabel: "Close") {}
                 }
 
+                section("Circular icon button") {
+                    HStack(spacing: 8) {
+                        CircularIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Search") {}
+                        CircularIconButtonLabel(systemImage: "arrow.up.arrow.down")
+                    }
+                }
+
                 section("Section header") {
                     SectionHeader(title: "To do", count: 3)
                     SectionHeader(title: "Completed", count: 1)

@@ -5,6 +5,7 @@ import SwiftUI
     @State private var viewModel: TodoListViewModel
     @State private var router = AppRouter()
     private let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
+    private let makeSearchViewModel: () -> TodoSearchViewModel
 
     init() {
         FontRegistrar.registerAll()
@@ -13,11 +14,12 @@ import SwiftUI
         do { dependencies = try AppDependencies.live() } catch { fatalError("Could not open the task store: \(error)") }
         _viewModel = State(initialValue: dependencies.makeTodoListViewModel())
         makeFormViewModel = { dependencies.makeTodoItemFormViewModel(mode: $0, initialTitle: $1) }
+        makeSearchViewModel = { dependencies.makeTodoSearchViewModel() }
     }
 
     var body: some Scene {
         WindowGroup {
-            TodoListView(viewModel: viewModel, router: router, makeFormViewModel: makeFormViewModel)
+            TodoListView(viewModel: viewModel, router: router, makeFormViewModel: makeFormViewModel, makeSearchViewModel: makeSearchViewModel)
                 .preferredColorScheme(.light)
         }
     }

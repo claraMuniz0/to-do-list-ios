@@ -5,6 +5,7 @@ struct TodoListView: View {
     let viewModel: TodoListViewModel
     let router: AppRouter
     let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
+    let makeSearchViewModel: () -> TodoSearchViewModel
 
     @State private var quickAddText = ""
     /// Only one row can be swiped open at a time; opening another closes the first.
@@ -35,12 +36,14 @@ struct TodoListView: View {
                 )
 
             case .search:
-                // TODO: wave-2 stream C replaces this placeholder with TodoSearchView.
-                SearchPlaceholderView(onCancel: { router.dismiss() })
-                    // Cover over cover: Add and Edit open above Search and close back to it.
-                    .fullScreenCover(item: Binding(get: { router.nestedRoute }, set: { if $0 == nil { router.dismissNested() } })) { nested in
-                        nestedCover(nested)
-                    }
+                TodoSearchCover(
+                    makeViewModel: makeSearchViewModel,
+                    router: router,
+                    sortOrder: viewModel.sortOrder,
+                    reloadList: { await viewModel.load() },
+                    onDeleted: { item in await viewModel.didDelete(item) },
+                    nestedCover: { route, onFinish in nestedCover(route, onFinish: onFinish) }
+                )
             }
         }
         .overlay(alignment: .bottom) {
@@ -56,28 +59,14 @@ struct TodoListView: View {
         }
     }
 
-    @ViewBuilder private func nestedCover(_ route: AppRoute) -> some View {
+    @ViewBuilder private func nestedCover(_ route: AppRoute, onFinish: @escaping (TodoItemFormOutcome) -> Void) -> some View {
         switch route {
         case .addTodoItem(let prefill):
-            TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishNestedForm)
+            TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: onFinish)
         case .editTodoItem(let id):
-            TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: finishNestedForm, isEditFlow: true)
+            TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: onFinish, isEditFlow: true)
         case .search:
             EmptyView()
-        }
-    }
-
-    /// Closes the form back to Search and refreshes the list behind it; a delete also closes Search so the list shows Undo.
-    private func finishNestedForm(_ outcome: TodoItemFormOutcome) {
-        switch outcome {
-        case .saved:
-            router.dismissNested()
-            Task { await viewModel.load() }
-        case .deleted(let item):
-            router.dismissAll()
-            Task { await viewModel.didDelete(item) }
-        case .cancelled:
-            router.dismissNested()
         }
     }
 
@@ -315,17 +304,54 @@ struct TodoListView: View {
     }
 }
 
-/// Temporary stand-in for the search screen so the Search entry point and cover-over-cover routing can be exercised.
-private struct SearchPlaceholderView: View {
-    let onCancel: () -> Void
+/// Holds the search view model in `@State` so it lives as long as the Search cover, and routes the forms that open
+/// over it: saved re-runs the query and reloads the list, deleted closes Search so the list shows Undo.
+private struct TodoSearchCover<Nested: View>: View {
+    @State private var viewModel: TodoSearchViewModel
+    let router: AppRouter
+    let sortOrder: TodoItemSortOrder
+    let reloadList: () async -> Void
+    let onDeleted: (TodoItem) async -> Void
+    let nestedCover: (AppRoute, @escaping (TodoItemFormOutcome) -> Void) -> Nested
+
+    init(
+        makeViewModel: () -> TodoSearchViewModel,
+        router: AppRouter,
+        sortOrder: TodoItemSortOrder,
+        reloadList: @escaping () async -> Void,
+        onDeleted: @escaping (TodoItem) async -> Void,
+        nestedCover: @escaping (AppRoute, @escaping (TodoItemFormOutcome) -> Void) -> Nested
+    ) {
+        _viewModel = State(initialValue: makeViewModel())
+        self.router = router
+        self.sortOrder = sortOrder
+        self.reloadList = reloadList
+        self.onDeleted = onDeleted
+        self.nestedCover = nestedCover
+    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Search").dsFont(.screenTitle).foregroundStyle(DSColor.accent)
-            Button("Cancel", action: onCancel).frame(minHeight: DSTouchTarget.minimum)
+        TodoSearchView(viewModel: viewModel, router: router, sortOrder: sortOrder)
+            // Cover over cover: Add and Edit open above Search and close back to it.
+            .fullScreenCover(item: Binding(get: { router.nestedRoute }, set: { if $0 == nil { router.dismissNested() } })) { route in
+                nestedCover(route, finish)
+            }
+    }
+
+    private func finish(_ outcome: TodoItemFormOutcome) {
+        switch outcome {
+        case .saved:
+            router.dismissNested()
+            Task {
+                await viewModel.didFinishForm(.saved)
+                await reloadList()
+            }
+        case .deleted(let item):
+            router.dismissAll()
+            Task { await onDeleted(item) }
+        case .cancelled:
+            router.dismissNested()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DSColor.bg.ignoresSafeArea())
     }
 }
 
@@ -361,12 +387,13 @@ private struct TodoListPreviewHost: View {
     let completedCount: Int
     var filter: TodoListFilter = .all
     @State private var viewModel: TodoListViewModel?
+    @State private var searchViewModel: TodoSearchViewModel?
     @State private var router = AppRouter()
 
     var body: some View {
         Group {
             if let viewModel {
-                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) })
+                TodoListView(viewModel: viewModel, router: router, makeFormViewModel: { _, title in .preview(title: title) }, makeSearchViewModel: { searchViewModel ?? AppDependencies(todoItemRepository: InMemoryTodoItemRepository(), dateProvider: PreviewDateProvider()).makeTodoSearchViewModel() })
             }
         }
         .task {
@@ -391,8 +418,9 @@ private struct TodoListPreviewHost: View {
                     completedAt: base.addingTimeInterval(Double(100 + index))
                 ))
             }
-            viewModel = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
-                .makeTodoListViewModel()
+            let dependencies = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
+            searchViewModel = dependencies.makeTodoSearchViewModel()
+            viewModel = dependencies.makeTodoListViewModel()
             await viewModel?.load()
             viewModel?.select(filter)
         }

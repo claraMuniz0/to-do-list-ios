@@ -1,0 +1,254 @@
+import SwiftUI
+
+/// Copy of the search screen, kept apart from the view so it is easy to check.
+enum TodoSearchCopy {
+    static let recentTitle = "Recent"
+    static let clearAll = "Clear all"
+    static let byCategoryTitle = "By category"
+    static let noResultsTitle = "No tasks found"
+    static let noResultsMessage = "Try a different word, or add it as a new task."
+
+    /// Curly quotes as in the design; the button truncates a long title in the middle.
+    static func addAsTaskTitle(_ title: String) -> String { "Add \u{201C}\(title)\u{201D} as a task" }
+}
+
+/// Full-screen search: Recent, Results and No Results states. Renders the view model and forwards intent to it;
+/// Add and Edit open through the router (as a cover over this one).
+struct TodoSearchView: View {
+    let viewModel: TodoSearchViewModel
+    let router: AppRouter
+    /// The list's current sort order, applied to the results when Search opens.
+    let sortOrder: TodoItemSortOrder
+
+    @FocusState private var isFieldFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SearchBar(
+                text: Binding(get: { viewModel.query }, set: { text in Task { await viewModel.setQuery(text) } }),
+                isFocused: $isFieldFocused,
+                onSubmit: submit,
+                onCancel: { router.dismiss() }
+            )
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            content
+        }
+        .background(DSColor.bg.ignoresSafeArea())
+        .task {
+            viewModel.setSortOrder(sortOrder)
+            await viewModel.load()
+        }
+        .onAppear { isFieldFocused = true }
+        .onChange(of: viewModel.announcement) { _, announcement in
+            if let announcement { AccessibilityNotification.Announcement(announcement.text).post() }
+        }
+    }
+
+    private func submit() {
+        isFieldFocused = false
+        Task { await viewModel.submit() }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch viewModel.state {
+        case .recent:
+            scrolling { recent }
+        case .results(let items):
+            scrolling { results(items) }
+        case .noResults:
+            scrolling { noResults }
+        case .error:
+            TodoListErrorView(onRetry: { Task { await viewModel.setQuery(viewModel.query) } })
+        }
+    }
+
+    /// The scroll view shrinks with the keyboard, so content (and the no-results button) stays visible.
+    private func scrolling<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) { content() }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    // MARK: Recent
+
+    @ViewBuilder private var recent: some View {
+        if !viewModel.recentSearches.isEmpty {
+            SectionHeader(
+                title: TodoSearchCopy.recentTitle,
+                trailingAction: (TodoSearchCopy.clearAll, { Task { await viewModel.clearAllRecentSearches() } })
+            )
+            VStack(spacing: 0) {
+                let terms = viewModel.recentSearches
+                ForEach(Array(terms.enumerated()), id: \.offset) { index, term in
+                    RecentSearchRow(
+                        term: term.value,
+                        showsDivider: index < terms.count - 1,
+                        onSelect: { Task { await viewModel.selectRecent(term) } },
+                        onFill: { Task { await viewModel.fill(term) } }
+                    )
+                }
+            }
+        }
+        SectionHeader(title: TodoSearchCopy.byCategoryTitle).padding(.top, 8)
+        // At accessibility sizes the chips would run off the edge, so they stack instead.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { categoryChips }
+            VStack(alignment: .leading, spacing: 10) { categoryChips }
+        }
+    }
+
+    @ViewBuilder private var categoryChips: some View {
+        ForEach(Category.defaults, id: \.self) { category in
+            Button { Task { await viewModel.toggleScope(category) } } label: {
+                chip(for: category)
+            }
+            .buttonStyle(.plain)
+            .frame(minHeight: DSTouchTarget.minimum)
+        }
+    }
+
+    private func chip(for category: Category) -> some View {
+        CategoryChip(
+            style: .option,
+            isSelected: viewModel.scope == category,
+            label: category.name.value,
+            palette: ChipPalette(colorKey: category.color.key)
+        )
+    }
+
+    // MARK: Results
+
+    @ViewBuilder private func results(_ items: [TodoItem]) -> some View {
+        scopeChip
+        if let count = viewModel.resultCountText {
+            SectionHeader(title: count)
+        }
+        ForEach(items, id: \.id) { item in
+            TaskRow(
+                title: item.title.value,
+                description: item.description,
+                categoryName: item.category.name.value,
+                palette: ChipPalette(colorKey: item.category.color.key),
+                isDone: item.isCompleted,
+                onOpen: { open(item) },
+                onToggle: { Task { await viewModel.toggle(id: item.id) } }
+            )
+            // A toggled row keeps its place but changes look; a state-dependent identity stops LazyVStack reuse.
+            .id("\(item.id.uuid)-\(item.isCompleted)")
+        }
+    }
+
+    private func open(_ item: TodoItem) {
+        Task {
+            await viewModel.didSelectResult()
+            router.present(.editTodoItem(id: item.id))
+        }
+    }
+
+    /// The selected category above the header; tapping it removes the scope.
+    @ViewBuilder private var scopeChip: some View {
+        if let scope = viewModel.scope {
+            Button { Task { await viewModel.toggleScope(scope) } } label: {
+                chip(for: scope)
+            }
+            .buttonStyle(.plain)
+            .frame(minHeight: DSTouchTarget.minimum)
+            .accessibilityHint("Removes the category filter")
+        }
+    }
+
+    // MARK: No results
+
+    @ViewBuilder private var noResults: some View {
+        scopeChip
+        VStack(spacing: 16) {
+            EmptyStateIllustration(symbol: "magnifyingglass", layout: .noResults)
+            Text(TodoSearchCopy.noResultsTitle)
+                .dsFont(.emptyTitle)
+                .foregroundStyle(DSColor.textPrimary)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+            Text(TodoSearchCopy.noResultsMessage)
+                .dsFont(.inputText)
+                .foregroundStyle(DSColor.textSecondary)
+                .multilineTextAlignment(.center)
+            if let title = viewModel.addAsTaskTitle {
+                PrimaryButton(title: TodoSearchCopy.addAsTaskTitle(title), systemImage: "plus", fullWidth: true) {
+                    router.present(.addTodoItem(prefill: title))
+                }
+                .lineLimit(1)
+                .truncationMode(.middle)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 24)
+    }
+}
+
+#if DEBUG
+/// Keeps previews off UserDefaults.standard.
+private final class PreviewRecentSearchRepository: RecentSearchRepository {
+    var searches: [SearchQuery]
+    init(_ terms: [String]) { searches = terms.compactMap { try? SearchQuery($0) } }
+    func recentSearches() async throws -> [SearchQuery] { searches }
+    func save(_ searches: [SearchQuery]) async throws { self.searches = searches }
+}
+
+private struct PreviewSortOrderRepository: SortOrderRepository {
+    func sortOrder() -> TodoItemSortOrder { .default }
+    func save(_ order: TodoItemSortOrder) {}
+}
+
+private struct PreviewDateProvider: DateProvider {
+    func now() -> Date { Date(timeIntervalSince1970: 1_791_460_800) }
+}
+
+/// Builds the view model from in-memory collaborators and types the query, so each state is deterministic.
+private struct TodoSearchPreviewHost: View {
+    let query: String
+    var recent: [String] = ["groceries", "dentist", "report"]
+    @State private var viewModel: TodoSearchViewModel?
+    @State private var router = AppRouter()
+
+    var body: some View {
+        Group {
+            if let viewModel { TodoSearchView(viewModel: viewModel, router: router, sortOrder: .default) }
+        }
+        .task {
+            let repository = InMemoryTodoItemRepository()
+            let base = Date(timeIntervalSince1970: 1_791_000_000)
+            let samples: [(String, String?, Category, Bool)] = [
+                ("Buy groceries for the week", "Milk, eggs and bread", .shopping, false),
+                ("Plan grocery budget", nil, .personal, false),
+                ("Grocery list sent to Sam", nil, .personal, true),
+                ("Prepare quarterly report", nil, .work, false),
+            ]
+            for (index, sample) in samples.enumerated() {
+                try? await repository.add(TodoItem(
+                    title: try! TodoItemTitle(sample.0), description: sample.1, category: sample.2,
+                    createdAt: base.addingTimeInterval(Double(index)),
+                    completedAt: sample.3 ? base.addingTimeInterval(100) : nil
+                ))
+            }
+            var dependencies = AppDependencies(todoItemRepository: repository, dateProvider: PreviewDateProvider())
+            dependencies.recentSearchRepository = PreviewRecentSearchRepository(recent)
+            dependencies.sortOrderRepository = PreviewSortOrderRepository()
+            let model = dependencies.makeTodoSearchViewModel()
+            await model.load()
+            await model.setQuery(query)
+            viewModel = model
+        }
+    }
+}
+
+#Preview("Recent") { TodoSearchPreviewHost(query: "") }
+#Preview("Results") { TodoSearchPreviewHost(query: "gro") }
+#Preview("No results") { TodoSearchPreviewHost(query: "gym") }
+#Preview("Accessibility3") { TodoSearchPreviewHost(query: "").dynamicTypeSize(.accessibility3) }
+#Preview("Results - accessibility3") { TodoSearchPreviewHost(query: "gro").dynamicTypeSize(.accessibility3) }
+#endif

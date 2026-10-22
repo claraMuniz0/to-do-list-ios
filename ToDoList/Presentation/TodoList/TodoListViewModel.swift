@@ -36,6 +36,7 @@ final class TodoListViewModel {
     private let restoreTodoItem: RestoreTodoItemUseCase
     private let deleteTodoItem: DeleteTodoItemUseCase
     private let saveSortOrder: SaveSortOrderUseCase
+    private let minimumLaunchDuration: Duration
 
     init(
         getTodoItems: GetTodoItemsUseCase,
@@ -44,7 +45,8 @@ final class TodoListViewModel {
         restoreTodoItem: RestoreTodoItemUseCase,
         deleteTodoItem: DeleteTodoItemUseCase,
         getSortOrder: GetSortOrderUseCase,
-        saveSortOrder: SaveSortOrderUseCase
+        saveSortOrder: SaveSortOrderUseCase,
+        minimumLaunchDuration: Duration = .seconds(1)
     ) {
         self.getTodoItems = getTodoItems
         self.toggleCompletion = toggleCompletion
@@ -52,6 +54,7 @@ final class TodoListViewModel {
         self.restoreTodoItem = restoreTodoItem
         self.deleteTodoItem = deleteTodoItem
         self.saveSortOrder = saveSortOrder
+        self.minimumLaunchDuration = minimumLaunchDuration
         sortOrder = getSortOrder.execute()
     }
 
@@ -139,8 +142,18 @@ final class TodoListViewModel {
     }
 
     /// Any thrown error ends in `.error`; previously loaded items are dropped rather than shown stale.
+    /// The first call also holds the splash for `minimumLaunchDuration` in total, so a fast local load does not
+    /// flash it away; `state` is already settled while it waits.
     func load() async {
-        defer { isLaunching = false }
+        let started = ContinuousClock.now
+        await fetch()
+        guard isLaunching else { return }
+        let remaining = minimumLaunchDuration - (ContinuousClock.now - started)
+        if remaining > .zero { try? await Task.sleep(for: remaining) }
+        isLaunching = false
+    }
+
+    private func fetch() async {
         do {
             let items = try await getTodoItems.execute()
             state = items.isEmpty ? .empty : .loaded(TodoListSections(items: items, sortOrder: sortOrder))

@@ -4,6 +4,7 @@ import Observation
 enum AppRoute: Hashable, Identifiable {
     case addTodoItem(prefill: String)
     case editTodoItem(id: TodoItemID)
+    case smartAdd
     case search
 
     var id: Self { self }
@@ -11,7 +12,7 @@ enum AppRoute: Hashable, Identifiable {
     /// Forms that open as a second cover when search is already showing.
     fileprivate var coversSearch: Bool {
         switch self {
-        case .addTodoItem, .editTodoItem: true
+        case .addTodoItem, .editTodoItem, .smartAdd: true
         case .search: false
         }
     }

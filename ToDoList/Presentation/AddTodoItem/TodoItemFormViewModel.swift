@@ -64,13 +64,41 @@ final class TodoItemFormViewModel {
         self.calendar = calendar
         dueDateLabel = DueDateLabel(dateProvider: dateProvider, calendar: calendar, locale: locale)
         storedTitle = String(initialTitle.prefix(TodoItemTitle.maxLength))
-        dueDate = mode == .add ? .today(using: dateProvider, calendar: calendar) : nil
+        switch mode {
+        case .add:
+            dueDate = .today(using: dateProvider, calendar: calendar)
+        case .edit:
+            dueDate = nil
+        case .reviewingDraft(let draft):
+            // A draft without a date stays without one: Claude was not told a date, so none is invented.
+            storedTitle = draft.title.value
+            details = draft.description ?? ""
+            category = categories.first { $0.id == draft.categoryID } ?? .personal
+            dueDate = draft.dueDate
+            stepList = StepList(draft.steps.map { Step(title: $0) })
+        }
     }
 
-    var screenSubtitle: String { editingID == nil ? "What's on your mind?" : "Make it just right" }
-    var screenTitle: String { editingID == nil ? "New task" : "Edit task" }
+    /// The "Filled in by Claude" banner: only while reviewing a Smart add draft.
+    var showsAIBanner: Bool { isReviewingDraft }
+
+    var screenSubtitle: String {
+        if isReviewingDraft { return "Here's what I understood" }
+        return editingID == nil ? "What's on your mind?" : "Make it just right"
+    }
+
+    var screenTitle: String {
+        if isReviewingDraft { return "Looks right?" }
+        return editingID == nil ? "New task" : "Edit task"
+    }
+
     var saveButtonTitle: String { editingID == nil ? "Save task" : "Save changes" }
     var canDelete: Bool { editingID != nil }
+
+    private var isReviewingDraft: Bool {
+        if case .reviewingDraft = mode { return true }
+        return false
+    }
 
     private var editingID: TodoItemID? {
         if case .edit(let id) = mode { return id }

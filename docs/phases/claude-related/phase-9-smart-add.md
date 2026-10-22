@@ -48,7 +48,7 @@ Recommendation in **bold**. Group A answers are already given in the kickoff cha
 | B3 | `SmartAddText` value object | trimmed, non-empty, max 280 characters | **As described** (matches the 280 counter); the field stops input at 280 | **confirmed** (recommendation accepted) |
 | B4 | Relative dates | Claude receives today's date (year-month-day) and resolves "next Tuesday", "tomorrow", "Friday" | **Claude resolves**; Data parses `YYYY-MM-DD` into `DueDate`; an invalid or past-by-years date becomes `nil`. "Next week" follows Phase 3 B6 (today + 7) and is stated in the prompt | **confirmed** (recommendation accepted) |
 | B5 | Category mapping | Claude picks one of the **current categories by id** (built-ins and custom, from Phase 7); unknown or missing → Personal (Phase 7 B4 rule) | **As described** | **confirmed** (recommendation accepted) |
-| B6 | What Claude must not invent | title is required; description, date and steps are optional and left empty when not in the sentence | **As described**; no hallucinated steps (steps only if the user listed them) | **confirmed** (recommendation accepted) |
+| B6 | What Claude must not invent | title is required; description, date and steps are optional and left empty when not in the sentence | **Changed after build:** description and date are still left empty when not in the sentence, but Claude now always proposes 3 to 6 steps (the user's own steps when listed), so Review opens with steps filled | **confirmed** (your change) |
 | B7 | Failure when nothing useful | an unusable answer (no title) → `SmartAddError.couldNotUnderstand` with a message and the text kept | **As described** | **confirmed** (recommendation accepted) |
 
 ### C. Data

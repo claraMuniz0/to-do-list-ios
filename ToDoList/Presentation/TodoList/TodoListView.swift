@@ -6,6 +6,8 @@ struct TodoListView: View {
     let router: AppRouter
     let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
     let makeSearchViewModel: () -> TodoSearchViewModel
+    /// `nil` when Claude is unavailable: the Smart add entry point is then hidden.
+    var makeSmartAddViewModel: (() -> SmartAddViewModel)?
 
     @State private var quickAddText = ""
     /// Only one row can be swiped open at a time; opening another closes the first.
@@ -26,8 +28,14 @@ struct TodoListView: View {
         .fullScreenCover(item: Binding(get: { router.presentedRoute }, set: { if $0 == nil { router.dismissAll() } })) { route in
             switch route {
             case .addTodoItem(let prefill):
-                TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm)
-                
+                TodoItemFormCover(
+                    makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: finishForm,
+                    onSmartAdd: smartAddAction
+                )
+
+            case .smartAdd:
+                smartAddCover(onFinish: finishForm)
+
             case .editTodoItem(let id):
                 TodoItemFormCover(
                     makeViewModel: { makeFormViewModel(.edit(id), "") },
@@ -62,11 +70,29 @@ struct TodoListView: View {
     @ViewBuilder private func nestedCover(_ route: AppRoute, onFinish: @escaping (TodoItemFormOutcome) -> Void) -> some View {
         switch route {
         case .addTodoItem(let prefill):
-            TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: onFinish)
+            TodoItemFormCover(makeViewModel: { makeFormViewModel(.add, prefill) }, onFinish: onFinish, onSmartAdd: smartAddAction)
+        case .smartAdd:
+            smartAddCover(onFinish: onFinish)
         case .editTodoItem(let id):
             TodoItemFormCover(makeViewModel: { makeFormViewModel(.edit(id), "") }, onFinish: onFinish, isEditFlow: true)
         case .search:
             EmptyView()
+        }
+    }
+
+    private var smartAddAction: (() -> Void)? {
+        makeSmartAddViewModel == nil ? nil : { router.present(.smartAdd) }
+    }
+
+    /// Without a view model factory the route cannot be reached (the entry point is hidden), so nothing is drawn.
+    @ViewBuilder private func smartAddCover(onFinish: @escaping (TodoItemFormOutcome) -> Void) -> some View {
+        if let makeSmartAddViewModel {
+            SmartAddCover(
+                makeViewModel: makeSmartAddViewModel,
+                makeFormViewModel: { makeFormViewModel($0, "") },
+                onManual: { router.present(.addTodoItem(prefill: "")) },
+                onFinish: onFinish
+            )
         }
     }
 
@@ -378,19 +404,22 @@ private struct TodoItemFormCover: View {
     @State private var viewModel: TodoItemFormViewModel
     @State private var isEditFlow: Bool
     let onFinish: (TodoItemFormOutcome) -> Void
+    let onSmartAdd: (() -> Void)?
 
     init(
         makeViewModel: () -> TodoItemFormViewModel,
         onFinish: @escaping (TodoItemFormOutcome) -> Void,
-        isEditFlow: Bool = false
+        isEditFlow: Bool = false,
+        onSmartAdd: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: makeViewModel())
         self.onFinish = onFinish
         self.isEditFlow = isEditFlow
+        self.onSmartAdd = onSmartAdd
     }
 
     var body: some View {
-        TodoItemFormView(viewModel: viewModel, onFinish: onFinish, isEditFlow: isEditFlow)
+        TodoItemFormView(viewModel: viewModel, onFinish: onFinish, isEditFlow: isEditFlow, onSmartAdd: onSmartAdd)
     }
 }
 

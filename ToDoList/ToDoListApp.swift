@@ -7,6 +7,8 @@ import SwiftUI
     @State private var router = AppRouter()
     private let makeFormViewModel: (TodoItemFormMode, String) -> TodoItemFormViewModel
     private let makeSearchViewModel: () -> TodoSearchViewModel
+    /// `nil` without a Claude key, which hides every Smart add entry point.
+    private let makeSmartAddViewModel: (() -> SmartAddViewModel)?
 
     init() {
         FontRegistrar.registerAll()
@@ -16,11 +18,13 @@ import SwiftUI
         _viewModel = State(initialValue: dependencies.makeTodoListViewModel())
         makeFormViewModel = { dependencies.makeTodoItemFormViewModel(mode: $0, initialTitle: $1) }
         makeSearchViewModel = { dependencies.makeTodoSearchViewModel() }
+        makeSmartAddViewModel = dependencies.claudeAvailability.isAvailable ? { dependencies.makeSmartAddViewModel() } : nil
     }
 
     var body: some Scene {
         WindowGroup {
-            TodoListView(viewModel: viewModel, router: router, makeFormViewModel: makeFormViewModel, makeSearchViewModel: makeSearchViewModel)
+            TodoListView(viewModel: viewModel, router: router, makeFormViewModel: makeFormViewModel, makeSearchViewModel: makeSearchViewModel,
+                         makeSmartAddViewModel: makeSmartAddViewModel)
                 .preferredColorScheme(.light)
         }
     }

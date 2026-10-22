@@ -4,6 +4,8 @@ import SwiftUI
 struct TodoItemFormView: View {
     @Bindable var viewModel: TodoItemFormViewModel
     let onFinish: (TodoItemFormOutcome) -> Void
+    /// Set only where Claude is available; the pill then shows in Add mode and opens Smart add.
+    let onSmartAdd: (() -> Void)?
 
     @FocusState private var isTitleFocused: Bool
     @State private var isDateSheetPresented = false
@@ -12,10 +14,12 @@ struct TodoItemFormView: View {
 
     init(viewModel: TodoItemFormViewModel,
          onFinish: @escaping (TodoItemFormOutcome) -> Void,
-         isEditFlow: Bool = false
+         isEditFlow: Bool = false,
+         onSmartAdd: (() -> Void)? = nil
     ) {
         self.viewModel = viewModel
         self.onFinish = onFinish
+        self.onSmartAdd = onSmartAdd
         self.isEditFlow = isEditFlow
     }
 
@@ -24,10 +28,13 @@ struct TodoItemFormView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                CircleIconButton(accessibilityLabel: "Close", action: close)
-                    .accessibilityHint(viewModel.canDelete ? "Discards your changes" : "Discards the task")
+                nav
                 ScreenHeader(subtitle: viewModel.screenSubtitle, title: viewModel.screenTitle)
                 
+                if viewModel.showsAIBanner {
+                    AIBanner(message: "Filled in by Claude. Tap any field to adjust.")
+                }
+
                 FormField(label: "Task name") {
                     TextInputField(text: $viewModel.title, isFocused: $isTitleFocused)
                 }
@@ -56,11 +63,14 @@ struct TodoItemFormView: View {
         .accessibilityAction(.escape, close)
         .task { await viewModel.load() }
         .onAppear {
-            if !isEditFlow {
+            if !isEditFlow, !viewModel.showsAIBanner {
                 isTitleFocused = true
             }
             
             AccessibilityNotification.ScreenChanged().post()
+            if viewModel.showsAIBanner {
+                AccessibilityNotification.Announcement("Claude filled in the form. Review it before saving.").post()
+            }
         }
         .onChange(of: viewModel.loadFailed) { _, failed in
             guard failed else { return }
@@ -80,6 +90,27 @@ struct TodoItemFormView: View {
             case .loading: break
             case .idle, .empty, .failed: isSuggestionSheetPresented = false
             }
+        }
+    }
+
+    private var nav: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack { closeButton; Spacer(minLength: 12); smartAddButton }
+            VStack(alignment: .leading, spacing: 12) { closeButton; smartAddButton }
+        }
+    }
+
+    private var closeButton: some View {
+        CircleIconButton(accessibilityLabel: "Close", action: close)
+            .accessibilityHint(viewModel.canDelete ? "Discards your changes" : "Discards the task")
+    }
+
+    @ViewBuilder private var smartAddButton: some View {
+        if let onSmartAdd, viewModel.mode == .add {
+            NavPillButton(
+                title: "Smart add", systemImage: "sparkles", style: .accent,
+                accessibilityHint: "Describe the task in a sentence and let Claude fill the form", action: onSmartAdd
+            )
         }
     }
 

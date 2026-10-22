@@ -54,9 +54,9 @@ struct TodoItemFormViewModelSuggestionTests {
     @Test func requestingFillsPreselectedSuggestionsAndSendsTheTask() async {
         let (viewModel, suggester) = await makeSUT(steps: [step("X")])
         await viewModel.requestSuggestions()
-        guard case .suggestions(let items) = viewModel.suggestionState else { return Issue.record("not suggestions") }
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
         #expect(items.map(\.title) == ["A", "B", "C"])
-        #expect(items.allSatisfy(\.isSelected))
+        #expect(items.allSatisfy { $0.isSelected })
         #expect(suggester.calls.first?.existingSteps == ["X"])
     }
 
@@ -73,13 +73,13 @@ struct TodoItemFormViewModelSuggestionTests {
         #expect(viewModel.suggestionState == .failed(.offline))
         suggester.outcome = .success([try! StepTitle("Z")])
         await viewModel.requestSuggestions()
-        guard case .suggestions = viewModel.suggestionState else { return Issue.record("did not recover") }
+        guard case .suggestions = viewModel.suggestionState else { Issue.record("did not recover"); return }
     }
 
     @Test func selectionCountFollowsTogglesAndEdits() async {
         let (viewModel, _) = await makeSUT()
         await viewModel.requestSuggestions()
-        guard case .suggestions(let items) = viewModel.suggestionState else { return Issue.record("not suggestions") }
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
         #expect(viewModel.selectedSuggestionCount == 3)
         viewModel.toggleSuggestion(items[0].id)
         #expect(viewModel.selectedSuggestionCount == 2)
@@ -91,7 +91,7 @@ struct TodoItemFormViewModelSuggestionTests {
     @Test func blankEditedSuggestionsAreSkippedWhenAdding() async {
         let (viewModel, _) = await makeSUT()
         await viewModel.requestSuggestions()
-        guard case .suggestions(let items) = viewModel.suggestionState else { return Issue.record("not suggestions") }
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
         viewModel.editSuggestion(items[0].id, to: "   ")
         viewModel.addSelectedSuggestions()
         #expect(viewModel.steps.map(\.title.value) == ["B", "C"])

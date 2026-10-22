@@ -17,6 +17,7 @@ final class TodoItemFormViewModel {
     var dueDate: DueDate?
     /// The steps being edited; they reach the store only when `save()` succeeds.
     private(set) var stepList = StepList()
+    private(set) var suggestionState = StepSuggestionState.idle
     private(set) var isSaving = false
     private(set) var saveFailed = false
     /// Set when `delete()` failed; the task is still stored and the form stays open so the user can retry.
@@ -34,6 +35,8 @@ final class TodoItemFormViewModel {
     /// The injected calendar and clock, shared with the date sheet so it never reads `Calendar.current` or `.now`.
     let calendar: Calendar
     private let dueDateLabel: DueDateLabel
+    /// `nil` when Claude is unavailable (no key): the suggestion entry points are then hidden.
+    private let suggestSteps: SuggestStepsUseCase?
 
     init(
         mode: TodoItemFormMode = .add,
@@ -44,8 +47,10 @@ final class TodoItemFormViewModel {
         dateProvider: DateProvider,
         calendar: Calendar,
         locale: Locale = .current,
-        initialTitle: String = ""
+        initialTitle: String = "",
+        suggestSteps: SuggestStepsUseCase? = nil
     ) {
+        self.suggestSteps = suggestSteps
         self.mode = mode
         self.addTodoItem = addTodoItem
         self.updateTodoItem = updateTodoItem
@@ -146,6 +151,54 @@ final class TodoItemFormViewModel {
     func renameStep(_ id: StepID, to text: String) -> Bool {
         guard let title = try? StepTitle(text) else { return false }
         return (try? stepList.rename(id, to: title)) != nil
+    }
+
+    // MARK: - Step suggestions
+
+    /// Only in Edit, with Claude available, a titled task and room for more steps.
+    var canSuggestSteps: Bool {
+        suggestSteps != nil && showsSteps && canAddStep && !TodoItemTitle.isBlank(title)
+    }
+
+    /// The same pill: "Break it down" for a task with no steps, "Suggest more" once it has some.
+    var suggestionPillTitle: String { stepList.steps.isEmpty ? "Break it down" : "Suggest more" }
+
+    var selectedSuggestionCount: Int {
+        guard case .suggestions(let items) = suggestionState else { return 0 }
+        return items.filter(\.isSelected).count
+    }
+
+    /// Asks Claude for steps; ignored while a request is already running. The result lands in `suggestionState`.
+    func requestSuggestions() async {
+        guard let suggestSteps, suggestionState != .loading else { return }
+        suggestionState = .loading
+        do {
+            let titles = try await suggestSteps.execute(
+                title: title, description: details.isEmpty ? nil : details, existing: stepList
+            )
+            suggestionState = titles.isEmpty ? .empty : .suggestions(titles.map { SuggestedStep(title: $0.value) })
+        } catch let error as StepSuggestionError {
+            suggestionState = .failed(error)
+        } catch {
+            suggestionState = .failed(.failed)
+        }
+    }
+
+    func toggleSuggestion(_ id: UUID) { updateSuggestion(id) { $0.isSelected.toggle() } }
+    func editSuggestion(_ id: UUID, to text: String) { updateSuggestion(id) { $0.title = text } }
+    func dismissSuggestions() { suggestionState = .idle }
+
+    /// Adds the ticked suggestions in order; one whose edited text is blank or overlong is skipped, and the list limit holds.
+    func addSelectedSuggestions() {
+        guard case .suggestions(let items) = suggestionState else { return }
+        for item in items where item.isSelected { addStep(item.title) }
+        suggestionState = .idle
+    }
+
+    private func updateSuggestion(_ id: UUID, _ change: (inout SuggestedStep) -> Void) {
+        guard case .suggestions(var items) = suggestionState, let index = items.firstIndex(where: { $0.id == id }) else { return }
+        change(&items[index])
+        suggestionState = .suggestions(items)
     }
 
     /// Returns whether the task was stored; a failure sets `saveFailed` and keeps the form editable.

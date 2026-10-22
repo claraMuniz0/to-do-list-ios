@@ -15,6 +15,12 @@ struct DSGradient: Equatable {
         Stop(color: DSColor.bg, location: 0.38),
     ])
 
+    /// Top to bottom, coral into deep brick; the splash screen's whole background.
+    static let splash = DSGradient(stops: [
+        Stop(color: DSColor.splashGradientTop, location: 0),
+        Stop(color: DSColor.splashGradientBottom, location: 1),
+    ])
+
     var linearGradient: LinearGradient {
         LinearGradient(
             stops: stops.map { Gradient.Stop(color: $0.color, location: $0.location) },

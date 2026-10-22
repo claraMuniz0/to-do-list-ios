@@ -104,7 +104,24 @@ struct TodoListView: View {
         }
     }
 
-    @ViewBuilder private var content: some View {
+    /// The splash cross-fades into the first real screen; Reduce Motion cuts instead. Only the first load shows
+    /// it, so a retry falls back to the plain loading background.
+    private var content: some View {
+        ZStack {
+            if viewModel.isLaunching {
+                SplashView().transition(.opacity)
+            } else {
+                screen.transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.isLaunching)
+        // Focus would otherwise stay on the removed splash element.
+        .onChange(of: viewModel.isLaunching) { _, isLaunching in
+            if !isLaunching { AccessibilityNotification.ScreenChanged(nil).post() }
+        }
+    }
+
+    @ViewBuilder private var screen: some View {
         switch viewModel.state {
         case .loading:
             DSGradient.welcome.linearGradient.ignoresSafeArea()

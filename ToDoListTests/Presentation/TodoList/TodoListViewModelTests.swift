@@ -7,7 +7,8 @@ struct TodoListViewModelTests {
     private func makeSUT(
         items: [TodoItem] = [],
         error: Error? = nil,
-        sortOrders: SortOrderRepositorySpy = SortOrderRepositorySpy()
+        sortOrders: SortOrderRepositorySpy = SortOrderRepositorySpy(),
+        minimumLaunchDuration: Duration = .zero
     ) -> (viewModel: TodoListViewModel, spy: TodoItemRepositorySpy) {
         let spy = TodoItemRepositorySpy()
         spy.storedItems = items
@@ -20,13 +21,81 @@ struct TodoListViewModelTests {
             restoreTodoItem: RestoreTodoItemUseCase(repository: spy),
             deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
             getSortOrder: GetSortOrderUseCase(repository: sortOrders),
-            saveSortOrder: SaveSortOrderUseCase(repository: sortOrders)
+            saveSortOrder: SaveSortOrderUseCase(repository: sortOrders),
+            minimumLaunchDuration: minimumLaunchDuration
         )
         return (viewModel, spy)
     }
 
     @Test func startsInTheLoadingState() {
         #expect(makeSUT().viewModel.state == .loading)
+    }
+
+    @Test func isLaunchingBeforeTheFirstLoad() {
+        #expect(makeSUT().viewModel.isLaunching)
+    }
+
+    @Test func stopsLaunchingOnceTheFirstLoadSucceeds() async {
+        let (viewModel, _) = makeSUT(items: [makeTodoItem(title: "A")])
+        await viewModel.load()
+        #expect(!viewModel.isLaunching)
+    }
+
+    @Test func stopsLaunchingWhenTheFirstLoadFails() async {
+        let (viewModel, _) = makeSUT(error: TodoItemRepositoryError.notFound)
+        await viewModel.load()
+        #expect(!viewModel.isLaunching)
+    }
+
+    @Test func theFirstLoadTakesAtLeastTheMinimumLaunchDurationEvenWhenInstant() async {
+        let (viewModel, _) = makeSUT(minimumLaunchDuration: .milliseconds(300))
+
+        let elapsed = await ContinuousClock().measure { await viewModel.load() }
+
+        #expect(elapsed >= .milliseconds(300))
+        #expect(!viewModel.isLaunching)
+    }
+
+    @Test func theStateIsReadyWhileTheSplashIsStillHeld() async {
+        let (viewModel, _) = makeSUT(minimumLaunchDuration: .milliseconds(300))
+
+        let task = Task { await viewModel.load() }
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(viewModel.state == .empty)
+        #expect(viewModel.isLaunching)
+        await task.value
+    }
+
+    @Test func aFailedFirstLoadAlsoHoldsTheSplash() async {
+        let (viewModel, _) = makeSUT(error: TodoItemRepositoryError.notFound, minimumLaunchDuration: .milliseconds(300))
+
+        let elapsed = await ContinuousClock().measure { await viewModel.load() }
+
+        #expect(elapsed >= .milliseconds(300))
+        #expect(viewModel.state == .error)
+    }
+
+    @Test func laterLoadsAndRetriesDoNotWaitAgain() async {
+        let (viewModel, _) = makeSUT(minimumLaunchDuration: .milliseconds(300))
+        await viewModel.load()
+
+        let elapsed = await ContinuousClock().measure {
+            await viewModel.load()
+            await viewModel.retry()
+        }
+
+        #expect(elapsed < .milliseconds(150))
+    }
+
+    @Test func retryDoesNotBringTheSplashBack() async {
+        let (viewModel, spy) = makeSUT(error: TodoItemRepositoryError.notFound)
+        await viewModel.load()
+        spy.errorToThrow = nil
+
+        await viewModel.retry()
+
+        #expect(!viewModel.isLaunching)
     }
 
     @Test func loadingWithNoTasksEndsEmpty() async {

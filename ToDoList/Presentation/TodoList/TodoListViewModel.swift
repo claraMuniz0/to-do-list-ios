@@ -18,6 +18,9 @@ struct CategoryCount: Equatable {
 @MainActor @Observable
 final class TodoListViewModel {
     private(set) var state: TodoListViewState = .loading
+    /// True until the first `load()` finishes, whatever its outcome; the branded splash covers exactly this window.
+    /// A `retry()` goes through `.loading` again but never sets this, so the splash plays once per cold start.
+    private(set) var isLaunching = true
     /// Set when the last toggle or quick add failed; the list stays visible, the view can show a message.
     private(set) var actionFailed = false
     /// The last deleted task, while the Undo toast is offered. The view runs the 5-second timer and calls `dismissUndo()`.
@@ -33,6 +36,7 @@ final class TodoListViewModel {
     private let restoreTodoItem: RestoreTodoItemUseCase
     private let deleteTodoItem: DeleteTodoItemUseCase
     private let saveSortOrder: SaveSortOrderUseCase
+    private let minimumLaunchDuration: Duration
 
     init(
         getTodoItems: GetTodoItemsUseCase,
@@ -41,7 +45,8 @@ final class TodoListViewModel {
         restoreTodoItem: RestoreTodoItemUseCase,
         deleteTodoItem: DeleteTodoItemUseCase,
         getSortOrder: GetSortOrderUseCase,
-        saveSortOrder: SaveSortOrderUseCase
+        saveSortOrder: SaveSortOrderUseCase,
+        minimumLaunchDuration: Duration = .seconds(1)
     ) {
         self.getTodoItems = getTodoItems
         self.toggleCompletion = toggleCompletion
@@ -49,6 +54,7 @@ final class TodoListViewModel {
         self.restoreTodoItem = restoreTodoItem
         self.deleteTodoItem = deleteTodoItem
         self.saveSortOrder = saveSortOrder
+        self.minimumLaunchDuration = minimumLaunchDuration
         sortOrder = getSortOrder.execute()
     }
 
@@ -136,7 +142,18 @@ final class TodoListViewModel {
     }
 
     /// Any thrown error ends in `.error`; previously loaded items are dropped rather than shown stale.
+    /// The first call also holds the splash for `minimumLaunchDuration` in total, so a fast local load does not
+    /// flash it away; `state` is already settled while it waits.
     func load() async {
+        let started = ContinuousClock.now
+        await fetch()
+        guard isLaunching else { return }
+        let remaining = minimumLaunchDuration - (ContinuousClock.now - started)
+        if remaining > .zero { try? await Task.sleep(for: remaining) }
+        isLaunching = false
+    }
+
+    private func fetch() async {
         do {
             let items = try await getTodoItems.execute()
             state = items.isEmpty ? .empty : .loaded(TodoListSections(items: items, sortOrder: sortOrder))

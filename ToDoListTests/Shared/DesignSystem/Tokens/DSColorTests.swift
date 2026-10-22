@@ -24,6 +24,14 @@ struct DSColorTests {
         ("shadowSoft", DSColor.shadowSoft, "EAD6C3"),
         ("shadowAccent", DSColor.shadowAccent, "8F2A10"),
         ("illustrationShadow", DSColor.illustrationShadow, "D94A2B26"),
+        ("splashGradientTop", DSColor.splashGradientTop, "E0603A"),
+        ("splashGradientBottom", DSColor.splashGradientBottom, "B03719"),
+        ("splashGlow", DSColor.splashGlow, "FFFFFF33"),
+        ("splashRing", DSColor.splashRing, "FFFFFF1F"),
+        ("splashCream", DSColor.splashCream, "FFF8F0"),
+        ("splashSoft", DSColor.splashSoft, "FFE3DA"),
+        ("splashDark", DSColor.splashDark, "7A2610"),
+        ("splashShadow", DSColor.splashShadow, "5A1A0A66"),
     ])
     func tokenMatchesDesign(name: String, color: Color, hex: String) {
         #expect(color.lightHex == hex, "\(name)")

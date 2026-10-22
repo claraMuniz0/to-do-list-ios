@@ -19,6 +19,7 @@
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* ToDoListTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ToDoListTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000130 /* Claude.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Claude.xcconfig; path = Config/Claude.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -318,7 +319,10 @@
 		};
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "MyApp" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 000000000000000000000130 /* Claude.xcconfig */;
 			buildSettings = {
+				INFOPLIST_KEY_AnthropicAPIKey = "$(ANTHROPIC_AUTH_TOKEN)";
+				INFOPLIST_KEY_AnthropicBaseURL = "$(ANTHROPIC_BASE_URL)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

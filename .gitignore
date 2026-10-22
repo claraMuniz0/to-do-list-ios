@@ -2,3 +2,7 @@ xcuserdata/
 .DS_Store
 build/
 DerivedData/
+
+# Local secrets (API token, base URL): never commit
+Config/Secrets.xcconfig
+.env

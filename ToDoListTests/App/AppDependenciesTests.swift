@@ -44,7 +44,9 @@ struct AppDependenciesSortOrderTests {
             todoItemRepository: InMemoryTodoItemRepository(),
             dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
             sortOrderRepository: spy,
-            recentSearchRepository: RecentSearchRepositorySpy()
+            recentSearchRepository: RecentSearchRepositorySpy(),
+            claudeClient: FakeClaudeClient(),
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: APIKeyProviderStub(key: nil))
         )
         let viewModel = dependencies.makeTodoListViewModel()
         #expect(viewModel.sortOrder == .titleAZ)

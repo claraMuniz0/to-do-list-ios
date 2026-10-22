@@ -44,11 +44,14 @@ extension AppDependencies {
 
     @MainActor
     private static func make(container: ModelContainer, defaults: UserDefaults = .standard) -> AppDependencies {
-        AppDependencies(
+        let keyProvider = ConfigFileAPIKeyProvider()
+        return AppDependencies(
             todoItemRepository: SwiftDataTodoItemRepository(container: container),
             dateProvider: SystemDateProvider(),
             sortOrderRepository: UserDefaultsSortOrderRepository(defaults: defaults),
-            recentSearchRepository: UserDefaultsRecentSearchRepository(defaults: defaults)
+            recentSearchRepository: UserDefaultsRecentSearchRepository(defaults: defaults),
+            claudeClient: AnthropicMessagesClient(apiKeyProvider: keyProvider),
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: keyProvider)
         )
     }
 }

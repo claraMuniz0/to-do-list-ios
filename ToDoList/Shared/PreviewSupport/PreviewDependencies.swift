@@ -53,8 +53,20 @@ enum PreviewDependencies {
             todoItemRepository: repository,
             dateProvider: FixedDateProvider(),
             sortOrderRepository: InMemorySortOrderRepository(),
-            recentSearchRepository: InMemoryRecentSearchRepository(recentSearches)
+            recentSearchRepository: InMemoryRecentSearchRepository(recentSearches),
+            claudeClient: UnavailableClaudeClient(),
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: NoAPIKeyProvider())
         )
     }
+}
+
+/// Previews never call Claude: no key, so every Claude entry point stays hidden.
+private struct NoAPIKeyProvider: APIKeyProvider {
+    func apiKey() -> String? { nil }
+    var baseURL: URL { ClaudeEndpoint.defaultBaseURL }
+}
+
+private struct UnavailableClaudeClient: ClaudeClient {
+    func send(_ request: ClaudeRequest) async throws -> ClaudeResponse { throw ClaudeError.missingAPIKey }
 }
 #endif

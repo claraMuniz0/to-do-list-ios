@@ -114,4 +114,42 @@ struct UpdateTodoItemUseCaseTests {
         }
         #expect(spy.storedItems == [item])
     }
+
+    // MARK: - steps
+
+    @Test func leavesStepsUntouchedWhenNoneAreGiven() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(steps: [Step(title: try StepTitle("Keep me"))])
+        spy.storedItems = [item]
+
+        let updated = try await update(spy, id: item.id)
+
+        #expect(updated.steps == item.steps)
+    }
+
+    @Test func replacesStepsWhenAListIsGiven() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(steps: [Step(title: try StepTitle("Old"))])
+        spy.storedItems = [item]
+        let newSteps = StepList([Step(title: try StepTitle("New 1")), Step(title: try StepTitle("New 2"), isDone: true)])
+
+        let updated = try await UpdateTodoItemUseCase(repository: spy).execute(
+            id: item.id, title: "T", description: nil, category: .work, dueDate: nil, steps: newSteps
+        )
+
+        #expect(updated.steps == newSteps.steps)
+        #expect(spy.storedItems == [updated])
+    }
+
+    @Test func anEmptyListClearsTheSteps() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(steps: [Step(title: try StepTitle("Old"))])
+        spy.storedItems = [item]
+
+        let updated = try await UpdateTodoItemUseCase(repository: spy).execute(
+            id: item.id, title: "T", description: nil, category: .work, dueDate: nil, steps: StepList()
+        )
+
+        #expect(updated.steps.isEmpty)
+    }
 }

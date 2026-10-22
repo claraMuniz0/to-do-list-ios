@@ -152,6 +152,7 @@ struct TodoSearchView: View {
                 categoryName: item.category.name.value,
                 palette: ChipPalette(colorKey: item.category.color.key),
                 isDone: item.isCompleted,
+                stepProgress: item.stepsProgress.map(TaskRowStepProgress.init),
                 onOpen: { open(item) },
                 onToggle: { Task { await viewModel.toggle(id: item.id) } }
             )

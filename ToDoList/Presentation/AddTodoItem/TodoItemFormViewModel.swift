@@ -121,6 +121,8 @@ final class TodoItemFormViewModel {
 
     // MARK: - Steps
 
+    /// Add has no Steps field in the design; steps are added once the task exists.
+    var showsSteps: Bool { editingID != nil }
     var steps: [Step] { stepList.steps }
     var stepsProgress: StepsProgress? { stepList.progress }
     var canAddStep: Bool { stepList.steps.count < StepList.maxSteps }

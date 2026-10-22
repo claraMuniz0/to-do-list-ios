@@ -35,6 +35,9 @@ struct TodoItemFormView: View {
                     TextAreaField(text: $viewModel.details, accessibilityLabel: "Description, optional")
                 }
                 
+                // Steps are added after creation (Add has none in the design); Smart Add Review reuses the field later.
+                if viewModel.showsSteps { stepsField }
+
                 FormField(label: "Category") { categoryChips }
                 
                 FormField(label: "Due date") {
@@ -66,6 +69,19 @@ struct TodoItemFormView: View {
         .sheet(isPresented: $isDateSheetPresented) {
             SelectDateView(viewModel: viewModel)
         }
+    }
+
+    private var stepsField: some View {
+        StepsField(
+            steps: viewModel.steps,
+            progress: viewModel.stepsProgress,
+            canAdd: viewModel.canAddStep,
+            onToggle: viewModel.toggleStep,
+            onRename: viewModel.renameStep,
+            onRemove: viewModel.removeStep,
+            onMove: viewModel.moveStep,
+            onAdd: viewModel.addStep
+        )
     }
 
     private var categoryChips: some View {

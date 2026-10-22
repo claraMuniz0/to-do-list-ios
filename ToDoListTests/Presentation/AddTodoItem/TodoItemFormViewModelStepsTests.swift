@@ -36,6 +36,12 @@ struct TodoItemFormViewModelStepsTests {
         #expect(viewModel.canAddStep)
     }
 
+    @Test func onlyEditModeShowsTheStepsField() {
+        let (editing, _) = makeSUT(for: makeTodoItem())
+        #expect(editing.showsSteps)
+        #expect(TodoItemFormViewModel.preview().showsSteps == false)
+    }
+
     @Test func loadingAnItemFillsItsSteps() async {
         let (viewModel, _) = makeSUT(for: makeTodoItem(steps: [step("A"), step("B", done: true)]))
         await viewModel.load()

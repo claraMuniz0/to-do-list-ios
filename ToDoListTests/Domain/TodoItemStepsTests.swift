@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import MyApp
 
@@ -103,5 +104,42 @@ struct TodoItemStepsTests {
         var item = makeTodoItem(steps: [step("A")])
         item.complete(at: .init(timeIntervalSince1970: 5_000))
         #expect(item.steps[0].isDone == false)
+    }
+
+    // MARK: - completing from steps
+
+    private let doneAt = Date(timeIntervalSince1970: 5_000)
+
+    @Test func completesWhenEveryStepIsDone() {
+        var item = makeTodoItem(steps: [step("A", done: true), step("B", done: true)])
+        item.completeIfAllStepsDone(at: doneAt)
+        #expect(item.completedAt == doneAt)
+    }
+
+    @Test func staysOpenWhileAStepIsOpen() {
+        var item = makeTodoItem(steps: [step("A", done: true), step("B")])
+        item.completeIfAllStepsDone(at: doneAt)
+        #expect(!item.isCompleted)
+    }
+
+    @Test func aTaskWithoutStepsIsNotCompleted() {
+        var item = makeTodoItem()
+        item.completeIfAllStepsDone(at: doneAt)
+        #expect(!item.isCompleted)
+    }
+
+    @Test func keepsTheFirstCompletionTime() {
+        let first = Date(timeIntervalSince1970: 1_000)
+        var item = makeTodoItem(steps: [step("A", done: true)])
+        item.complete(at: first)
+        item.completeIfAllStepsDone(at: doneAt)
+        #expect(item.completedAt == first)
+    }
+
+    @Test func untickingAStepDoesNotReopenTheTask() throws {
+        var item = makeTodoItem(steps: [step("A", done: true)])
+        item.completeIfAllStepsDone(at: doneAt)
+        try item.toggleStep(item.steps[0].id)
+        #expect(item.isCompleted)
     }
 }

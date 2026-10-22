@@ -152,4 +152,58 @@ struct UpdateTodoItemUseCaseTests {
 
         #expect(updated.steps.isEmpty)
     }
+
+    private let completionTime = Date(timeIntervalSince1970: 9_000)
+
+    private func updateSteps(
+        _ done: [Bool]?, on item: TodoItem, in spy: TodoItemRepositorySpy, withClock: Bool = true
+    ) async throws -> TodoItem {
+        let list = done.map { flags in
+            StepList(flags.enumerated().map { Step(title: try! StepTitle("Step \($0.offset)"), isDone: $0.element) })
+        }
+        let useCase = UpdateTodoItemUseCase(
+            repository: spy, dateProvider: withClock ? DateProviderStub(current: completionTime) : nil
+        )
+        return try await useCase.execute(
+            id: item.id, title: "T", description: nil, category: .work, dueDate: nil, steps: list
+        )
+    }
+
+    @Test func savingEveryStepDoneCompletesTheTask() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem()
+        spy.storedItems = [item]
+        let updated = try await updateSteps([true, true], on: item, in: spy)
+        #expect(updated.completedAt == completionTime)
+        #expect(spy.storedItems.first?.completedAt == completionTime)
+    }
+
+    @Test func savingAnOpenStepKeepsTheTaskOpen() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem()
+        spy.storedItems = [item]
+        #expect(try await updateSteps([true, false], on: item, in: spy).isCompleted == false)
+    }
+
+    @Test func withoutAClockStepsNeverCompleteTheTask() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem()
+        spy.storedItems = [item]
+        #expect(try await updateSteps([true], on: item, in: spy, withClock: false).isCompleted == false)
+    }
+
+    @Test func leavingStepsUntouchedDoesNotChangeCompletion() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = makeTodoItem(steps: [Step(title: try StepTitle("A"), isDone: true)])
+        spy.storedItems = [item]
+        #expect(try await updateSteps(nil, on: item, in: spy).isCompleted == false)
+    }
+
+    @Test func savingOpenStepsDoesNotReopenACompletedTask() async throws {
+        let spy = TodoItemRepositorySpy()
+        var item = makeTodoItem()
+        item.complete(at: Date(timeIntervalSince1970: 1))
+        spy.storedItems = [item]
+        #expect(try await updateSteps([false], on: item, in: spy).isCompleted)
+    }
 }

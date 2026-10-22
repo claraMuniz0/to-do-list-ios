@@ -112,4 +112,58 @@ struct TodoItemFormViewModelSuggestionTests {
         #expect(viewModel.suggestionState == .idle)
         #expect(viewModel.steps.isEmpty)
     }
+
+    @Test func suggestionsAreAvailableInAddModeOnceTheTitleIsFilled() {
+        let spy = TodoItemRepositorySpy()
+        let provider = DateProviderStub(current: calendar.makeDate(2026, 10, 8))
+        let viewModel = TodoItemFormViewModel(
+            addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: spy),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
+            getTodoItem: GetTodoItemUseCase(repository: spy),
+            dateProvider: provider,
+            calendar: calendar,
+            locale: Locale(identifier: "en_US"),
+            suggestSteps: SuggestStepsUseCase(suggester: FakeStepSuggester())
+        )
+        #expect(!viewModel.canSuggestSteps)
+        viewModel.title = "Plan trip"
+        #expect(viewModel.canSuggestSteps)
+        #expect(viewModel.suggestionPillTitle == "Break it down")
+    }
+
+    @Test func addingStopsAtTheStepLimit() async {
+        let (viewModel, _) = await makeSUT(steps: (1...19).map { step("S\($0)") })
+        await viewModel.requestSuggestions()
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
+        #expect(items.count == 1)
+        viewModel.addSelectedSuggestions()
+        #expect(viewModel.steps.count == 20)
+    }
+
+    @Test func overlongEditedSuggestionIsSkippedWhenAdding() async {
+        let (viewModel, _) = await makeSUT()
+        await viewModel.requestSuggestions()
+        guard case .suggestions(let items) = viewModel.suggestionState else { Issue.record("not suggestions"); return }
+        viewModel.editSuggestion(items[0].id, to: String(repeating: "x", count: StepTitle.maxLength + 1))
+        viewModel.addSelectedSuggestions()
+        #expect(viewModel.steps.map(\.title.value) == ["B", "C"])
+    }
+
+    @Test func suggestionActionsAreIgnoredWithoutSuggestions() async {
+        let (viewModel, _) = await makeSUT()
+        viewModel.toggleSuggestion(UUID())
+        viewModel.editSuggestion(UUID(), to: "x")
+        viewModel.addSelectedSuggestions()
+        #expect(viewModel.suggestionState == .idle)
+        #expect(viewModel.steps.isEmpty)
+        #expect(viewModel.selectedSuggestionCount == 0)
+    }
+
+    @Test func requestingWithoutClaudeDoesNothing() async {
+        let (viewModel, suggester) = await makeSUT(withClaude: false)
+        await viewModel.requestSuggestions()
+        #expect(viewModel.suggestionState == .idle)
+        #expect(suggester.calls.isEmpty)
+    }
 }

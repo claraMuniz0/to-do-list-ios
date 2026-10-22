@@ -36,12 +36,6 @@ struct TodoItemFormViewModelStepsTests {
         #expect(viewModel.canAddStep)
     }
 
-    @Test func onlyEditModeShowsTheStepsField() {
-        let (editing, _) = makeSUT(for: makeTodoItem())
-        #expect(editing.showsSteps)
-        #expect(TodoItemFormViewModel.preview().showsSteps == false)
-    }
-
     @Test func loadingAnItemFillsItsSteps() async {
         let (viewModel, _) = makeSUT(for: makeTodoItem(steps: [step("A"), step("B", done: true)]))
         await viewModel.load()
@@ -137,5 +131,51 @@ struct TodoItemFormViewModelStepsTests {
         await viewModel.load()
         #expect(await viewModel.save())
         #expect(spy.storedItems.first?.steps == item.steps)
+    }
+
+    @Test func addAndEditBothShowTheStepsField() {
+        let (editing, _) = makeSUT(for: makeTodoItem())
+        #expect(editing.showsSteps)
+        #expect(TodoItemFormViewModel.preview().showsSteps)
+    }
+
+    @Test func savingANewTaskStoresItsStepsDraft() async {
+        let spy = TodoItemRepositorySpy()
+        let provider = DateProviderStub(current: calendar.makeDate(2026, 10, 8))
+        let viewModel = TodoItemFormViewModel(
+            addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: spy),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
+            getTodoItem: GetTodoItemUseCase(repository: spy),
+            dateProvider: provider,
+            calendar: calendar,
+            locale: Locale(identifier: "en_US"),
+            initialTitle: "Plan trip"
+        )
+        viewModel.addStep("Book flights")
+        viewModel.addStep("Pack")
+        #expect(await viewModel.save())
+        #expect(spy.storedItems.first?.steps.map(\.title.value) == ["Book flights", "Pack"])
+    }
+
+    @Test func savingAllStepsDoneCompletesTheEditedTask() async {
+        let item = makeTodoItem(steps: [step("A")])
+        let spy = TodoItemRepositorySpy()
+        spy.storedItems = [item]
+        let provider = DateProviderStub(current: calendar.makeDate(2026, 10, 8))
+        let viewModel = TodoItemFormViewModel(
+            mode: .edit(item.id),
+            addTodoItem: AddTodoItemUseCase(repository: spy, dateProvider: provider, calendar: calendar),
+            updateTodoItem: UpdateTodoItemUseCase(repository: spy, dateProvider: provider),
+            deleteTodoItem: DeleteTodoItemUseCase(repository: spy),
+            getTodoItem: GetTodoItemUseCase(repository: spy),
+            dateProvider: provider,
+            calendar: calendar,
+            locale: Locale(identifier: "en_US")
+        )
+        await viewModel.load()
+        viewModel.toggleStep(viewModel.steps[0].id)
+        #expect(await viewModel.save())
+        #expect(spy.storedItems.first?.isCompleted == true)
     }
 }

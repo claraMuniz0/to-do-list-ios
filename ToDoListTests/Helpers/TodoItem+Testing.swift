@@ -7,7 +7,8 @@ func makeTodoItem(
     description: String? = nil,
     category: Category = .personal,
     dueDate: DueDate? = nil,
-    createdAt: Date = Date(timeIntervalSince1970: 1_000)
+    createdAt: Date = Date(timeIntervalSince1970: 1_000),
+    steps: [Step] = []
 ) -> TodoItem {
     TodoItem(
         id: id,
@@ -15,6 +16,7 @@ func makeTodoItem(
         description: description,
         category: category,
         dueDate: dueDate,
-        createdAt: createdAt
+        createdAt: createdAt,
+        steps: steps
     )
 }

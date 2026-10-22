@@ -26,6 +26,25 @@ struct ConfigFileAPIKeyProviderTests {
     }
 }
 
+struct ConfigFileBaseURLTests {
+    private func baseURL(_ value: Any?) -> URL {
+        ConfigFileAPIKeyProvider(infoDictionary: value.map { ["AnthropicBaseURL": $0] } ?? [:]).baseURL
+    }
+
+    @Test func usesTheConfiguredBaseURL() {
+        #expect(baseURL("https://gateway.example.com") == URL(string: "https://gateway.example.com"))
+    }
+
+    @Test(arguments: ["", "  ", "$(ANTHROPIC_BASE_URL)", "not a url", "ftp://host"])
+    func fallsBackToAnthropicWhenMissingOrInvalid(value: String) {
+        #expect(baseURL(value) == ClaudeEndpoint.defaultBaseURL)
+    }
+
+    @Test func fallsBackWhenAbsent() {
+        #expect(baseURL(nil) == ClaudeEndpoint.defaultBaseURL)
+    }
+}
+
 struct ClaudeAvailabilityTests {
     @Test func isAvailableWhenAKeyExists() {
         #expect(ClaudeAvailability(apiKeyProvider: APIKeyProviderStub(key: "sk-ant-123")).isAvailable)

@@ -15,11 +15,11 @@ struct AnthropicMessagesClientTests {
         maxTokens: 256
     )
 
-    private func makeClient(key: String? = "test-key") -> AnthropicMessagesClient {
+    private func makeClient(key: String? = "test-key", baseURL: URL? = nil) -> AnthropicMessagesClient {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [StubURLProtocol.self]
         return AnthropicMessagesClient(
-            apiKeyProvider: APIKeyProviderStub(key: key),
+            apiKeyProvider: APIKeyProviderStub(key: key, baseURL: baseURL ?? ClaudeEndpoint.defaultBaseURL),
             session: URLSession(configuration: configuration)
         )
     }
@@ -47,10 +47,23 @@ struct AnthropicMessagesClientTests {
         let sent = try #require(captured)
         #expect(sent.url?.absoluteString == "https://api.anthropic.com/v1/messages")
         #expect(sent.httpMethod == "POST")
-        #expect(sent.value(forHTTPHeaderField: "x-api-key") == "test-key")
+        #expect(sent.value(forHTTPHeaderField: "authorization") == "Bearer test-key")
+        #expect(sent.value(forHTTPHeaderField: "x-api-key") == nil)
         #expect(sent.value(forHTTPHeaderField: "anthropic-version") == "2023-06-01")
         #expect(sent.value(forHTTPHeaderField: "content-type") == "application/json")
         #expect(sent.timeoutInterval == 20)
+    }
+
+    @Test func postsToTheConfiguredBaseURL() async throws {
+        var captured: URLRequest?
+        StubURLProtocol.handler = { request in
+            captured = request
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (response, Data(toolUseBody.utf8))
+        }
+        _ = try await makeClient(baseURL: URL(string: "https://gateway.example.com/proxy")!).send(request)
+
+        #expect(captured?.url?.absoluteString == "https://gateway.example.com/proxy/v1/messages")
     }
 
     @Test func bodyForcesTheToolCall() async throws {

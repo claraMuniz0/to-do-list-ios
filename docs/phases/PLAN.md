@@ -58,7 +58,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 10: Splash Screen
 - Branded launch screen handing off to Welcome / the list once loading finishes, no artificial delay, Reduce Motion honored.
-- All decisions confirmed; independent of Phases 5 to 9.
+- Done; independent of Phases 5 to 9.
 
 ## Post-MVP backlog (to be phased later)
 - See [backlog](backlog-post-mvp.md).

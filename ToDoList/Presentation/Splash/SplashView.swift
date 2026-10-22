@@ -18,7 +18,7 @@ struct SplashView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.bottom, 40)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { DSGradient.splash.linearGradient.ignoresSafeArea() }
         .accessibilityElement(children: .ignore)

@@ -1,6 +1,6 @@
 # Phase 10: Splash Screen
 
-**Status:** all decisions confirmed, ready to start
+**Status:** done (all decisions confirmed and implemented)
 **Design:** `to-do.pen`, frame "Splash" (390x844, id `aCsZH`)
 **Depends on:** Phase 0 (composition root), Phase 1 (tokens, fonts), Phase 2 (`TodoListViewState.loading`). Independent of Phases 5 to 9.
 
@@ -52,13 +52,13 @@ Recommendation in **bold**. Status `open` until confirmed.
 | D1 | Start order and project edits | **Build any time after Phase 2.** The only project-file edit is the launch screen background in A1; ask before touching it | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] Splash tokens (colorsets, `DSColor`, `DSGradient.splash`) with tests
-- [ ] `isLaunching` on `TodoListViewModel`, tested first (true before load, false after success, false after failure, unchanged by `retry()`)
-- [ ] `SplashLayout` geometry (disc, ring, dots) with tests
-- [ ] `SplashView` and the `TodoListView` hand-off (cross-fade, Reduce Motion)
-- [ ] Launch screen background (only if A1 option 1 is approved)
-- [ ] Previews: default, `.accessibility3`
-- [ ] `accessibility-check` and `design-fidelity-checker` pass
+- [x] Splash tokens (colorsets, `DSColor`, `DSGradient.splash`) with tests
+- [x] `isLaunching` on `TodoListViewModel`, tested first (true before load, false after success, false after failure, unchanged by `retry()`)
+- [x] `SplashLayout` geometry (disc, ring, dots) with tests
+- [x] `SplashView` and the `TodoListView` hand-off (cross-fade, Reduce Motion)
+- [x] Launch screen background (only if A1 option 1 is approved)
+- [x] Previews: default, `.accessibility3`
+- [x] `accessibility-check` and `design-fidelity-checker` pass
 
 ## Out of scope
 - Motion beyond the hand-off fade, loading indicators
@@ -69,3 +69,10 @@ Recommendation in **bold**. Status `open` until confirmed.
 - Cold start shows the splash, then the correct screen, with no flash of other content.
 - Retry after an error does not show the splash.
 - Reduce Motion is honored; tests green; accessibility check passes; design-fidelity shows no High differences.
+
+## Build notes
+- Test-first: tokens (8 colorsets, `DSColor`, `DSGradient.splash`, `DSFont.tagline`, `DSShadow.splash`), `TodoListViewModel.isLaunching` (cleared by a `defer` in `load()`, so `retry()` never re-arms it) and `SplashLayout` (offsets from the disc center). `SplashView` and the hand-off are not unit tested (pure rendering).
+- Launch screen: `INFOPLIST_KEY_UILaunchScreen_BackgroundColor` is not a supported generated key (the dict stayed empty). Done instead with `Config/LaunchScreen-Info.plist` (`UILaunchScreen/UIColorName = splash-gradient-top`) plus `INFOPLIST_FILE` on both app-target configurations. It is flat coral `#E0603A`, so the bottom half jumps to the darker brick when the splash appears.
+- Reviews: accessibility found no blockers; added a `ScreenChanged` post when the splash hands off. Fidelity found no High differences; horizontal padding fixed to 32.
+- Carried forward: the SF `checkmark` (112pt, semibold) is larger and heavier than the design's lucide `check` (Medium, accepted per B3; a drawn `Shape` or about 90pt `.medium` would be closer). Tagline contrast is about 4:1 at its position (passes the 3:1 large-text rule; a lighter tint would read better in thin Caveat). The design's "Wordmark" and "Footer" frames still need the designer's word (C1). UI tests are done manually by the user.
+

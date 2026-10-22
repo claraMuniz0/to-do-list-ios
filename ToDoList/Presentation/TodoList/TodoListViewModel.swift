@@ -18,6 +18,9 @@ struct CategoryCount: Equatable {
 @MainActor @Observable
 final class TodoListViewModel {
     private(set) var state: TodoListViewState = .loading
+    /// True until the first `load()` finishes, whatever its outcome; the branded splash covers exactly this window.
+    /// A `retry()` goes through `.loading` again but never sets this, so the splash plays once per cold start.
+    private(set) var isLaunching = true
     /// Set when the last toggle or quick add failed; the list stays visible, the view can show a message.
     private(set) var actionFailed = false
     /// The last deleted task, while the Undo toast is offered. The view runs the 5-second timer and calls `dismissUndo()`.
@@ -137,6 +140,7 @@ final class TodoListViewModel {
 
     /// Any thrown error ends in `.error`; previously loaded items are dropped rather than shown stale.
     func load() async {
+        defer { isLaunching = false }
         do {
             let items = try await getTodoItems.execute()
             state = items.isEmpty ? .empty : .loaded(TodoListSections(items: items, sortOrder: sortOrder))

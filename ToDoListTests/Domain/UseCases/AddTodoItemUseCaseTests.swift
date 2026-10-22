@@ -74,4 +74,34 @@ struct AddTodoItemUseCaseTests {
         await #expect(throws: TodoItemTitleError.empty) { try await makeUseCase(spy).quickAdd(title: " ") }
         #expect(spy.storedItems.isEmpty)
     }
+
+    private func steps(done: [Bool]) -> StepList {
+        StepList(done.enumerated().map { Step(title: try! StepTitle("Step \($0.offset)"), isDone: $0.element) })
+    }
+
+    @Test func storesTheStepsWithTheNewItem() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = try await makeUseCase(spy).execute(
+            title: "Trip", description: nil, category: .personal, dueDate: nil, steps: steps(done: [false, false])
+        )
+        #expect(item.steps.count == 2)
+        #expect(spy.storedItems == [item])
+        #expect(!item.isCompleted)
+    }
+
+    @Test func noStepsByDefault() async throws {
+        let item = try await makeUseCase(TodoItemRepositorySpy())
+            .execute(title: "Buy milk", description: nil, category: .personal, dueDate: nil)
+        #expect(item.steps.isEmpty)
+        #expect(!item.isCompleted)
+    }
+
+    @Test func aNewTaskWithEveryStepDoneIsStoredCompleted() async throws {
+        let spy = TodoItemRepositorySpy()
+        let item = try await makeUseCase(spy).execute(
+            title: "Trip", description: nil, category: .personal, dueDate: nil, steps: steps(done: [true, true])
+        )
+        #expect(item.completedAt == now)
+        #expect(spy.storedItems.first?.completedAt == now)
+    }
 }

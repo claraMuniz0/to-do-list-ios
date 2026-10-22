@@ -270,6 +270,7 @@ struct TodoListView: View {
                         categoryName: item.category.name.value,
                         palette: ChipPalette(colorKey: item.category.color.key),
                         isDone: isDone,
+                        stepProgress: item.stepsProgress.map(TaskRowStepProgress.init),
                         onOpen: { router.present(.editTodoItem(id: item.id)) },
                         onToggle: { Task { await viewModel.toggle(id: item.id) } }
                     )

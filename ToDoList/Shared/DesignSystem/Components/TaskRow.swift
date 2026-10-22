@@ -16,10 +16,13 @@ struct TaskRowStyle: Equatable {
     var openHint: String { "Opens the task for editing" }
 
     /// One spoken label for the whole row. The description is skipped when done because it is not shown.
-    func accessibilityLabel(title: String, description: String?, categoryName: String) -> String {
+    func accessibilityLabel(
+        title: String, description: String?, categoryName: String, stepProgress: TaskRowStepProgress? = nil
+    ) -> String {
         var parts = [title]
         if let description, !description.isEmpty, !isDone { parts.append(description) }
         parts.append(categoryName)
+        if let stepProgress { parts.append("\(stepProgress.completed) of \(stepProgress.total) steps done") }
         return parts.joined(separator: ", ")
     }
 
@@ -32,10 +35,19 @@ struct TaskRowStyle: Equatable {
     }
 }
 
-/// Plain display data for the optional step counter. Unused in the MVP.
+/// Plain display data for the optional step counter; `nil` on a task without steps.
 struct TaskRowStepProgress: Equatable {
     let completed: Int
     let total: Int
+
+    init(completed: Int, total: Int) {
+        self.completed = completed
+        self.total = total
+    }
+
+    init(_ progress: StepsProgress) {
+        self.init(completed: progress.done, total: progress.total)
+    }
 }
 
 /// The description is hidden when `isDone`. The checkbox toggles completion; tapping the rest of the row calls `onOpen`.
@@ -115,7 +127,7 @@ struct TaskRow: View {
         }
         // The whole row is one VoiceOver element; the visible checkbox stays a real Button for touch and pointer.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(style.accessibilityLabel(title: title, description: description, categoryName: categoryName))
+        .accessibilityLabel(style.accessibilityLabel(title: title, description: description, categoryName: categoryName, stepProgress: stepProgress))
         .accessibilityValue(style.accessibilityValue)
         .accessibilityHint(style.openHint)
         .accessibilityAddTraits(.isButton)

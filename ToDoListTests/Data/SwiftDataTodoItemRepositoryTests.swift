@@ -16,15 +16,15 @@ struct SwiftDataTodoItemRepositoryTests {
     @Test func addThenFindByID() async throws {
         let repository = try makeRepository()
         let item = makeTodoItem(description: "Notes", category: .work, dueDate: makeDueDate(2026, 10, 8))
-        try await repository.add(item)
+        try repository.add(item)
         #expect(try await repository.task(id: item.id) == item)
     }
 
     @Test func allTasksKeepsInsertionOrder() async throws {
         let repository = try makeRepository()
         let first = makeTodoItem(title: "First"), second = makeTodoItem(title: "Second")
-        try await repository.add(first)
-        try await repository.add(second)
+        try repository.add(first)
+        try repository.add(second)
         #expect(try await repository.allTasks() == [first, second])
     }
 
@@ -32,15 +32,15 @@ struct SwiftDataTodoItemRepositoryTests {
         let repository = try makeRepository()
         let older = makeTodoItem(title: "Older", createdAt: Date(timeIntervalSince1970: 1))
         let newer = makeTodoItem(title: "Newer", createdAt: Date(timeIntervalSince1970: 2))
-        try await repository.add(newer)
-        try await repository.add(older)
+        try repository.add(newer)
+        try repository.add(older)
         #expect(try await repository.allTasks() == [older, newer])
     }
 
     @Test func addingDuplicateIDThrowsAndKeepsOneItem() async throws {
         let repository = try makeRepository()
         let item = makeTodoItem()
-        try await repository.add(item)
+        try repository.add(item)
         await #expect(throws: TodoItemRepositoryError.alreadyExists) { try await repository.add(item) }
         #expect(try await repository.allTasks() == [item])
     }
@@ -49,11 +49,11 @@ struct SwiftDataTodoItemRepositoryTests {
         let repository = try makeRepository()
         var first = makeTodoItem(title: "First")
         let second = makeTodoItem(title: "Second")
-        try await repository.add(first)
-        try await repository.add(second)
+        try repository.add(first)
+        try repository.add(second)
         first.changeCategory(.shopping)
         first.complete(at: Date(timeIntervalSince1970: 9_000))
-        try await repository.update(first)
+        try repository.update(first)
         #expect(try await repository.allTasks() == [first, second])
     }
 
@@ -65,9 +65,9 @@ struct SwiftDataTodoItemRepositoryTests {
     @Test func deleteRemovesOnlyThatItem() async throws {
         let repository = try makeRepository()
         let a = makeTodoItem(title: "A"), b = makeTodoItem(title: "B")
-        try await repository.add(a)
-        try await repository.add(b)
-        try await repository.delete(id: a.id)
+        try repository.add(a)
+        try repository.add(b)
+        try repository.delete(id: a.id)
         #expect(try await repository.allTasks() == [b])
         #expect(try await repository.task(id: a.id) == nil)
     }
@@ -84,7 +84,42 @@ struct SwiftDataTodoItemRepositoryTests {
     @Test func aSecondRepositoryOnTheSameStoreSeesSavedItems() async throws {
         let container = try ModelContainer.inMemoryTodoItems()
         let item = makeTodoItem()
-        try await makeRepository(container: container).add(item)
+        try makeRepository(container: container).add(item)
         #expect(try await makeRepository(container: container).allTasks() == [item])
+    }
+
+    // MARK: - steps
+
+    private func steps(_ titles: String...) -> [Step] {
+        titles.map { Step(title: try! StepTitle($0)) }
+    }
+
+    @Test func addThenFindKeepsSteps() async throws {
+        let repository = try makeRepository()
+        let item = makeTodoItem(steps: steps("A", "B"))
+        try repository.add(item)
+        #expect(try await repository.task(id: item.id) == item)
+    }
+
+    @Test func updatePersistsStepChanges() async throws {
+        let repository = try makeRepository()
+        var item = makeTodoItem(steps: steps("A", "B", "C"))
+        try repository.add(item)
+
+        try item.toggleStep(item.steps[0].id)
+        try item.moveStep(from: 2, to: 0)
+        try item.addStep(StepTitle("D"))
+        try repository.update(item)
+
+        #expect(try await repository.task(id: item.id) == item)
+    }
+
+    @Test func updateCanRemoveEveryStep() async throws {
+        let repository = try makeRepository()
+        var item = makeTodoItem(steps: steps("A"))
+        try repository.add(item)
+        try item.removeStep(item.steps[0].id)
+        try repository.update(item)
+        #expect(try await repository.task(id: item.id)?.steps.isEmpty == true)
     }
 }

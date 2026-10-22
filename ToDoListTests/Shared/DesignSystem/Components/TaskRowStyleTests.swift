@@ -67,4 +67,18 @@ struct TaskRowStyleTests {
         #expect(TaskRowStyle(isDone: false).openHint == "Opens the task for editing")
         #expect(TaskRowStyle(isDone: true).openHint == "Opens the task for editing")
     }
+
+    @Test func stepProgressIsBuiltFromTheDomainProgress() throws {
+        let progress = TaskRowStepProgress(StepsProgress(done: 2, total: 5))
+        #expect(progress == TaskRowStepProgress(completed: 2, total: 5))
+    }
+
+    @Test func spokenLabelEndsWithTheStepsDoneWhenTheTaskHasSteps() {
+        let style = TaskRowStyle(isDone: false)
+        let label = style.accessibilityLabel(
+            title: "Buy milk", description: nil, categoryName: "Shopping",
+            stepProgress: TaskRowStepProgress(completed: 2, total: 5)
+        )
+        #expect(label == "Buy milk, Shopping, 2 of 5 steps done")
+    }
 }

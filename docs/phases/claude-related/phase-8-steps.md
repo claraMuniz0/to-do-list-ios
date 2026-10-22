@@ -1,6 +1,6 @@
 # Phase 8: Steps (manual + Claude)
 
-**Status:** all decisions confirmed, ready to start
+**Status:** built; open PR [#11](https://github.com/claramzfpp/to-do-list-ios/pull/11). Still to do: `design-fidelity-checker`, a full `accessibility-auditor` pass on the sheet and pill, and the doc-comment pass
 **Design:** `to-do.pen`: "Edit Task – Steps" (`zZdaQ`), "Edit Task – Break it down" (`m52M44`), "Edit Task – Suggested Steps" (`f8WT4`), "Smart Add – Review" (`i1ysG`, Steps field), Task Row (steps progress)
 **Depends on:** Phase 3 (`TodoItem`, SwiftData record, form), Phase 4 (Edit form, mode-based form view model), [Claude foundation](claude-foundation.md)
 **Parallel with:** [Phase 9: Smart Add](phase-9-smart-add.md) (after the foundation is merged)
@@ -44,10 +44,10 @@ Recommendation in **bold**. Group A answers are already given in the kickoff cha
 | B2 | `StepTitle` | trimmed, non-empty, max length | **Trimmed, non-empty, max 120 characters** (same as the task title); the field stops input at the limit | **confirmed** (recommendation accepted) |
 | B3 | Limits | (1) none; (2) max steps per task | **Max 20 steps** (Claude cannot flood a task; the list stays usable). Adding beyond it throws `TodoItemError.tooManySteps` | **confirmed** (your choice: 20) |
 | B4 | Progress | `StepsProgress` value (done, total, fraction) computed by `TodoItem` | **As described**, pure and tested (0 steps = no progress shown) | **confirmed** (recommendation accepted) |
-| B5 | Task completion vs steps | (1) independent: ticking all steps does not complete the task and completing the task does not tick steps; (2) linked | **(1) Independent** (YAGNI, no surprising automation). Trade-off: the user ticks twice | **confirmed** (recommendation accepted) |
+| B5 | Task completion vs steps | (1) independent: ticking all steps does not complete the task and completing the task does not tick steps; (2) linked | **(1) Independent** (YAGNI, no surprising automation). Trade-off: the user ticks twice | **changed after build:** linked one way. Saving a task (Add or Edit) with at least one step and every step done completes it (`TodoItem.completeIfAllStepsDone`, called by `AddTodoItemUseCase` and `UpdateTodoItemUseCase`). It happens on Save, not when the last step is ticked, and un-ticking or adding a step never reopens the task. Completing the task still does not tick steps |
 | B6 | Order | stable, user-controlled order; new steps append at the end | **As described**; `moveStep(from:to:)` | **confirmed** (recommendation accepted) |
 | B7 | Use cases | `UpdateTodoItemUseCase` (Phase 4) already persists the whole item, so steps ride on it | **No new CRUD use cases.** Only `SuggestStepsUseCase` (B9). Trade-off: a step toggle in the list saves the whole item | **confirmed** (recommendation accepted) |
-| B8 | Steps in the Add form | (1) Edit only in this phase; Add gets steps via Smart Add Review; (2) add the Steps field to Add too | **(1) Edit only.** Phase 3's Add has no Steps in the design; adding steps happens after creation. Trade-off: users cannot add steps while creating manually | **confirmed** (recommendation accepted) |
+| B8 | Steps in the Add form | (1) Edit only in this phase; Add gets steps via Smart Add Review; (2) add the Steps field to Add too | **(1) Edit only.** Phase 3's Add has no Steps in the design; adding steps happens after creation. Trade-off: users cannot add steps while creating manually | **changed after build:** option (2). The Steps field, including the Claude pill, is in Add too, and its steps are saved with the new task (`AddTodoItemUseCase` takes `steps`). Deviation from the design, flag it |
 | B9 | Suggestion port | `StepSuggesting` (Domain protocol): `suggest(title, description, existingSteps) async throws -> [StepTitle]`; `SuggestStepsUseCase` calls it | **As described.** Domain stays free of Claude. Result is 3 to 6 titles, validated (trim, drop empties and duplicates, cap at 20 total) | **confirmed** (recommendation accepted) |
 
 ### C. Data
@@ -78,13 +78,15 @@ Recommendation in **bold**. Group A answers are already given in the kickoff cha
 | E2 | Shared files with Phase 9 | `TodoItemFormViewModel` (steps draft), the Steps field components, composition root. **Phase 8 owns the Steps components and `StepsDraft`; Phase 9 only consumes them.** Phase 9's Review screen is wired after Phase 8's field exists, or uses a minimal stub of it | **confirmed** (recommendation accepted) |
 
 ## Scope (after decisions are confirmed)
-- [ ] `StepID`, `StepTitle`, `Step`, `StepsProgress`; `TodoItem` step behaviors; `TodoItemError` cases; tests first
-- [ ] Persistence of steps (defaulted property), mapper, old-shape store test
-- [ ] DS components: `StepRow`, `StepsProgressBar`, `StepsField`, `SuggestPill`; `TaskRow` progress
-- [ ] Form view model: steps draft (add, toggle, edit, delete, move, limit)
-- [ ] `StepSuggesting`, `SuggestStepsUseCase`, `ClaudeStepSuggester`, `FakeStepSuggester`
-- [ ] "Break it down" and "Suggest more" pills; `SuggestedStepsSheet`
-- [ ] Previews per state; `accessibility-check`; `design-fidelity-checker`; doc-comment pass in its own commit
+- [x] `StepID`, `StepTitle`, `Step`, `StepsProgress`; `TodoItem` step behaviors; `TodoItemError` cases; tests first
+- [x] Persistence of steps (defaulted property), mapper, old-shape store test
+- [x] DS components: `StepRow`, `StepsProgressBar`, `StepsField`, `SuggestPill`; `TaskRow` progress
+- [x] Form view model: steps draft (add, toggle, edit, delete, move, limit)
+- [x] `StepSuggesting`, `SuggestStepsUseCase`, `ClaudeStepSuggester`, `FakeStepSuggester` (the fake lives in the test target)
+- [x] "Break it down" and "Suggest more" pills; `SuggestedStepsSheet`. Both pills are one pill in the Steps header (its title follows whether steps exist), not in the Description row as designed. Flag to the design
+- [x] Previews per state; `accessibility-check` (Steps components)
+- [ ] `accessibility-auditor` pass on `SuggestedStepsSheet` and the pill states; `design-fidelity-checker`; doc-comment pass in its own commit
+- Not unit tested (previews only): the views in `TodoItemFormView` and `SuggestedStepsSheet`; the logic behind them is covered through the view model
 
 ## Out of scope
 - Smart Add (Phase 9), the Claude client itself (foundation), nested steps, step due dates, templates

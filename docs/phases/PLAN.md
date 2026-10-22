@@ -50,7 +50,7 @@ Source of truth for design: `to-do.pen` (18 screens + component library). Macro 
 
 ## Phase 8: Steps (manual + Claude)
 - Steps on a task (add, tick, rename, delete, reorder, progress, "2/5" on the row), "Break it down", "Suggest more" and the Suggested steps sheet.
-- All decisions confirmed; built in parallel with Phase 9 after the foundation.
+- Built (PR #11): steps also in the Add form, and a task with every step done is completed on save. Design-fidelity check and doc-comment pass pending.
 
 ## Phase 9: Smart Add
 - Describe screen (sentence, counter, examples) and Review screen (the Add form prefilled by Claude, banner, Save). Date only, no priority, no mic.

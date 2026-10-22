@@ -77,3 +77,26 @@ struct AppDependenciesClaudeTests {
         #expect(!dependencies.claudeAvailability.isAvailable)
     }
 }
+
+
+@MainActor
+struct AppDependenciesStepSuggestionTests {
+    private func makeViewModel(key: String?) -> TodoItemFormViewModel {
+        AppDependencies(
+            todoItemRepository: InMemoryTodoItemRepository(),
+            dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
+            sortOrderRepository: SortOrderRepositorySpy(),
+            recentSearchRepository: RecentSearchRepositorySpy(),
+            claudeClient: FakeClaudeClient(),
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: APIKeyProviderStub(key: key))
+        ).makeTodoItemFormViewModel(initialTitle: "Plan trip")
+    }
+
+    @Test func theFormOffersSuggestionsWhenAKeyIsConfigured() {
+        #expect(makeViewModel(key: "token").canSuggestSteps)
+    }
+
+    @Test func theFormHidesSuggestionsWithoutAKey() {
+        #expect(!makeViewModel(key: nil).canSuggestSteps)
+    }
+}

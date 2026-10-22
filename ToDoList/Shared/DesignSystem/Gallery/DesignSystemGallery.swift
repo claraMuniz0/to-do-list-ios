@@ -5,6 +5,9 @@ struct DesignSystemGallery: View {
     @State private var inputText = ""
     @State private var titleText = ""
     @State private var notesText = ""
+    @State private var steps = ["Write the list", "Pick up milk", "Pack the bags"].enumerated().map {
+        Step(title: try! StepTitle($1), isDone: $0 == 0)
+    }
 
     var body: some View {
         ScrollView {
@@ -54,6 +57,28 @@ struct DesignSystemGallery: View {
                     TaskRow(title: "Prepare slides", description: "Quarterly review", categoryName: "Work", palette: .blue, isDone: false, onToggle: {})
                     TaskRow(title: "Buy milk", description: nil, categoryName: "Shopping", palette: .green, isDone: false, onToggle: {})
                     TaskRow(title: "Call mom", description: nil, categoryName: "Personal", palette: .brick, isDone: true, onToggle: {})
+                }
+
+                section("Steps") {
+                    StepsField(
+                        steps: steps,
+                        progress: StepList(steps).progress,
+                        canAdd: steps.count < StepList.maxSteps,
+                        suggestion: StepsFieldSuggestion(title: "Suggest more", isLoading: false, action: {}),
+                        onToggle: { id in if let i = steps.firstIndex(where: { $0.id == id }) { steps[i].toggle() } },
+                        onRename: { id, text in
+                            guard let title = try? StepTitle(text), let i = steps.firstIndex(where: { $0.id == id }) else { return false }
+                            steps[i].rename(title)
+                            return true
+                        },
+                        onRemove: { id in steps.removeAll { $0.id == id } },
+                        onMove: { from, to in steps.insert(steps.remove(at: from), at: to) },
+                        onAdd: { text in
+                            guard let title = try? StepTitle(text) else { return false }
+                            steps.append(Step(title: title))
+                            return true
+                        }
+                    )
                 }
 
                 section("Form controls") {

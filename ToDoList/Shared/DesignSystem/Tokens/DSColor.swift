@@ -13,6 +13,8 @@ enum DSColor {
     static let textMuted = Color("text-muted")
     static let accent = Color("accent")
     static let accentSoft = Color("accent-soft")
+    /// `accent` darkened to 4.65:1 on `accentSoft` (plain `accent` is 4.21:1 there, under the 4.5:1 text minimum, WCAG 1.4.3).
+    static let accentText = Color("accent-text")
     static let onAccent = Color("on-accent")
     static let danger = Color("danger")
 

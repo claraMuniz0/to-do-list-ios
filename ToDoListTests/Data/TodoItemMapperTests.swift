@@ -55,4 +55,34 @@ struct TodoItemMapperTests {
         record.dueMonth = 13
         #expect(throws: DueDateError.invalidDate) { try mapper.toDomain(record) }
     }
+
+    // MARK: - steps
+
+    private func steps(_ titles: String...) -> [Step] {
+        titles.enumerated().map { Step(title: try! StepTitle($1), isDone: $0 == 1) }
+    }
+
+    @Test func roundTripsStepsInOrderWithTheirState() throws {
+        let item = makeTodoItem(steps: steps("A", "B", "C"))
+        let restored = try mapper.toDomain(mapper.toRecord(item))
+        #expect(restored == item)
+        #expect(restored.steps.map(\.title.value) == ["A", "B", "C"])
+        #expect(restored.steps.map(\.isDone) == [false, true, false])
+    }
+
+    @Test func storesStepsAsPlainDTOs() {
+        let item = makeTodoItem(steps: steps("A", "B"))
+        let record = mapper.toRecord(item)
+        #expect(record.steps == item.steps.map { StepDTO(id: $0.id.uuid, title: $0.title.value, isDone: $0.isDone) })
+    }
+
+    @Test func aCorruptStepTitleDropsOnlyThatStep() throws {
+        let record = mapper.toRecord(makeTodoItem(steps: steps("A", "B", "C")))
+        record.steps[1].title = "   "
+        #expect(try mapper.toDomain(record).steps.map(\.title.value) == ["A", "C"])
+    }
+
+    @Test func aRecordWithoutStepsMapsToNoSteps() throws {
+        #expect(try mapper.toDomain(mapper.toRecord(makeTodoItem())).steps.isEmpty)
+    }
 }

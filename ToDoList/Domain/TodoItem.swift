@@ -12,6 +12,10 @@ struct TodoItem: Equatable {
     private(set) var category: Category
     private(set) var dueDate: DueDate?
     private(set) var completedAt: Date?
+    private(set) var steps: [Step]
+
+    /// Keeps a task usable and stops Claude from flooding it.
+    static var maxSteps: Int { StepList.maxSteps }
 
     init(
         id: TodoItemID = TodoItemID(),
@@ -20,7 +24,8 @@ struct TodoItem: Equatable {
         category: Category,
         dueDate: DueDate? = nil,
         createdAt: Date,
-        completedAt: Date? = nil
+        completedAt: Date? = nil,
+        steps: [Step] = []
     ) {
         self.id = id
         self.title = title
@@ -29,6 +34,8 @@ struct TodoItem: Equatable {
         self.dueDate = dueDate
         self.createdAt = createdAt
         self.completedAt = completedAt
+        // Steps past the limit are dropped so the invariant holds even for stored data.
+        self.steps = StepList(steps).steps
     }
 
     var isCompleted: Bool { completedAt != nil }
@@ -58,6 +65,52 @@ struct TodoItem: Equatable {
     /// Blank text clears the description (stored as `nil`).
     mutating func changeDescription(_ newDescription: String?) {
         description = Self.normalized(newDescription)
+    }
+
+    /// `nil` when the task has no steps, so views never show an empty "0 of 0" bar.
+    var stepsProgress: StepsProgress? { StepList(steps).progress }
+
+    /// - Throws: `TodoItemError.tooManySteps` once the task already has `maxSteps`.
+    @discardableResult
+    mutating func addStep(_ title: StepTitle) throws -> StepID {
+        try changeSteps { try $0.add(title) }
+    }
+
+    mutating func toggleStep(_ id: StepID) throws {
+        try changeSteps { try $0.toggle(id) }
+    }
+
+    mutating func renameStep(_ id: StepID, to newTitle: StepTitle) throws {
+        try changeSteps { try $0.rename(id, to: newTitle) }
+    }
+
+    mutating func removeStep(_ id: StepID) throws {
+        try changeSteps { try $0.remove(id) }
+    }
+
+    /// `to` is the index the step ends up at, so moving the first of three steps to `2` puts it last.
+    mutating func moveStep(from source: Int, to destination: Int) throws {
+        try changeSteps { try $0.move(from: source, to: destination) }
+    }
+
+    /// Replaces every step at once, for a form that edited a `StepList` and saves it in one go.
+    mutating func replaceSteps(_ newSteps: StepList) {
+        steps = newSteps.steps
+    }
+
+    /// Completes the task when it has steps and every one is done; otherwise changes nothing.
+    /// A task already completed keeps its first completion time, and un-ticking a step later does not reopen it.
+    mutating func completeIfAllStepsDone(at date: Date) {
+        guard stepsProgress?.isComplete == true else { return }
+        complete(at: date)
+    }
+
+    /// Applies a change to a copy and keeps it only if it succeeds, so a failed change never leaves a half-edited list.
+    private mutating func changeSteps<Result>(_ change: (inout StepList) throws -> Result) throws -> Result {
+        var list = StepList(steps)
+        let result = try change(&list)
+        steps = list.steps
+        return result
     }
 
     private static func normalized(_ text: String?) -> String? {

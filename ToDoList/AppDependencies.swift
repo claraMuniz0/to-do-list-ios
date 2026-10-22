@@ -45,13 +45,18 @@ struct AppDependencies {
         TodoItemFormViewModel(
             mode: mode,
             addTodoItem: makeAddTodoItemUseCase(),
-            updateTodoItem: UpdateTodoItemUseCase(repository: todoItemRepository),
+            updateTodoItem: UpdateTodoItemUseCase(repository: todoItemRepository, dateProvider: dateProvider),
             deleteTodoItem: DeleteTodoItemUseCase(repository: todoItemRepository),
             getTodoItem: GetTodoItemUseCase(repository: todoItemRepository),
             dateProvider: dateProvider,
             calendar: calendar,
-            initialTitle: initialTitle
+            initialTitle: initialTitle,
+            suggestSteps: claudeAvailability.isAvailable ? makeSuggestStepsUseCase() : nil
         )
+    }
+
+    private func makeSuggestStepsUseCase() -> SuggestStepsUseCase {
+        SuggestStepsUseCase(suggester: ClaudeStepSuggester(client: claudeClient))
     }
 
     private func makeAddTodoItemUseCase() -> AddTodoItemUseCase {

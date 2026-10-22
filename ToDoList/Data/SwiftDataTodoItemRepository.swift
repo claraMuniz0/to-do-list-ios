@@ -45,6 +45,7 @@ final class SwiftDataTodoItemRepository: TodoItemRepository {
         stored.dueMonth = updated.dueMonth
         stored.dueDay = updated.dueDay
         stored.completedAt = updated.completedAt
+        stored.steps = updated.steps
         try save()
     }
 

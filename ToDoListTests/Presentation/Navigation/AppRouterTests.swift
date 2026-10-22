@@ -96,6 +96,16 @@ struct AppRouterTests {
         #expect(router.nestedRoute == nil)
     }
 
+    @Test func dismissNestedOnlyClosesTheNestedCoverAndIsIdempotent() {
+        let router = AppRouter()
+        router.present(.search)
+        router.present(.addTodoItem(prefill: ""))
+        router.dismissNested()
+        router.dismissNested()
+        #expect(router.presentedRoute == .search)
+        #expect(router.nestedRoute == nil)
+    }
+
     @Test func addPresentedWithoutSearchHasNoNestedRoute() {
         let router = AppRouter()
         router.present(.addTodoItem(prefill: ""))

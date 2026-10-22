@@ -115,6 +115,10 @@ struct TodoListView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.isLaunching)
+        // Focus would otherwise stay on the removed splash element.
+        .onChange(of: viewModel.isLaunching) { _, isLaunching in
+            if !isLaunching { AccessibilityNotification.ScreenChanged(nil).post() }
+        }
     }
 
     @ViewBuilder private var screen: some View {

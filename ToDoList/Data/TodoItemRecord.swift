@@ -16,6 +16,8 @@ final class TodoItemRecord {
     var dueDay: Int?
     var createdAt: Date
     var completedAt: Date?
+    /// Ordered, stored with the task. A defaulted property, so stores written before steps open unchanged.
+    var steps: [StepDTO] = []
 
     init(
         id: UUID,
@@ -26,7 +28,8 @@ final class TodoItemRecord {
         dueMonth: Int?,
         dueDay: Int?,
         createdAt: Date,
-        completedAt: Date?
+        completedAt: Date?,
+        steps: [StepDTO] = []
     ) {
         self.id = id
         self.title = title
@@ -37,5 +40,6 @@ final class TodoItemRecord {
         self.dueDay = dueDay
         self.createdAt = createdAt
         self.completedAt = completedAt
+        self.steps = steps
     }
 }

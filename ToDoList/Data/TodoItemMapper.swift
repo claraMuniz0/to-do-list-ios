@@ -18,7 +18,8 @@ struct TodoItemMapper {
             dueMonth: item.dueDate?.month,
             dueDay: item.dueDate?.day,
             createdAt: item.createdAt,
-            completedAt: item.completedAt
+            completedAt: item.completedAt,
+            steps: item.steps.map { StepDTO(id: $0.id.uuid, title: $0.title.value, isDone: $0.isDone) }
         )
     }
 
@@ -33,8 +34,15 @@ struct TodoItemMapper {
             category: categories.first { $0.id.value == record.categoryID } ?? .personal,
             dueDate: try dueDate(of: record),
             createdAt: record.createdAt,
-            completedAt: record.completedAt
+            completedAt: record.completedAt,
+            steps: record.steps.compactMap(step)
         )
+    }
+
+    /// A step whose stored title is no longer valid is dropped rather than failing the whole task.
+    private func step(_ dto: StepDTO) -> Step? {
+        guard let title = try? StepTitle(dto.title) else { return nil }
+        return Step(id: StepID(dto.id), title: title, isDone: dto.isDone)
     }
 
     private func dueDate(of record: TodoItemRecord) throws -> DueDate? {

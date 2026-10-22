@@ -54,3 +54,24 @@ struct AppDependenciesSortOrderTests {
         #expect(spy.stored == .newestFirst)
     }
 }
+
+@MainActor
+struct AppDependenciesClaudeTests {
+    @Test func exposesTheInjectedClaudeClientAndAvailability() async throws {
+        let fake = FakeClaudeClient(outcomes: [.success(ClaudeResponse(toolName: "t", toolInput: Data("{}".utf8)))])
+        let dependencies = AppDependencies(
+            todoItemRepository: InMemoryTodoItemRepository(),
+            dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
+            sortOrderRepository: SortOrderRepositorySpy(),
+            recentSearchRepository: RecentSearchRepositorySpy(),
+            claudeClient: fake,
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: APIKeyProviderStub(key: nil))
+        )
+        let request = ClaudeRequest(systemPrompt: "s", userMessage: "u", tool: ClaudeTool(name: "t", description: "d", inputSchema: .object([:])), maxTokens: 1)
+
+        _ = try await dependencies.claudeClient.send(request)
+
+        #expect(fake.receivedRequests == [request])
+        #expect(!dependencies.claudeAvailability.isAvailable)
+    }
+}

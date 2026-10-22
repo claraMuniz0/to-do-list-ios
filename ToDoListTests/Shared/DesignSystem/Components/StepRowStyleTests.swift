@@ -44,4 +44,14 @@ struct StepRowStyleTests {
     @Test func rowHeightIsTheDesign52() {
         #expect(StepRowStyle.minRowHeight == 52)
     }
+
+    @Test func deleteActionIsNamedForVoiceOver() {
+        #expect(StepRowStyle.deleteActionName == "Delete step")
+    }
+
+    @Test func emptyTextStillGivesTheCheckboxAName() {
+        #expect(StepRowStyle.checkboxLabel(for: "") == "Step")
+        #expect(StepRowStyle.checkboxLabel(for: "  ") == "Step")
+        #expect(StepRowStyle.checkboxLabel(for: "Pack") == "Pack")
+    }
 }

@@ -338,8 +338,6 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/LaunchScreen-Info.plist";
-				INFOPLIST_KEY_AnthropicAPIKey = "$(ANTHROPIC_AUTH_TOKEN)";
-				INFOPLIST_KEY_AnthropicBaseURL = "$(ANTHROPIC_BASE_URL)";
 				INFOPLIST_KEY_CFBundleDisplayName = "Do it later";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

@@ -24,7 +24,8 @@ final class TodoSearchViewModel {
     private(set) var recentSearches: [SearchQuery] = []
     /// Set when the last record or clear of recent searches failed; results stay visible.
     private(set) var actionFailed = false
-    /// Text for VoiceOver. Set only on submit or when the scope changes, never per keystroke.
+    /// Text for VoiceOver. Set on submit, when the scope changes, when a toggle or form outcome changes the result
+    /// count, and after clearing recents; never per keystroke.
     private(set) var announcement: SearchAnnouncement?
 
     /// Called with the deleted task when the Edit form reports `.deleted`, so the list can show its Undo toast.

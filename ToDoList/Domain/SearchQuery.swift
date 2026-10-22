@@ -1,7 +1,9 @@
 import Foundation
 
 enum SearchQueryError: Error, Equatable {
+    /// Blank text is not an error for the user: it means "no search", so the Recent state shows.
     case empty
+    /// The screen cuts typed text to `SearchQuery.maxLength`, so only direct callers can hit this.
     case tooLong
 }
 

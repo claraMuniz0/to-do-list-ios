@@ -2,8 +2,11 @@ import Foundation
 
 /// How the open tasks are ordered. Completed tasks ignore it and stay most recently completed first.
 enum TodoItemSortOrder: String, CaseIterable, Equatable {
+    /// Soonest first, undated last; ties go to the oldest created. The default, and the order before sorting existed.
     case dueDate
+    /// Latest `createdAt` first.
     case newestFirst
+    /// Ignores case and accents; identical titles fall back to the oldest created.
     case titleAZ
 
     static let `default`: TodoItemSortOrder = .dueDate
@@ -18,6 +21,7 @@ enum TodoItemSortOrder: String, CaseIterable, Equatable {
         ordered(items.filter { !$0.isCompleted }) + Self.completedFirstByRecentCompletion(items.filter(\.isCompleted))
     }
 
+    /// A task with no `completedAt` sorts last rather than throwing, so a malformed record cannot hide the list.
     static func completedFirstByRecentCompletion(_ items: [TodoItem]) -> [TodoItem] {
         stable(items) { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
     }

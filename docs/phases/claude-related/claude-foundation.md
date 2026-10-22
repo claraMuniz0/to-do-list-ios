@@ -12,7 +12,7 @@ One small, tested way to call Claude, so Phases 8 and 9 can be built **in parall
 - **Domain (pure):** no Claude types. Only the ports each feature needs live in their own phase (`StepSuggesting` in Phase 8, `TaskDraftParsing` in Phase 9). This phase adds nothing to Domain.
 - **Data:**
   - `ClaudeClient` protocol: `send(_ request: ClaudeRequest) async throws -> ClaudeResponse` (system prompt, one user message, one forced tool definition, `maxTokens`). Features build requests and decode the tool input.
-  - `AnthropicMessagesClient`: `URLSession` against `POST https://api.anthropic.com/v1/messages` (`x-api-key`, `anthropic-version`, JSON body). No SDK.
+  - `AnthropicMessagesClient`: `URLSession` against `POST <base URL>/v1/messages` (`Authorization: Bearer <token>`, `anthropic-version`, JSON body). No SDK. **Changed after kickoff:** the user supplies `ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_BASE_URL` (gateway) in the git-ignored `Config/Secrets.xcconfig`, so auth is Bearer, not `x-api-key`, and the base URL defaults to `https://api.anthropic.com` when unset or invalid. The xcconfig is wired into Debug builds only.
   - `ClaudeError` (`missingAPIKey`, `offline`, `timeout`, `rateLimited`, `unauthorized`, `serverError(status)`, `invalidResponse`), never swallowed.
   - `APIKeyProvider` protocol and `ConfigFileAPIKeyProvider` (reads the key from the app bundle, see C1).
   - Test doubles: `FakeClaudeClient` (queued responses and errors) and a `URLProtocol` stub for the HTTP client tests.

@@ -6,6 +6,8 @@ struct AppDependencies {
     var calendar: Calendar = .current
     let sortOrderRepository: SortOrderRepository
     let recentSearchRepository: RecentSearchRepository
+    let claudeClient: ClaudeClient
+    let claudeAvailability: ClaudeAvailability
 
     func makeGetSortOrderUseCase() -> GetSortOrderUseCase { GetSortOrderUseCase(repository: sortOrderRepository) }
     func makeSaveSortOrderUseCase() -> SaveSortOrderUseCase { SaveSortOrderUseCase(repository: sortOrderRepository) }

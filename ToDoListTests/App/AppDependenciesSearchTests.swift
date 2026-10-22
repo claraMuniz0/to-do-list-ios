@@ -31,7 +31,9 @@ struct AppDependenciesSearchTests {
             todoItemRepository: InMemoryTodoItemRepository(),
             dateProvider: DateProviderStub(current: Date(timeIntervalSince1970: 50_000)),
             sortOrderRepository: SortOrderRepositorySpy(),
-            recentSearchRepository: spy
+            recentSearchRepository: spy,
+            claudeClient: FakeClaudeClient(),
+            claudeAvailability: ClaudeAvailability(apiKeyProvider: APIKeyProviderStub(key: nil))
         )
 
         try await dependencies.makeRecordRecentSearchUseCase().execute(SearchQuery("groceries"))

@@ -29,7 +29,26 @@ Every phase then follows the same loop: kick off the phase, confirm the decision
 
 ### Design
 
-The entire design was drawn in **[pen.dev](https://pen.dev)** with **Claude as the design agent**, through the Pencil MCP server. The design file (`to-do.pen`) is the source of truth for every screen and component: Claude reads it to produce a SwiftUI spec (`design-to-swiftui-spec` skill) and checks the running app against it (`design-fidelity-checker` agent).
+The entire design was drawn in **[pen.dev](https://pen.dev)** with **Claude as the design agent**, through the Pencil MCP server. The design file ([`design/to-do.pen`](design/to-do.pen), open it with pen.dev) is the source of truth for every screen and component: Claude reads it to produce a SwiftUI spec (`design-to-swiftui-spec` skill) and checks the running app against it (`design-fidelity-checker` agent). PNG exports of every screen are in [`design/screens/`](design/screens).
+
+<table>
+  <tr>
+    <td><img src="design/screens/01-welcome.png" width="150" alt="Welcome"></td>
+    <td><img src="design/screens/03-add-task.png" width="150" alt="Add task"></td>
+    <td><img src="design/screens/05-task-list.png" width="150" alt="Task list"></td>
+    <td><img src="design/screens/06-task-list-swipe-to-delete.png" width="150" alt="Swipe to delete"></td>
+    <td><img src="design/screens/12-search-results.png" width="150" alt="Search"></td>
+  </tr>
+  <tr>
+    <td><img src="design/screens/09-task-list-categories.png" width="150" alt="Categories filter"></td>
+    <td><img src="design/screens/10-new-category-sheet.png" width="150" alt="New category"></td>
+    <td><img src="design/screens/14-smart-add-describe.png" width="150" alt="Smart Add: describe"></td>
+    <td><img src="design/screens/15-smart-add-review.png" width="150" alt="Smart Add: review"></td>
+    <td><img src="design/screens/16-edit-task-steps.png" width="150" alt="Steps"></td>
+  </tr>
+</table>
+
+The Smart Add and Steps screens are implemented on the [`feat-adding-claude-feature`](../../tree/feat-adding-claude-feature) branch.
 
 ## Branches
 

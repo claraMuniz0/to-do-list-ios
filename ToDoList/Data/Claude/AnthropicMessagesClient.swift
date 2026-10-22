@@ -7,8 +7,13 @@ struct AnthropicMessagesClient: ClaudeClient {
     static let timeout: TimeInterval = 20
     private static let apiVersion = "2023-06-01"
 
-    let apiKeyProvider: APIKeyProvider
-    var session: URLSession = .shared
+    private let apiKeyProvider: APIKeyProvider
+    private let session: URLSession
+
+    init(apiKeyProvider: APIKeyProvider, session: URLSession = .shared) {
+        self.apiKeyProvider = apiKeyProvider
+        self.session = session
+    }
 
     func send(_ request: ClaudeRequest) async throws -> ClaudeResponse {
         guard let key = apiKeyProvider.apiKey()?.trimmingCharacters(in: .whitespacesAndNewlines), !key.isEmpty else {

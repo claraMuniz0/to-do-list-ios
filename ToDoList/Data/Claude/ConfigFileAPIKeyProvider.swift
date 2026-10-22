@@ -5,7 +5,11 @@ struct ConfigFileAPIKeyProvider: APIKeyProvider {
     static let infoDictionaryKey = "AnthropicAPIKey"
     static let baseURLInfoDictionaryKey = "AnthropicBaseURL"
 
-    var infoDictionary: [String: Any] = Bundle.main.infoDictionary ?? [:]
+    private let infoDictionary: [String: Any]
+
+    init(infoDictionary: [String: Any] = Bundle.main.infoDictionary ?? [:]) {
+        self.infoDictionary = infoDictionary
+    }
 
     func apiKey() -> String? {
         guard let raw = infoDictionary[Self.infoDictionaryKey] as? String else { return nil }

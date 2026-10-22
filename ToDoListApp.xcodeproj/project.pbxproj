@@ -55,6 +55,7 @@
 				000000000000000000000010 /* ToDoList */,
 				000000000000000000000011 /* ToDoListTests */,
 				000000000000000000000020 /* Products */,
+				1EECAA8D308A6E3800EC7E75 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -65,6 +66,14 @@
 				000000000000000000000121 /* ToDoListTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1EECAA8D308A6E3800EC7E75 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000130 /* Claude.xcconfig */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -321,8 +330,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 000000000000000000000130 /* Claude.xcconfig */;
 			buildSettings = {
-				INFOPLIST_KEY_AnthropicAPIKey = "$(ANTHROPIC_AUTH_TOKEN)";
-				INFOPLIST_KEY_AnthropicBaseURL = "$(ANTHROPIC_BASE_URL)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -331,6 +338,8 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/LaunchScreen-Info.plist";
+				INFOPLIST_KEY_AnthropicAPIKey = "$(ANTHROPIC_AUTH_TOKEN)";
+				INFOPLIST_KEY_AnthropicBaseURL = "$(ANTHROPIC_BASE_URL)";
 				INFOPLIST_KEY_CFBundleDisplayName = "Do it later";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

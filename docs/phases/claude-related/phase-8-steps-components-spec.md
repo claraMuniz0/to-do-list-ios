@@ -86,3 +86,13 @@ Spec only, no code. Source frames: "Edit Task – Steps" (`zZdaQ`), plus the Ste
 5. **Loading, error and offline states** for the pill and header: not designed (flag to the design).
 6. **Row progress icon.** `jUq0s` is disabled in the master Task Row; the enabled variant appears on rows in the list frames. Confirm the "2/5" placement (Meta Row, after the category chip).
 7. **Contradiction with the phase doc:** none. The only scope change is that `TaskRow` progress is already implemented (see section 5).
+
+## 10. Known contrast gaps (kept as designed)
+The accessibility audit (hand-computed WCAG ratios from the asset-catalog colors) found two places where the design's colors fall short. The decision is to **keep the design colors** for now and flag them to the design.
+
+| Where | Colors | Ratio | Needed | Possible fix if the design changes |
+|-------|--------|-------|--------|------------------------------------|
+| `SuggestPill` text, sparkle and spinner (13pt semibold) | `accent` #C4401F on `accent-soft` #FFE3DA | 4.20:1 | 4.5:1 (WCAG 1.4.3) | a text-only `accentText` around #B03A1A (about 4.97:1), keeping the stroke and icon on `accent` |
+| Open `StepRow` checkbox ring | `border` #F0E2D4 on `surface` #FFFFFF | 1.27:1 | 3:1 (WCAG 1.4.11) | use `border-control` #8E8272 (3.76:1), already used by other controls |
+
+Related, lower priority, also left as designed: the unfilled progress track and the Steps card outline use `border` (about 1.2:1); the filled part of the bar and the "N of M" text carry the information, so this passes, but the card edge is faint. Count text (`text-muted` on `bg`) passes at 4.66:1 with a thin margin.

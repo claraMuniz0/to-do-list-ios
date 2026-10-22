@@ -27,6 +27,9 @@ final class TodoSearchViewModel {
     /// Text for VoiceOver. Set only on submit or when the scope changes, never per keystroke.
     private(set) var announcement: SearchAnnouncement?
 
+    /// Called with the deleted task when the Edit form reports `.deleted`, so the list can show its Undo toast.
+    var onDeleted: ((TodoItem) -> Void)?
+
     private var sortOrder: TodoItemSortOrder
     /// Bumped by every run so a slow, older search can never overwrite a newer one.
     private var runCounter = 0
@@ -102,6 +105,40 @@ final class TodoSearchViewModel {
         await setQuery(term.value)
     }
 
+    /// Toggles a result's completion and refreshes. A failure sets `actionFailed`; the results are refreshed either way.
+    func toggle(id: TodoItemID) async {
+        do {
+            _ = try await toggleCompletion.execute(id: id)
+            actionFailed = false
+        } catch {
+            actionFailed = true
+        }
+        await refresh()
+    }
+
+    /// Call when the Add or Edit form closes over search. `.saved` re-runs the query; `.deleted` hands the item to
+    /// `onDeleted` (the list's Undo toast) and refreshes; `.cancelled` does nothing.
+    func didFinishForm(_ outcome: TodoItemFormOutcome) async {
+        switch outcome {
+        case .saved:
+            await refresh()
+        case .deleted(let item):
+            onDeleted?(item)
+            await refresh()
+        case .cancelled:
+            break
+        }
+    }
+
+    /// The prefill for the Add form: the trimmed query. Only in `.noResults` with typed text (not for a scope alone).
+    var addAsTaskTitle: String? {
+        guard case .noResults(let query?) = state else { return nil }
+        return query.value
+    }
+
+    /// The category the Add form starts with: the active scope, or nil for the form's default.
+    var addAsTaskCategory: Category? { scope }
+
     func clearAllRecentSearches() async {
         do {
             try await clearRecentSearches.execute()
@@ -129,6 +166,18 @@ final class TodoSearchViewModel {
     }
 
     /// Only a typed query that has results is worth remembering; a scope alone or an empty search is not.
+    /// Re-runs after a mutation; announces only if the number of results changed.
+    private func refresh() async {
+        let before = shownCount
+        await run()
+        if shownCount != before { announceState() }
+    }
+
+    private var shownCount: Int {
+        if case .results(let items) = state { return items.count }
+        return 0
+    }
+
     private func recordIfFound() async {
         guard case .results = state, let parsed = parsedQuery else { return }
         do {
